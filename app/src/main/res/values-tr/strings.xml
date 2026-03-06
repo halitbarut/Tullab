@@ -46,6 +46,9 @@
     <string name="homework_due_date_label">Son teslim: %1$s</string>
     <string name="homework_status_pending">Beklemede</string>
     <string name="homework_status_completed">Tamamlandı</string>
+    <string name="homework_status_overdue">Gecikti</string>
+    <string name="homework_status_cancelled">İptal edildi</string>
+    <string name="homework_badge_overdue">Gecikti</string>
     <string name="homework_add_fab_content_description">Ödev ekle</string>
     <string name="homework_dialog_add_title">Ödev Ekle</string>
     <string name="homework_dialog_edit_title">Ödevi Düzenle</string>
@@ -182,7 +185,7 @@
     <string name="calendar_select_day_message">Lütfen önce bir gün seçin</string>
     <string name="calendar_lesson_scheduled_message">Ders planlandı</string>
     <string name="calendar_day_details_title">%1$s tarihindeki dersler</string>
-    <string name="calendar_no_lessons_message">Bu gün için planlanmış ders yok.</string>
+    <string name="calendar_no_lessons_message">Bu gün için planlanmış etkinlik yok.</string>
     <string name="calendar_lesson_details_title">%1$s tarihli ders</string>
     <string name="calendar_lesson_details_status">Durum: %1$s</string>
     <string name="calendar_lesson_details_duration">Süre: %1$s saat</string>
@@ -194,6 +197,9 @@
     <string name="calendar_status_scheduled">Planlandı</string>
     <string name="calendar_status_scheduled_needs_logging">Planlandı (Kaydı Gerekli)</string>
     <string name="calendar_status_cancelled">İptal edildi</string>
+    <string name="calendar_homework_action_mark_complete">Tamamlandı İşaretle</string>
+    <string name="calendar_homework_action_mark_pending">Beklemede İşaretle</string>
+    <string name="calendar_homework_action_details">Detaylar</string>
     <!-- Genel Dialog Eylemleri -->
     <string name="dialog_action_cancel">İptal</string>
     <string name="dialog_action_ok">Tamam</string>

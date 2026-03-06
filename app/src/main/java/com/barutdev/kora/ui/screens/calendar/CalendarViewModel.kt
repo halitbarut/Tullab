@@ -4,8 +4,11 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.barutdev.kora.domain.model.Homework
+import com.barutdev.kora.domain.model.HomeworkStatus
 import com.barutdev.kora.domain.model.Lesson
 import com.barutdev.kora.domain.model.LessonStatus
+import com.barutdev.kora.domain.repository.HomeworkRepository
 import com.barutdev.kora.domain.repository.LessonRepository
 import com.barutdev.kora.domain.repository.StudentRepository
 import com.barutdev.kora.domain.repository.UserPreferencesRepository
@@ -32,6 +35,7 @@ class CalendarViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val studentRepository: StudentRepository,
     private val lessonRepository: LessonRepository,
+    private val homeworkRepository: HomeworkRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val scheduleNotificationAlarmsUseCase: ScheduleNotificationAlarmsUseCase,
     private val cancelNotificationAlarmsUseCase: CancelNotificationAlarmsUseCase
@@ -75,6 +79,16 @@ class CalendarViewModel @Inject constructor(
             )
     } ?: MutableStateFlow(emptyList())
     val lessons: StateFlow<List<Lesson>> = lessonsState
+
+    private val homeworkState: StateFlow<List<Homework>> = studentId?.let { id ->
+        homeworkRepository.getHomeworkForStudent(id)
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = emptyList()
+            )
+    } ?: MutableStateFlow(emptyList())
+    val homework: StateFlow<List<Homework>> = homeworkState
 
     init {
         Log.d("CalendarViewModel", "Created for studentId=$studentId")
@@ -172,5 +186,19 @@ class CalendarViewModel @Inject constructor(
     private fun clearLogLessonSelection() {
         logLessonDialogVisibility.value = false
         selectedLessonForLogging.value = null
+    }
+
+    fun toggleHomeworkStatus(homework: Homework) {
+        if (homework.status == HomeworkStatus.CANCELLED) return
+        
+        viewModelScope.launch {
+            val newStatus = when (homework.status) {
+                HomeworkStatus.PENDING -> HomeworkStatus.COMPLETED
+                HomeworkStatus.COMPLETED -> HomeworkStatus.PENDING
+                HomeworkStatus.OVERDUE -> HomeworkStatus.COMPLETED
+                HomeworkStatus.CANCELLED -> HomeworkStatus.CANCELLED
+            }
+            homeworkRepository.updateHomework(homework.copy(status = newStatus))
+        }
     }
 }

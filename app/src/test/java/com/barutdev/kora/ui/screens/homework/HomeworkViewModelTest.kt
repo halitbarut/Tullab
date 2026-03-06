@@ -25,6 +25,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -160,6 +161,12 @@ private class FakeHomeworkRepository : HomeworkRepository {
 
     override fun getHomeworkForStudent(studentId: Int): Flow<List<Homework>> =
         homework.getOrPut(studentId) { MutableStateFlow(emptyList()) }
+
+    override fun getHomeworkById(homeworkId: Int): Flow<Homework?> {
+        return kotlinx.coroutines.flow.flowOf(
+            homework.values.flatMap { it.value }.find { it.id == homeworkId }
+        )
+    }
 
     fun setHomework(studentId: Int, homework: List<Homework>) {
         this.homework.getOrPut(studentId) { MutableStateFlow(emptyList()) }.value = homework

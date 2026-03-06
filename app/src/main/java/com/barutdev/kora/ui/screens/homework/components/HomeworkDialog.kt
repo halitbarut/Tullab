@@ -258,4 +258,6 @@ fun HomeworkDialog(
 private fun statusLabelRes(status: HomeworkStatus): Int = when (status) {
     HomeworkStatus.PENDING -> R.string.homework_status_pending
     HomeworkStatus.COMPLETED -> R.string.homework_status_completed
+    HomeworkStatus.OVERDUE -> R.string.homework_status_overdue
+    HomeworkStatus.CANCELLED -> R.string.homework_status_cancelled
 }

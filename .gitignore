@@ -108,3 +108,8 @@ secrets.properties
 ehthumbs.db
 .Spotlight-V100
 .Trashes
+
+# Missing patterns
+*.class
+*.jar
+.env*

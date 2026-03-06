@@ -17,6 +17,7 @@ room = "2.8.4"
 material3 = "1.4.0"
 datastore = "1.2.0"
 generativeAi = "0.7.0"
+mockk = "1.13.13"
 
 [libraries]
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "androidxActivityCompose" }
@@ -51,6 +52,7 @@ room-testing = { group = "androidx.room", name = "room-testing", version.ref = "
 androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 google-ai-generativeai = { group = "com.google.ai.client.generativeai", name = "generativeai", version.ref = "generativeAi" }
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 androidx-compose-animation = { group = "androidx.compose.animation", name = "animation" }
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
 

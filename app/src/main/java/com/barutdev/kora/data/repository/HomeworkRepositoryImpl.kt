@@ -18,6 +18,11 @@ class HomeworkRepositoryImpl @Inject constructor(
             entities.toDomain()
         }
 
+    override fun getHomeworkById(homeworkId: Int): Flow<Homework?> =
+        homeworkDao.getHomeworkById(homeworkId).map { entity ->
+            entity?.toDomain()
+        }
+
     override suspend fun insertHomework(homework: Homework) {
         homeworkDao.insert(homework.toEntity())
     }

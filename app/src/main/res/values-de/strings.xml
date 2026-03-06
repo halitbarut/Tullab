@@ -46,6 +46,9 @@
     <string name="homework_due_date_label">Fällig: %1$s</string>
     <string name="homework_status_pending">Ausstehend</string>
     <string name="homework_status_completed">Abgeschlossen</string>
+    <string name="homework_status_overdue">Überfällig</string>
+    <string name="homework_status_cancelled">Abgesagt</string>
+    <string name="homework_badge_overdue">Überfällig</string>
     <string name="homework_add_fab_content_description">Hausaufgabe hinzufügen</string>
     <string name="homework_dialog_add_title">Hausaufgabe hinzufügen</string>
     <string name="homework_dialog_edit_title">Hausaufgabe bearbeiten</string>
@@ -197,7 +200,7 @@
     <string name="calendar_select_day_message">Bitte zuerst einen Tag auswählen</string>
     <string name="calendar_lesson_scheduled_message">Stunde geplant</string>
     <string name="calendar_day_details_title">Stunden am %1$s</string>
-    <string name="calendar_no_lessons_message">Für diesen Tag sind keine Stunden geplant.</string>
+    <string name="calendar_no_lessons_message">Für diesen Tag sind keine Termine geplant.</string>
     <string name="calendar_lesson_details_title">Stunde am %1$s</string>
     <string name="calendar_lesson_details_status">Status: %1$s</string>
     <string name="calendar_lesson_details_duration">Dauer: %1$s Stunden</string>
@@ -209,6 +212,9 @@
     <string name="calendar_status_scheduled">Geplant</string>
     <string name="calendar_status_scheduled_needs_logging">Geplant (Protokoll erforderlich)</string>
     <string name="calendar_status_cancelled">Abgesagt</string>
+    <string name="calendar_homework_action_mark_complete">Als erledigt markieren</string>
+    <string name="calendar_homework_action_mark_pending">Als ausstehend markieren</string>
+    <string name="calendar_homework_action_details">Details</string>
     <!-- Allgemeine Dialogaktionen -->
     <string name="dialog_action_cancel">Abbrechen</string>
     <string name="dialog_action_ok">OK</string>

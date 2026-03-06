@@ -30,6 +30,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -62,7 +63,17 @@ import com.barutdev.kora.ui.theme.StatusBlue
 import com.barutdev.kora.ui.theme.StatusGreen
 import com.barutdev.kora.ui.theme.StatusRed
 import com.barutdev.kora.ui.theme.StatusYellow
+import com.barutdev.kora.ui.theme.StatusOrange
+import com.barutdev.kora.ui.theme.StatusOrangeContainer
+import com.barutdev.kora.ui.theme.HomeworkTeal
+import com.barutdev.kora.ui.theme.HomeworkTealContainer
+import com.barutdev.kora.ui.theme.HomeworkMagenta
+import com.barutdev.kora.ui.theme.HomeworkMagentaContainer
+import com.barutdev.kora.ui.theme.HomeworkGray
+import com.barutdev.kora.ui.theme.HomeworkGrayContainer
 import com.barutdev.kora.ui.theme.KoraAnimationSpecs
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.material3.Surface
 import com.barutdev.kora.ui.components.AnimatedListItem
 import java.text.NumberFormat
 import java.time.DayOfWeek
@@ -75,14 +86,18 @@ import java.time.format.FormatStyle
 import java.time.format.TextStyle
 import java.time.temporal.WeekFields
 import java.util.Locale
+import com.barutdev.kora.domain.model.Homework
+import com.barutdev.kora.domain.model.HomeworkStatus
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
+import androidx.compose.material.icons.outlined.Assignment
 
 
 @Composable
 fun CalendarScreen(
     onNavigateToStudentList: () -> Unit,
+    onNavigateToHomework: (Int, Int) -> Unit,
     expectedStudentId: Int? = null,
     modifier: Modifier = Modifier,
     viewModel: CalendarViewModel = hiltViewModel(
@@ -92,6 +107,7 @@ fun CalendarScreen(
     val scaffoldController = LocalKoraScaffoldController.current
     val studentName by viewModel.studentName.collectAsStateWithLifecycle()
     val lessons by viewModel.lessons.collectAsStateWithLifecycle()
+    val homework by viewModel.homework.collectAsStateWithLifecycle()
     val currentMonth by viewModel.currentMonth.collectAsStateWithLifecycle()
     val selectedDate by viewModel.selectedDate.collectAsStateWithLifecycle()
     val isLogLessonDialogVisible by viewModel.isLogLessonDialogVisible.collectAsStateWithLifecycle()
@@ -200,10 +216,17 @@ fun CalendarScreen(
         currentMonth = currentMonth,
         selectedDate = selectedDate,
         lessons = lessons,
+        homework = homework,
         onPreviousMonth = viewModel::onPreviousMonth,
         onNextMonth = viewModel::onNextMonth,
         onSelectDate = viewModel::onSelectDate,
-        onLogLessonClick = viewModel::onLogLessonClicked
+        onLogLessonClick = viewModel::onLogLessonClicked,
+        onToggleHomeworkStatus = viewModel::toggleHomeworkStatus,
+        onHomeworkDetailsClick = { homework ->
+            viewModel.studentId?.let { studentId ->
+                onNavigateToHomework(studentId, homework.id)
+            }
+        }
     )
 }
 
@@ -213,10 +236,13 @@ private fun CalendarScreenContent(
     currentMonth: YearMonth,
     selectedDate: LocalDate,
     lessons: List<Lesson>,
+    homework: List<Homework>,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
     onSelectDate: (LocalDate) -> Unit,
-    onLogLessonClick: (Lesson) -> Unit
+    onLogLessonClick: (Lesson) -> Unit,
+    onToggleHomeworkStatus: (Homework) -> Unit,
+    onHomeworkDetailsClick: (Homework) -> Unit
 ) {
     val currentLocale = LocalLocale.current
     val zoneId = remember { ZoneId.systemDefault() }
@@ -229,8 +255,18 @@ private fun CalendarScreenContent(
                 .toLocalDate()
         }
     }
+    val homeworkByDate = remember(homework, zoneId) {
+        homework.groupBy { h ->
+            Instant.ofEpochMilli(h.dueDate)
+                .atZone(zoneId)
+                .toLocalDate()
+        }
+    }
     val selectedDateLessons = remember(selectedDate, lessonsByDate) {
         lessonsByDate[selectedDate].orEmpty()
+    }
+    val selectedDateHomework = remember(selectedDate, homeworkByDate) {
+        homeworkByDate[selectedDate].orEmpty()
     }
 
     Column(
@@ -248,16 +284,20 @@ private fun CalendarScreenContent(
                 onNextMonth = onNextMonth,
                 onDaySelected = onSelectDate,
                 lessonsByDate = lessonsByDate,
+                homeworkByDate = homeworkByDate,
                 locale = currentLocale
             )
         }
         AnimatedListItem(index = 1) {
-            LessonDetailsSection(
+            DayDetailsSection(
                 selectedDate = selectedDate,
                 lessons = selectedDateLessons,
+                homework = selectedDateHomework,
                 today = today,
                 locale = currentLocale,
-                onLessonActionClick = onLogLessonClick
+                onLessonActionClick = onLogLessonClick,
+                onToggleHomeworkStatus = onToggleHomeworkStatus,
+                onHomeworkDetailsClick = onHomeworkDetailsClick
             )
         }
     }
@@ -274,6 +314,7 @@ private fun MonthlyCalendarView(
     onNextMonth: () -> Unit,
     onDaySelected: (LocalDate) -> Unit,
     lessonsByDate: Map<LocalDate, List<Lesson>>,
+    homeworkByDate: Map<LocalDate, List<Homework>>,
     locale: Locale
 ) {
     val monthName = remember(currentMonth, locale) {
@@ -333,11 +374,13 @@ private fun MonthlyCalendarView(
                             )
                         } else {
                             val lessonsForDate = lessonsByDate[date].orEmpty()
+                            val homeworkForDate = homeworkByDate[date].orEmpty()
                             CalendarDayCell(
                                 date = date,
                                 isSelected = selectedDate == date,
-                                indicatorColor = statusDotColorForLessons(
+                                dayIndicators = resolveDayIndicators(
                                     lessons = lessonsForDate,
+                                    homework = homeworkForDate,
                                     date = date,
                                     today = today
                                 ),
@@ -414,7 +457,7 @@ private fun DaysOfWeekRow(
 private fun CalendarDayCell(
     date: LocalDate,
     isSelected: Boolean,
-    indicatorColor: Color?,
+    dayIndicators: DayIndicators,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -468,37 +511,41 @@ private fun CalendarDayCell(
                 color = animatedTextColor,
                 textAlign = TextAlign.Center
             )
-            if (indicatorColor != null) {
+            if (dayIndicators.lessonColor != null || dayIndicators.homeworkColor != null) {
                 Spacer(modifier = Modifier.height(6.dp))
-                Box(
-                    modifier = Modifier
-                        .size(6.dp)
-                        .clip(CircleShape)
-                        .background(indicatorColor)
-                )
+                if (dayIndicators.lessonColor != null && dayIndicators.homeworkColor != null) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(2.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(5.dp)
+                                .clip(CircleShape)
+                                .background(dayIndicators.lessonColor)
+                        )
+                        Box(
+                            modifier = Modifier
+                                .size(5.dp)
+                                .clip(CircleShape)
+                                .background(dayIndicators.homeworkColor)
+                        )
+                    }
+                } else {
+                    val singleColor = dayIndicators.lessonColor ?: dayIndicators.homeworkColor!!
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .clip(CircleShape)
+                            .background(singleColor)
+                    )
+                }
             }
         }
     }
 }
 
-private fun statusDotColorForLessons(
-    lessons: List<Lesson>,
-    date: LocalDate,
-    today: LocalDate
-): Color? {
-    if (lessons.isEmpty()) return null
-    return when {
-        lessons.any { it.status == LessonStatus.PAID } -> StatusGreen
-        lessons.any { it.status == LessonStatus.COMPLETED } -> StatusYellow
-        lessons.any { it.status == LessonStatus.SCHEDULED } -> if (date.isBefore(today)) {
-            StatusRed
-        } else {
-            StatusBlue
-        }
-        lessons.any { it.status == LessonStatus.CANCELLED } -> StatusRed
-        else -> null
-    }
-}
+// Internal classes mapped in CalendarStatusResolver.kt
 
 private data class LessonStatusDisplay(
     val text: String,
@@ -506,12 +553,15 @@ private data class LessonStatusDisplay(
 )
 
 @Composable
-private fun LessonDetailsSection(
+private fun DayDetailsSection(
     selectedDate: LocalDate,
     lessons: List<Lesson>,
+    homework: List<Homework>,
     today: LocalDate,
     locale: Locale,
     onLessonActionClick: (Lesson) -> Unit,
+    onToggleHomeworkStatus: (Homework) -> Unit,
+    onHomeworkDetailsClick: (Homework) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val dateFormatter = remember(locale) {
@@ -535,7 +585,7 @@ private fun LessonDetailsSection(
             ),
             style = MaterialTheme.typography.titleMedium
         )
-        if (lessonsSorted.isEmpty()) {
+        if (lessonsSorted.isEmpty() && homework.isEmpty()) {
             Card(
                 shape = MaterialTheme.shapes.large,
                 modifier = Modifier.fillMaxWidth()
@@ -561,6 +611,156 @@ private fun LessonDetailsSection(
                         locale = locale,
                         onActionClick = onLessonActionClick
                     )
+                }
+                homework.forEach { h ->
+                    HomeworkDetailCard(
+                        homework = h,
+                        dateFormatter = dateFormatter,
+                        today = today,
+                        locale = locale,
+                        onToggleStatus = { onToggleHomeworkStatus(h) },
+                        onDetailsClick = { onHomeworkDetailsClick(h) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HomeworkDetailCard(
+    homework: Homework,
+    dateFormatter: DateTimeFormatter,
+    today: LocalDate,
+    locale: Locale,
+    onToggleStatus: () -> Unit,
+    onDetailsClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val dueDate = remember(homework.dueDate) {
+        Instant.ofEpochMilli(homework.dueDate)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate()
+    }
+    
+    val isOverdue = homework.status == HomeworkStatus.PENDING && dueDate.isBefore(today)
+    val effectiveStatus = if (isOverdue) HomeworkStatus.OVERDUE else homework.status
+    
+    val statusText = when (effectiveStatus) {
+        HomeworkStatus.COMPLETED -> koraStringResource(id = R.string.homework_status_completed)
+        HomeworkStatus.OVERDUE -> koraStringResource(id = R.string.homework_status_overdue)
+        HomeworkStatus.CANCELLED -> koraStringResource(id = R.string.homework_status_cancelled)
+        else -> koraStringResource(id = R.string.homework_status_pending)
+    }
+    
+    val statusColor = when (effectiveStatus) {
+        HomeworkStatus.COMPLETED -> HomeworkTeal
+        HomeworkStatus.OVERDUE -> HomeworkMagenta
+        HomeworkStatus.CANCELLED -> HomeworkGray
+        else -> StatusOrange
+    }
+
+    val textDecoration = if (effectiveStatus == HomeworkStatus.CANCELLED) TextDecoration.LineThrough else TextDecoration.None
+    val titleColor = if (effectiveStatus == HomeworkStatus.CANCELLED) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface
+
+    Card(
+        shape = MaterialTheme.shapes.large,
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Assignment,
+                    contentDescription = null,
+                    tint = if (effectiveStatus == HomeworkStatus.CANCELLED) MaterialTheme.colorScheme.primary.copy(alpha = 0.6f) else MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+                Text(
+                    text = homework.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    textDecoration = textDecoration,
+                    color = titleColor
+                )
+            }
+            
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = koraStringResource(
+                        id = R.string.calendar_lesson_details_status,
+                        statusText
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = statusColor
+                )
+                if (effectiveStatus == HomeworkStatus.OVERDUE) {
+                    Surface(
+                        color = HomeworkMagentaContainer,
+                        shape = MaterialTheme.shapes.small
+                    ) {
+                        Text(
+                            text = koraStringResource(id = R.string.homework_badge_overdue),
+                            color = HomeworkMagenta,
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+            }
+            
+            if (homework.description.isNotBlank()) {
+                Text(
+                    text = homework.description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (effectiveStatus == HomeworkStatus.CANCELLED) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurfaceVariant,
+                    textDecoration = textDecoration
+                )
+            }
+            
+            val notes = homework.performanceNotes
+            if (!notes.isNullOrBlank()) {
+                Text(
+                    text = koraStringResource(
+                        id = R.string.calendar_lesson_details_notes,
+                        notes
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (effectiveStatus == HomeworkStatus.CANCELLED) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                if (effectiveStatus != HomeworkStatus.CANCELLED) {
+                    Button(
+                        onClick = onToggleStatus,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    ) {
+                        val labelRes = if (effectiveStatus == HomeworkStatus.COMPLETED) {
+                            R.string.calendar_homework_action_mark_pending
+                        } else {
+                            R.string.calendar_homework_action_mark_complete
+                        }
+                        Text(text = koraStringResource(id = labelRes))
+                    }
+                }
+
+                OutlinedButton(
+                    onClick = onDetailsClick,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(text = koraStringResource(id = R.string.calendar_homework_action_details))
                 }
             }
         }
@@ -624,21 +824,22 @@ private fun LessonDetailCard(
                 style = MaterialTheme.typography.bodyMedium,
                 color = statusDisplay.color
             )
-            durationText?.let { duration ->
+            if (durationText != null) {
                 Text(
                     text = koraStringResource(
                         id = R.string.calendar_lesson_details_duration,
-                        duration
+                        durationText
                     ),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            lesson.notes?.takeIf { it.isNotBlank() }?.let { notes ->
+            val lessonNotes = lesson.notes
+            if (!lessonNotes.isNullOrBlank()) {
                 Text(
                     text = koraStringResource(
                         id = R.string.calendar_lesson_details_notes,
-                        notes
+                        lessonNotes
                     ),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -738,10 +939,13 @@ private fun CalendarScreenPreview() {
             currentMonth = currentMonth,
             selectedDate = selectedDate,
             lessons = previewLessons,
+            homework = emptyList(),
             onPreviousMonth = {},
             onNextMonth = {},
             onSelectDate = {},
-            onLogLessonClick = {}
+            onLogLessonClick = {},
+            onToggleHomeworkStatus = {},
+            onHomeworkDetailsClick = {}
         )
     }
 }

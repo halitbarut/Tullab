@@ -440,6 +440,9 @@ fun KoraNavGraph(
                                     }
                                     launchSingleTop = true
                                 }
+                            },
+                            onNavigateToHomework = { sId, hId ->
+                                navController.navigate(KoraDestination.Homework.createRoute(sId, hId))
                             }
                         )
                     }
@@ -450,13 +453,15 @@ fun KoraNavGraph(
                     arguments = KoraDestination.Homework.arguments()
                 ) { backStackEntry ->
                     val studentId = backStackEntry.requireStudentId()
+                    val homeworkId = backStackEntry.arguments?.getInt(HOMEWORK_ID_ARG)?.takeIf { it != -1 }
                     Log.d(
                         NAVIGATION_LOG_TAG,
-                        "Rendering Homework entry=${backStackEntry.id} for studentId=$studentId"
+                        "Rendering Homework entry=${backStackEntry.id} for studentId=$studentId homeworkId=$homeworkId"
                     )
                     key("homework-$studentId") {
                         HomeworkScreen(
                             expectedStudentId = studentId,
+                            homeworkId = homeworkId,
                             onNavigateToStudentList = {
                                 navController.navigate(KoraDestination.StudentList.route) {
                                     popUpTo(navController.graph.startDestinationId) {
@@ -709,7 +714,9 @@ internal fun resolveSlideDirection(
     targetRoute: String?
 ): AnimatedContentTransitionScope.SlideDirection? {
     val initial = KoraDestination.studentScopedFromRoute(initialRoute)
+        ?: KoraDestination.fromRoute(initialRoute)
     val target = KoraDestination.studentScopedFromRoute(targetRoute)
+        ?: KoraDestination.fromRoute(targetRoute)
     if (initial == null || target == null || initial == target) return null
     val initialIndex = KoraDestination.bottomBarDestinations.indexOf(initial)
     val targetIndex = KoraDestination.bottomBarDestinations.indexOf(target)
@@ -742,7 +749,6 @@ private fun KoraDestination.icon(): ImageVector = when (this) {
     KoraDestination.Dashboard -> Icons.Outlined.Dashboard
     KoraDestination.Calendar -> Icons.Outlined.CalendarMonth
     KoraDestination.Homework -> Icons.Outlined.Assignment
-    KoraDestination.Reports -> Icons.Outlined.BarChart
     KoraDestination.EditStudentProfile -> Icons.Outlined.Dashboard
     else -> Icons.Outlined.Dashboard
 }
