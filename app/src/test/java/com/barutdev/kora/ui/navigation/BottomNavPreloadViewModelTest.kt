@@ -85,6 +85,7 @@ private class RecordingHomeworkRepository : HomeworkRepository {
     var homeworkCallCount = 0
     override fun getHomeworkForStudent(studentId: Int): Flow<List<Homework>> =
         flowOf(emptyList<Homework>()).also { homeworkCallCount += 1 }
+    override fun getHomeworkById(homeworkId: Int): Flow<Homework?> = flowOf(null)
     override suspend fun insertHomework(homework: Homework) = error("unused")
     override suspend fun updateHomework(homework: Homework) = error("unused")
 }

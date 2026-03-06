@@ -6,27 +6,30 @@ import androidx.navigation.navArgument
 import com.barutdev.kora.R
 
 const val STUDENT_ID_ARG = "studentId"
+const val HOMEWORK_ID_ARG = "homeworkId"
 
 internal sealed class KoraDestination(
-    val route: String,
     @StringRes val labelRes: Int
 ) {
+    abstract val route: String
 
     object StudentList : KoraDestination(
-        route = "student_list",
         labelRes = R.string.student_list_title
-    )
+    ) {
+        override val route: String = "student_list"
+    }
 
     sealed class StudentScoped(
         internal val baseRoute: String,
         @StringRes labelRes: Int
     ) : KoraDestination(
-        route = "$baseRoute/{$STUDENT_ID_ARG}",
         labelRes = labelRes
     ) {
-        fun createRoute(studentId: Int): String = "$baseRoute/$studentId"
+        override val route: String get() = "$baseRoute/{$STUDENT_ID_ARG}"
 
-        fun arguments() = listOf(
+        open fun createRoute(studentId: Int): String = "$baseRoute/$studentId"
+
+        open fun arguments() = listOf(
             navArgument(STUDENT_ID_ARG) {
                 type = NavType.IntType
             }
@@ -46,12 +49,27 @@ internal sealed class KoraDestination(
     object Homework : StudentScoped(
         baseRoute = "homework",
         labelRes = R.string.homework_title
-    )
+    ) {
+        override val route: String = "$baseRoute/{$STUDENT_ID_ARG}?$HOMEWORK_ID_ARG={$HOMEWORK_ID_ARG}"
+
+        fun createRoute(studentId: Int, homeworkId: Int? = null): String {
+            return if (homeworkId != null) "$baseRoute/$studentId?$HOMEWORK_ID_ARG=$homeworkId"
+            else "$baseRoute/$studentId"
+        }
+
+        override fun arguments() = super.arguments() + listOf(
+            navArgument(HOMEWORK_ID_ARG) {
+                type = NavType.IntType
+                defaultValue = -1
+            }
+        )
+    }
 
     object Reports : KoraDestination(
-        route = "reports",
         labelRes = R.string.reports_tab_label
-    )
+    ) {
+        override val route: String = "reports"
+    }
 
     object EditStudentProfile : StudentScoped(
         baseRoute = "student_profile",
@@ -59,19 +77,22 @@ internal sealed class KoraDestination(
     )
 
     object AddStudentProfile : KoraDestination(
-        route = "student_profile/add",
         labelRes = R.string.add_student_profile_title
-    )
+    ) {
+        override val route: String = "student_profile/add"
+    }
 
     object Settings : KoraDestination(
-        route = "settings",
         labelRes = R.string.settings_title
-    )
+    ) {
+        override val route: String = "settings"
+    }
 
     object Onboarding : KoraDestination(
-        route = "onboarding",
         labelRes = R.string.onboarding_title
-    )
+    ) {
+        override val route: String = "onboarding"
+    }
 
     companion object {
         val bottomBarDestinations: List<KoraDestination> by lazy(LazyThreadSafetyMode.PUBLICATION) {

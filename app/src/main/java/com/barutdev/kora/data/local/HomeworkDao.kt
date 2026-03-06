@@ -22,6 +22,9 @@ interface HomeworkDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(homework: List<HomeworkEntity>)
 
+    @Query("SELECT * FROM homework WHERE id = :homeworkId")
+    fun getHomeworkById(homeworkId: Int): Flow<HomeworkEntity?>
+
     @Query("DELETE FROM homework")
     suspend fun deleteAll()
 }

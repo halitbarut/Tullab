@@ -1,12 +1,12 @@
 [versions]
 agp = "9.1.0"
-androidxActivityCompose = "1.10.0"
-androidxCore = "1.15.0"
-androidxEspresso = "3.6.1"
+androidxActivityCompose = "1.12.4"
+androidxCore = "1.17.0"
+androidxEspresso = "3.7.0"
 androidxHiltNavigation = "1.3.0"
-androidxJunit = "1.2.1"
-composeBom = "2026.01.00"
-coroutines = "1.9.0"
+androidxJunit = "1.3.0"
+composeBom = "2026.02.01"
+coroutines = "1.10.2"
 hilt = "2.58"
 junit = "4.13.2"
 kotlin = "2.3.0"
@@ -15,8 +15,9 @@ lifecycle = "2.10.0"
 navigation = "2.9.6"
 room = "2.8.4"
 material3 = "1.4.0"
-datastore = "1.1.1"
+datastore = "1.2.0"
 generativeAi = "0.7.0"
+mockk = "1.13.13"
 
 [libraries]
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "androidxActivityCompose" }
@@ -51,6 +52,7 @@ room-testing = { group = "androidx.room", name = "room-testing", version.ref = "
 androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 google-ai-generativeai = { group = "com.google.ai.client.generativeai", name = "generativeai", version.ref = "generativeAi" }
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 androidx-compose-animation = { group = "androidx.compose.animation", name = "animation" }
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
 

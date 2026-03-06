@@ -61,6 +61,7 @@ import com.barutdev.kora.ui.theme.KoraAnimationSpecs
 import com.barutdev.kora.ui.theme.KoraTheme
 import com.barutdev.kora.ui.theme.LocalLocale
 import com.barutdev.kora.ui.theme.StatusGreen
+import com.barutdev.kora.ui.theme.StatusRed
 import com.barutdev.kora.ui.theme.StatusYellow
 import com.barutdev.kora.ui.model.AiInsightsUiState
 import com.barutdev.kora.ui.model.AiStatus
@@ -76,6 +77,7 @@ import java.util.Locale
 fun HomeworkScreen(
     onNavigateToStudentList: () -> Unit,
     expectedStudentId: Int? = null,
+    homeworkId: Int? = null,
     modifier: Modifier = Modifier,
     viewModel: HomeworkViewModel = hiltViewModel(
         key = expectedStudentId?.let { "homework-$it" } ?: "homework-default"
@@ -411,6 +413,8 @@ private fun StatusBadge(status: HomeworkStatus, modifier: Modifier = Modifier) {
     val (labelRes, targetColor) = when (status) {
         HomeworkStatus.PENDING -> R.string.homework_status_pending to StatusYellow
         HomeworkStatus.COMPLETED -> R.string.homework_status_completed to StatusGreen
+        HomeworkStatus.OVERDUE -> R.string.homework_status_overdue to StatusRed
+        HomeworkStatus.CANCELLED -> R.string.homework_status_cancelled to androidx.compose.ui.graphics.Color.Gray
     }
     val text = koraStringResource(id = labelRes)
     

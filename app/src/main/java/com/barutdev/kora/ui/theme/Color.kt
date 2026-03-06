@@ -41,6 +41,14 @@ val StatusBlueContainer = Color(0xFFE3F2FD)
 val StatusOrangeContainer = Color(0xFFFFF3E0)
 val StatusRedContainer = Color(0xFFFFEBEE)
 
+// Homework Status Colors
+val HomeworkTeal = Color(0xFF009688)           // Completed
+val HomeworkTealContainer = Color(0xFFE0F2F1)  // Completed card bg
+val HomeworkMagenta = Color(0xFFE91E63)        // Overdue
+val HomeworkMagentaContainer = Color(0xFFFCE4EC) // Overdue card bg
+val HomeworkGray = Color(0xFF9E9E9E)           // Cancelled
+val HomeworkGrayContainer = Color(0xFFF5F5F5)  // Cancelled card bg
+
 // Gradient Colors
 val GradientPrimaryStart = Color(0xFF4A90E2)
 val GradientPrimaryEnd = Color(0xFF7C3AED)

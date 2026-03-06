@@ -51,6 +51,9 @@
     <string name="homework_due_date_label">Due: %1$s</string>
     <string name="homework_status_pending">Pending</string>
     <string name="homework_status_completed">Completed</string>
+    <string name="homework_status_overdue">Overdue</string>
+    <string name="homework_status_cancelled">Cancelled</string>
+    <string name="homework_badge_overdue">Overdue</string>
     <string name="homework_add_fab_content_description">Add homework</string>
     <string name="homework_dialog_add_title">Add Homework</string>
     <string name="homework_dialog_edit_title">Edit Homework</string>
@@ -197,7 +200,7 @@
     <string name="calendar_select_day_message">Please select a day first</string>
     <string name="calendar_lesson_scheduled_message">Lesson scheduled</string>
     <string name="calendar_day_details_title">Lessons on %1$s</string>
-    <string name="calendar_no_lessons_message">No lessons scheduled for this day.</string>
+    <string name="calendar_no_lessons_message">No events scheduled for this day.</string>
     <string name="calendar_lesson_details_title">Lesson on %1$s</string>
     <string name="calendar_lesson_details_status">Status: %1$s</string>
     <string name="calendar_lesson_details_duration">Duration: %1$s hours</string>
@@ -209,6 +212,12 @@
     <string name="calendar_status_scheduled">Scheduled</string>
     <string name="calendar_status_scheduled_needs_logging">Scheduled (Needs Logging)</string>
     <string name="calendar_status_cancelled">Cancelled</string>
+
+    <string name="calendar_homework_section_title">Homework for %1$s</string>
+    <string name="calendar_no_homework_message">No homework assigned for this day.</string>
+    <string name="calendar_homework_action_mark_complete">Mark Complete</string>
+    <string name="calendar_homework_action_mark_pending">Mark Pending</string>
+    <string name="calendar_homework_action_details">Details</string>
 
     <!-- Reports Screen -->
     <string name="reports_title">Reports</string>

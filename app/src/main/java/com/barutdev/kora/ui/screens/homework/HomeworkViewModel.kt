@@ -20,6 +20,7 @@ import com.barutdev.kora.domain.repository.AiInsightsGenerationTracker
 import com.barutdev.kora.domain.repository.StudentRepository
 import com.barutdev.kora.domain.usecase.GenerateAiInsightsUseCase
 import com.barutdev.kora.navigation.STUDENT_ID_ARG
+import com.barutdev.kora.navigation.HOMEWORK_ID_ARG
 import com.barutdev.kora.ui.model.AiInsightsUiState
 import com.barutdev.kora.ui.model.AiStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -120,6 +121,16 @@ class HomeworkViewModel @Inject constructor(
 
     init {
         Log.d("HomeworkViewModel", "Created for studentId=$studentId")
+        
+        val initialHomeworkId = savedStateHandle.get<Int>(HOMEWORK_ID_ARG)?.takeIf { it != -1 }
+        if (initialHomeworkId != null) {
+            viewModelScope.launch {
+                val homeworkItem = homeworkRepository.getHomeworkById(initialHomeworkId).first()
+                if (homeworkItem != null) {
+                    showEditHomeworkDialog(homeworkItem)
+                }
+            }
+        }
     }
 
     private fun observeAiInsights() {
