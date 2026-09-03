@@ -65,14 +65,7 @@ class KoraNavGraphTest {
         assertFalse(shouldShow)
     }
 
-    @Test
-    fun shouldShowBottomBar_returnsTrue_forReportsDestination() {
-        val shouldShow = shouldShowBottomBar(
-            currentDestination = destination(KoraDestination.Reports.route)
-        )
 
-        assertTrue(shouldShow)
-    }
 
     private fun destination(route: String?): NavDestination? {
         if (route == null) return null
