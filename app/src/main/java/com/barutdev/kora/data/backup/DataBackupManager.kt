@@ -1,7 +1,6 @@
 package com.barutdev.kora.data.backup
 
 import androidx.room.withTransaction
-import com.barutdev.kora.data.local.AiInsightDao
 import com.barutdev.kora.data.local.HomeworkDao
 import com.barutdev.kora.data.local.KoraDatabase
 import com.barutdev.kora.data.local.LessonDao
@@ -22,7 +21,6 @@ class DataBackupManager @Inject constructor(
     private val studentDao: StudentDao,
     private val lessonDao: LessonDao,
     private val homeworkDao: HomeworkDao,
-    private val aiInsightDao: AiInsightDao,
     private val database: KoraDatabase
 ) {
 
@@ -76,7 +74,6 @@ class DataBackupManager @Inject constructor(
         }
 
         database.withTransaction {
-            aiInsightDao.deleteAll()
             homeworkDao.deleteAll()
             lessonDao.deleteAll()
             studentDao.deleteAll()
@@ -88,7 +85,6 @@ class DataBackupManager @Inject constructor(
 
     suspend fun clearAllData() = withContext(Dispatchers.IO) {
         database.withTransaction {
-            aiInsightDao.deleteAll()
             homeworkDao.deleteAll()
             lessonDao.deleteAll()
             studentDao.deleteAll()

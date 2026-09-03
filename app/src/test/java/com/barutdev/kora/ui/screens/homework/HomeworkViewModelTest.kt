@@ -8,16 +8,9 @@ import com.barutdev.kora.domain.model.HomeworkStatus
 import com.barutdev.kora.domain.model.Lesson
 import com.barutdev.kora.domain.model.Student
 import com.barutdev.kora.domain.model.StudentProfileUpdate
-import com.barutdev.kora.domain.model.ai.AiInsightsFocus
-import com.barutdev.kora.domain.model.ai.AiInsightsRequestKey
-import com.barutdev.kora.domain.model.ai.CachedAiInsight
-import com.barutdev.kora.domain.repository.AiInsightsCacheRepository
-import com.barutdev.kora.domain.repository.AiInsightsGenerationTracker
-import com.barutdev.kora.domain.repository.AiRepository
 import com.barutdev.kora.domain.repository.HomeworkRepository
 import com.barutdev.kora.domain.repository.LessonRepository
 import com.barutdev.kora.domain.repository.StudentRepository
-import com.barutdev.kora.domain.usecase.GenerateAiInsightsUseCase
 import com.barutdev.kora.navigation.STUDENT_ID_ARG
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -60,23 +53,12 @@ class HomeworkViewModelTest {
                 )
             )
         }
-        val generationTracker = FakeAiInsightsGenerationTracker()
-        val cacheRepository = FakeAiInsightsCacheRepository()
-        val aiUseCase = GenerateAiInsightsUseCase(
-            studentRepository = studentRepository,
-            lessonRepository = FakeLessonRepository(),
-            homeworkRepository = homeworkRepository,
-            aiRepository = FakeAiRepository()
-        )
 
         val savedStateHandle = SavedStateHandle(mapOf(STUDENT_ID_ARG to 1))
         val viewModel = HomeworkViewModel(
             savedStateHandle = savedStateHandle,
             homeworkRepository = homeworkRepository,
             studentRepository = studentRepository,
-            aiInsightsCacheRepository = cacheRepository,
-            aiInsightsGenerationTracker = generationTracker,
-            generateAiInsightsUseCase = aiUseCase
         )
         val viewModelJob = viewModel.viewModelScope.coroutineContext[Job]
 
@@ -209,40 +191,4 @@ private class FakeLessonRepository : LessonRepository {
     override fun getActiveLessons(): Flow<List<Lesson>> = error("Not needed")
 }
 
-private class FakeAiInsightsCacheRepository : AiInsightsCacheRepository {
-    override fun observeInsight(
-        studentId: Int,
-        focus: AiInsightsFocus,
-        localeTag: String
-    ): Flow<CachedAiInsight?> = MutableStateFlow(null)
 
-    override suspend fun getInsight(
-        studentId: Int,
-        focus: AiInsightsFocus,
-        localeTag: String
-    ): CachedAiInsight? = null
-
-    override suspend fun saveInsight(insight: CachedAiInsight) = Unit
-
-    override suspend fun clearInsight(studentId: Int, focus: AiInsightsFocus, localeTag: String) = Unit
-}
-
-private class FakeAiInsightsGenerationTracker : AiInsightsGenerationTracker {
-    private val running = MutableStateFlow(emptyMap<AiInsightsRequestKey, String>())
-
-    override val runningGenerations: StateFlow<Map<AiInsightsRequestKey, String>> = running
-
-    override fun markGenerationStarted(key: AiInsightsRequestKey, signature: String) {
-        running.value = running.value + (key to signature)
-    }
-
-    override fun markGenerationFinished(key: AiInsightsRequestKey) {
-        running.value = running.value - key
-    }
-
-    override fun getRunningSignature(key: AiInsightsRequestKey): String? = running.value[key]
-}
-
-private class FakeAiRepository : AiRepository {
-    override suspend fun generateInsights(prompt: String): String = error("Not needed")
-}

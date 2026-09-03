@@ -1,5 +1,5 @@
 [versions]
-agp = "9.1.0"
+agp = "9.4.0"
 androidxActivityCompose = "1.12.4"
 androidxCore = "1.17.0"
 androidxEspresso = "3.7.0"
@@ -10,13 +10,12 @@ coroutines = "1.10.2"
 hilt = "2.58"
 junit = "4.13.2"
 kotlin = "2.3.0"
-ksp = "2.3.4"
+ksp = "2.3.6"
 lifecycle = "2.10.0"
 navigation = "2.9.6"
 room = "2.8.4"
 material3 = "1.4.0"
 datastore = "1.2.0"
-generativeAi = "0.7.0"
 mockk = "1.13.13"
 
 [libraries]
@@ -51,7 +50,6 @@ room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "
 room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
-google-ai-generativeai = { group = "com.google.ai.client.generativeai", name = "generativeai", version.ref = "generativeAi" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 androidx-compose-animation = { group = "androidx.compose.animation", name = "animation" }
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }

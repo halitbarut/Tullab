@@ -2,13 +2,13 @@ package com.barutdev.kora.di
 
 import android.content.Context
 import androidx.room.Room
-import com.barutdev.kora.data.local.AiInsightDao
 import com.barutdev.kora.data.local.HomeworkDao
 import com.barutdev.kora.data.local.KoraDatabase
 import com.barutdev.kora.data.local.LessonDao
 import com.barutdev.kora.data.local.PaymentRecordDao
 import com.barutdev.kora.data.local.StudentDao
 import com.barutdev.kora.data.local.migrations.MIGRATION_7_8
+import com.barutdev.kora.data.local.migrations.MIGRATION_8_9
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -30,7 +30,7 @@ object DatabaseModule {
         context,
         KoraDatabase::class.java,
         DATABASE_NAME
-    ).addMigrations(MIGRATION_7_8)
+    ).addMigrations(MIGRATION_7_8, MIGRATION_8_9)
         .fallbackToDestructiveMigration()
         .build()
 
@@ -51,12 +51,6 @@ object DatabaseModule {
     fun provideHomeworkDao(
         database: KoraDatabase
     ): HomeworkDao = database.homeworkDao()
-
-    @Provides
-    @Singleton
-    fun provideAiInsightDao(
-        database: KoraDatabase
-    ): AiInsightDao = database.aiInsightDao()
 
     @Provides
     @Singleton

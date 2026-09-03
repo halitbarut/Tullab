@@ -2,7 +2,6 @@ package com.barutdev.kora.di
 
 import android.content.Context
 import androidx.room.Room
-import com.barutdev.kora.data.local.AiInsightDao
 import com.barutdev.kora.data.local.HomeworkDao
 import com.barutdev.kora.data.local.KoraDatabase
 import com.barutdev.kora.data.local.LessonDao
@@ -45,10 +44,6 @@ object TestDatabaseModule {
     @Provides
     @Singleton
     fun provideHomeworkDao(database: KoraDatabase): HomeworkDao = database.homeworkDao()
-
-    @Provides
-    @Singleton
-    fun provideAiInsightDao(database: KoraDatabase): AiInsightDao = database.aiInsightDao()
 
     @Provides
     @Singleton

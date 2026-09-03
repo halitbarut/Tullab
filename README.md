@@ -10,7 +10,6 @@ Kora is a modern Android application built for private tutors, coaches, and inst
 Core principles:
 - Privacy‑First: Your data stays on your device. No servers, no accounts, no hidden syncs.
 - Intuitive Design: A frictionless, Material 3 experience powered by Jetpack Compose.
-- Intelligent Assistance: Context‑aware insights backed by Google's Gemini API.
 
 ## ✨ Features & Functionality
 ### 👨‍🎓 Effortless Student Management
@@ -22,8 +21,6 @@ Plan and visualize lessons on a calendar. Quickly distinguish upcoming, complete
 ### 💰 Automated Payment Tracking
 Automatically calculate amounts owed based on hourly rates and completed lessons. Log payments with a tap and maintain a clear, auditable history.
 
-### 🧠 AI‑Powered Insights
-Leverage Google’s Gemini API to get actionable recommendations. Kora analyzes lesson notes and homework performance to suggest focus areas for the next session.
 
 ### 📝 Integrated Homework Management
 Assign homework, track its status (pending/completed), and record performance notes to build a complete academic picture for each student.
@@ -43,7 +40,6 @@ Add your screenshots below (replace the links with your actual images):
 ![Student List](link_to_screenshot_student_list.png)
 ![Calendar](link_to_screenshot_calendar.png)
 ![Payments](link_to_screenshot_payments.png)
-![AI Insights](link_to_screenshot_insights.png)
 
 ## 🛠️ Tech Stack & Architecture
 Kora is built on a modern Android tech stack, following the MVVM architecture to ensure a scalable and maintainable codebase.
@@ -52,7 +48,6 @@ Kora is built on a modern Android tech stack, following the MVVM architecture to
 - Language: Kotlin first, embracing coroutines for asynchronous operations.
 - Architecture: MVVM with Hilt for dependency injection.
 - Database: Room for robust, offline‑first local data storage.
-- AI: Google Gemini API for intelligent features.
 
 ## 🚀 Installation & Getting Started
 1) Clone the repository:
@@ -64,14 +59,7 @@ cd Kora
 
 2) Open the project in Android Studio (latest stable), ensure JDK 17 is configured.
 
-3) Add your Gemini API key to `local.properties` (this file is untracked — do not commit secrets):
-
-```properties
-# local.properties (do NOT commit this file)
-GEMINI_API_KEY=your_gemini_api_key_here
-```
-
-4) Build the app:
+3) Build the app:
 
 ```bash
 ./gradlew assembleDebug
