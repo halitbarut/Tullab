@@ -27,7 +27,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Groups
-import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -63,8 +62,6 @@ import com.barutdev.kora.ui.theme.LocalLocale
 import com.barutdev.kora.ui.theme.StatusGreen
 import com.barutdev.kora.ui.theme.StatusRed
 import com.barutdev.kora.ui.theme.StatusYellow
-import com.barutdev.kora.ui.model.AiInsightsUiState
-import com.barutdev.kora.ui.model.AiStatus
 import com.barutdev.kora.ui.components.AnimatedListItem
 import java.time.Instant
 import java.time.LocalDate
@@ -87,7 +84,6 @@ fun HomeworkScreen(
     val homeworkList by viewModel.homework.collectAsStateWithLifecycle()
     val isDialogVisible by viewModel.isDialogVisible.collectAsStateWithLifecycle()
     val editingHomework by viewModel.editingHomework.collectAsStateWithLifecycle()
-    val aiInsightsState by viewModel.aiInsightsState.collectAsStateWithLifecycle()
     val locale = LocalLocale.current
 
     LaunchedEffect(expectedStudentId) {
@@ -95,11 +91,6 @@ fun HomeworkScreen(
     }
     LaunchedEffect(viewModel.studentId) {
         Log.d("HomeworkScreen", "Rendering homework for studentId=${viewModel.studentId}")
-    }
-    LaunchedEffect(viewModel.studentId, locale) {
-        if (viewModel.hasStudentReference) {
-            viewModel.ensureAiInsights(locale)
-        }
     }
 
     HomeworkDialog(
@@ -177,8 +168,6 @@ fun HomeworkScreen(
         modifier = modifier.fillMaxSize(),
         studentName = displayStudentName,
         homeworkList = homeworkList,
-        aiInsightsState = aiInsightsState,
-        onGenerateAiInsights = { viewModel.retryAiInsights(locale) },
         onHomeworkClick = viewModel::showEditHomeworkDialog
     )
 }
@@ -189,8 +178,6 @@ private fun HomeworkScreenContent(
     modifier: Modifier = Modifier,
     studentName: String?,
     homeworkList: List<Homework>,
-    aiInsightsState: AiInsightsUiState,
-    onGenerateAiInsights: () -> Unit,
     onHomeworkClick: (Homework) -> Unit
 ) {
     val locale = LocalLocale.current
@@ -202,15 +189,6 @@ private fun HomeworkScreenContent(
             .padding(horizontal = 24.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Card 0: AI Assistant
-        AnimatedListItem(index = 0) {
-            AiAssistantCard(
-                studentName = studentName,
-                aiState = aiInsightsState,
-                onGenerateAgain = onGenerateAiInsights
-            )
-        }
-        
         // Card 1: Section Title
         AnimatedListItem(index = 1) {
             Text(
@@ -241,118 +219,6 @@ private fun HomeworkScreenContent(
     }
 }
 
-
-@OptIn(ExperimentalAnimationApi::class)
-@Composable
-private fun AiAssistantCard(
-    studentName: String?,
-    aiState: AiInsightsUiState,
-    onGenerateAgain: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .animateContentSize(animationSpec = KoraAnimationSpecs.contentSizeSpec),
-        shape = MaterialTheme.shapes.large
-    ) {
-        Column(
-            modifier = Modifier.padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Dashboard-style header with icon
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Psychology,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = koraStringResource(id = R.string.homework_ai_card_title),
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
-            AnimatedContent(
-                targetState = aiState,
-                transitionSpec = { KoraAnimationSpecs.cardContentTransform() },
-                label = "homework_ai_card"
-            ) { state ->
-                when (state.status) {
-                    AiStatus.Success -> {
-                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            state.insight?.let { insight ->
-                                Text(
-                                    text = insight,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                            TextButton(onClick = onGenerateAgain) {
-                                Text(text = koraStringResource(id = R.string.ai_generate_again_action))
-                            }
-                        }
-                    }
-                    AiStatus.Error -> {
-                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            val message = state.messageRes?.let { resId ->
-                                koraStringResource(id = resId)
-                            } ?: koraStringResource(id = R.string.ai_generic_error_message)
-                            Text(
-                                text = message,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            TextButton(onClick = onGenerateAgain) {
-                                Text(text = koraStringResource(id = R.string.ai_retry_action))
-                            }
-                        }
-                    }
-                    AiStatus.NoData -> {
-                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            val message = state.messageRes?.let { resId ->
-                                when (resId) {
-                                    R.string.homework_ai_no_data_message ->
-                                        koraStringResource(
-                                            id = resId,
-                                            studentName ?: ""
-                                        )
-                                    else -> koraStringResource(id = resId)
-                                }
-                            } ?: koraStringResource(id = R.string.ai_generic_no_data_message)
-                            Text(
-                                text = message,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            TextButton(onClick = onGenerateAgain) {
-                                Text(text = koraStringResource(id = R.string.ai_generate_again_action))
-                            }
-                        }
-                    }
-                    AiStatus.Loading, AiStatus.Idle -> {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                strokeWidth = 3.dp
-                            )
-                            Text(
-                                text = koraStringResource(id = R.string.ai_loading_message),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
 
 @Composable
 private fun HomeworkListItem(
@@ -467,16 +333,10 @@ private fun HomeworkScreenPreview() {
             performanceNotes = null
         )
     )
-    val previewAiState = AiInsightsUiState(
-        status = AiStatus.Success,
-        insight = "Elif completed her recent assignments accurately. Introduce mixed-problem sets to reinforce multi-step reasoning."
-    )
     KoraTheme {
         HomeworkScreenContent(
             studentName = "Elif Yılmaz",
             homeworkList = homeworkList,
-            aiInsightsState = previewAiState,
-            onGenerateAiInsights = {},
             onHomeworkClick = {},
             modifier = Modifier
         )

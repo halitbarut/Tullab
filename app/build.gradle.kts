@@ -32,9 +32,6 @@ android {
             useSupportLibrary = true
         }
 
-        val geminiApiKey = localProperties.getProperty("GEMINI_API_KEY", "")
-        val sanitizedGeminiApiKey = geminiApiKey.replace("\"", "\\\"")
-        buildConfigField("String", "GEMINI_API_KEY", "\"$sanitizedGeminiApiKey\"")
     }
 
     buildTypes {
@@ -89,7 +86,6 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.datastore.preferences)
-    implementation(libs.google.ai.generativeai)
 
     implementation(libs.hilt.android)
     implementation(libs.androidx.material3)

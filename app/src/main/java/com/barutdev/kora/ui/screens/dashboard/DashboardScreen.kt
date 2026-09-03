@@ -22,8 +22,9 @@ import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.History
+
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -62,8 +63,6 @@ import com.barutdev.kora.ui.screens.dashboard.components.LogLessonDialog
 import com.barutdev.kora.ui.theme.KoraAnimationSpecs
 import com.barutdev.kora.ui.theme.KoraTheme
 import com.barutdev.kora.ui.theme.LocalLocale
-import com.barutdev.kora.ui.model.AiInsightsUiState
-import com.barutdev.kora.ui.model.AiStatus
 import com.barutdev.kora.ui.components.AnimatedListItem
 import com.barutdev.kora.util.formatCurrency
 import java.text.NumberFormat
@@ -97,7 +96,6 @@ fun DashboardScreen(
     )
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-val aiInsightsState by viewModel.aiInsightsState.collectAsStateWithLifecycle()
     val coroutineScope = rememberCoroutineScope()
     val userPreferences = LocalUserPreferences.current
     val locale = LocalLocale.current
@@ -118,12 +116,6 @@ val aiInsightsState by viewModel.aiInsightsState.collectAsStateWithLifecycle()
     LaunchedEffect(uiState.studentId) {
         uiState.studentId?.let { resolvedId ->
             Log.d("DashboardScreen", "Rendering dashboard for studentId=$resolvedId")
-        }
-    }
-
-    LaunchedEffect(uiState.studentId, locale) {
-        if (uiState.studentId != null) {
-            viewModel.ensureAiInsights(locale)
         }
     }
 
@@ -240,8 +232,6 @@ PaymentHistoryDialog(
 onMarkCurrentCycleAsPaid = viewModel::showMarkAsPaidDialog,
         onShowPaymentHistory = viewModel::showPaymentHistoryDialog,
         currencyCode = userPreferences.currencyCode,
-        aiInsightsState = aiInsightsState,
-        onGenerateAiInsights = { viewModel.retryAiInsights(locale) },
         modifier = modifier.fillMaxSize()
     )
 }
@@ -259,8 +249,6 @@ private fun DashboardBody(
     onMarkCurrentCycleAsPaid: () -> Unit,
     onShowPaymentHistory: () -> Unit,
     currencyCode: String,
-    aiInsightsState: AiInsightsUiState,
-    onGenerateAiInsights: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val locale = LocalLocale.current
@@ -318,13 +306,6 @@ private fun DashboardBody(
             )
         }
         
-        // Card 4: AI Assistant
-        AnimatedListItem(index = 4) {
-            AiAssistantCard(
-                aiState = aiInsightsState,
-                onGenerateAgain = onGenerateAiInsights
-            )
-        }
     }
 }
 
@@ -738,106 +719,6 @@ private fun UpcomingLessonsCard(
     }
 }
 
-@OptIn(ExperimentalAnimationApi::class)
-@Composable
-private fun AiAssistantCard(
-    aiState: AiInsightsUiState,
-    onGenerateAgain: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .animateContentSize(animationSpec = KoraAnimationSpecs.contentSizeSpec),
-        shape = MaterialTheme.shapes.large
-    ) {
-        Column(
-            modifier = Modifier.padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Psychology,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = koraStringResource(id = R.string.dashboard_ai_insights_title),
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
-            AnimatedContent(
-                targetState = aiState,
-                transitionSpec = { KoraAnimationSpecs.cardContentTransform() },
-                label = "dashboard_ai_card"
-            ) { state ->
-                when (state.status) {
-                    AiStatus.Success -> {
-                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            state.insight?.let { insight ->
-                                Text(
-                                    text = insight,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                            TextButton(onClick = onGenerateAgain) {
-                                Text(text = koraStringResource(id = R.string.ai_generate_again_action))
-                            }
-                        }
-                    }
-                    AiStatus.Error -> {
-                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            val message = state.messageRes?.let { koraStringResource(id = it) }
-                                ?: koraStringResource(id = R.string.ai_generic_error_message)
-                            Text(
-                                text = message,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            TextButton(onClick = onGenerateAgain) {
-                                Text(text = koraStringResource(id = R.string.ai_retry_action))
-                            }
-                        }
-                    }
-                    AiStatus.NoData -> {
-                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            val message = state.messageRes?.let { koraStringResource(id = it) }
-                                ?: koraStringResource(id = R.string.ai_generic_no_data_message)
-                            Text(
-                                text = message,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            TextButton(onClick = onGenerateAgain) {
-                                Text(text = koraStringResource(id = R.string.ai_generate_again_action))
-                            }
-                        }
-                    }
-                    AiStatus.Loading, AiStatus.Idle -> {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                strokeWidth = 3.dp
-                            )
-                            Text(
-                                text = koraStringResource(id = R.string.ai_loading_message),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
 
 @Preview
 @Composable
@@ -888,10 +769,6 @@ private fun DashboardScreenPreview() {
             )
         )
     )
-    val previewAiState = AiInsightsUiState(
-        status = AiStatus.Success,
-        insight = "Elif's performance in Algebra has improved while Geometry homework needs reinforcement. Plan targeted triangle exercises next."
-    )
     KoraTheme {
         DashboardBody(
             totalHours = previewUiState.totalHours,
@@ -904,9 +781,7 @@ private fun DashboardScreenPreview() {
             onLogLessonClick = {},
             onMarkCurrentCycleAsPaid = {},
             onShowPaymentHistory = {},
-            currencyCode = "TRY",
-            aiInsightsState = previewAiState,
-            onGenerateAiInsights = {}
+            currencyCode = "TRY"
         )
     }
 }
