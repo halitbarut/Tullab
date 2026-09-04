@@ -157,6 +157,25 @@ class CalendarViewModel @Inject constructor(
         }
     }
 
+    fun onSaveScheduledLesson(lesson: Lesson, duration: String, notes: String, pricingMode: com.barutdev.kora.domain.model.PricingMode, rateOrFee: String) {
+        viewModelScope.launch {
+            val normalizedDuration = duration.trim().replace(',', '.')
+            val durationValue = normalizedDuration.toDoubleOrNull()
+            
+            val normalizedRate = rateOrFee.trim().replace(',', '.')
+            val rateValue = normalizedRate.toDoubleOrNull() ?: lesson.rateOrFee
+
+            val updatedLesson = lesson.copy(
+                durationInHours = durationValue,
+                notes = notes.trim().ifEmpty { null },
+                pricingMode = pricingMode,
+                rateOrFee = rateValue
+            )
+            lessonRepository.updateLesson(updatedLesson)
+            clearLogLessonSelection()
+        }
+    }
+
     fun onLogLessonMarkNotDone(notes: String) {
         val lessonId = selectedLessonForLogging.value?.id ?: return
         viewModelScope.launch {

@@ -44,7 +44,9 @@ fun LogLessonDialog(
     onMarkNotDone: (notes: String) -> Unit,
     isMarkAsPaidMode: Boolean = false,
     requiresFeePrompt: Boolean = false,
-    onMarkAsPaid: ((duration: String, customFee: String) -> Unit)? = null
+    onMarkAsPaid: ((duration: String, customFee: String) -> Unit)? = null,
+    /** Called when saving edits to a future scheduled lesson (US3). Null when not applicable. */
+    onSaveScheduled: ((duration: String, notes: String, pricingMode: PricingMode, rateOrFee: String) -> Unit)? = null
 ) {
     if (!showDialog || lesson == null) return
 
@@ -237,27 +239,33 @@ fun LogLessonDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    if (isMarkAsPaidMode) {
-                        onMarkAsPaid?.invoke(duration, customFee)
-                    } else {
-                        onComplete(duration, notes, pricingMode, rateOrFeeInput)
+                    when {
+                        onSaveScheduled != null -> {
+                            onSaveScheduled(duration, notes, pricingMode, rateOrFeeInput)
+                        }
+                        isMarkAsPaidMode -> {
+                            onMarkAsPaid?.invoke(duration, customFee)
+                        }
+                        else -> {
+                            onComplete(duration, notes, pricingMode, rateOrFeeInput)
+                        }
                     }
                     resetInputs()
                 },
                 enabled = isCompleteEnabled
             ) {
                 Text(
-                    text = if (isMarkAsPaidMode) {
-                        koraStringResource(id = R.string.calendar_lesson_action_mark_as_paid)
-                    } else {
-                        koraStringResource(id = R.string.dashboard_log_lesson_complete_button)
+                    text = when {
+                        onSaveScheduled != null -> koraStringResource(id = R.string.calendar_lesson_action_save_changes)
+                        isMarkAsPaidMode -> koraStringResource(id = R.string.calendar_lesson_action_mark_as_paid)
+                        else -> koraStringResource(id = R.string.dashboard_log_lesson_complete_button)
                     }
                 )
             }
         },
         dismissButton = {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (!isMarkAsPaidMode) {
+                if (!isMarkAsPaidMode && onSaveScheduled == null) {
                     TextButton(
                         onClick = {
                             onMarkNotDone(notes)

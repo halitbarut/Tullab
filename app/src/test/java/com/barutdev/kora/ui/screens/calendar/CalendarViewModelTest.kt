@@ -218,4 +218,34 @@ class CalendarViewModelTest {
         coVerify { paymentRepository.revertLessonPayment(1) }
         assertEquals(null, viewModel.lessonToRevert.value)
     }
+
+    @Test
+    fun `onSaveScheduledLesson calls updateLesson and dismisses dialog`() = runTest {
+        val lesson = Lesson(id = 1, studentId = 1, date = 0L, status = LessonStatus.SCHEDULED, durationInHours = null, notes = null, pricingMode = com.barutdev.kora.domain.model.PricingMode.PER_HOUR, rateOrFee = 50.0)
+        coEvery { lessonRepository.updateLesson(any()) } returns Unit
+
+        viewModel.onLogLessonClicked(lesson) // Opens the dialog
+        assertEquals(lesson, viewModel.lessonToLog.value)
+
+        viewModel.onSaveScheduledLesson(
+            lesson = lesson,
+            duration = "1.5",
+            notes = "Test Note",
+            pricingMode = com.barutdev.kora.domain.model.PricingMode.FLAT_FEE,
+            rateOrFee = "60.0"
+        )
+        advanceUntilIdle()
+
+        coVerify {
+            lessonRepository.updateLesson(match {
+                it.id == lesson.id &&
+                it.durationInHours == 1.5 &&
+                it.notes == "Test Note" &&
+                it.pricingMode == com.barutdev.kora.domain.model.PricingMode.FLAT_FEE &&
+                it.rateOrFee == 60.0 &&
+                it.status == LessonStatus.SCHEDULED // Should remain SCHEDULED
+            })
+        }
+        assertEquals(null, viewModel.lessonToLog.value)
+    }
 }

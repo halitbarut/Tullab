@@ -161,6 +161,12 @@ fun CalendarScreen(
     val containerColor = MaterialTheme.colorScheme.primary
     val contentColor = MaterialTheme.colorScheme.onPrimary
 
+    val today = LocalDate.now(ZoneId.systemDefault())
+    val currentLessonToLog = lessonToLog
+    val isFutureScheduled = currentLessonToLog != null &&
+        currentLessonToLog.status == LessonStatus.SCHEDULED &&
+        !Instant.ofEpochMilli(currentLessonToLog.date).atZone(ZoneId.systemDefault()).toLocalDate().isBefore(today)
+
     LogLessonDialog(
         showDialog = isLogLessonDialogVisible,
         lesson = lessonToLog,
@@ -170,7 +176,12 @@ fun CalendarScreen(
         },
         onMarkNotDone = { notes ->
             viewModel.onLogLessonMarkNotDone(notes)
-        }
+        },
+        onSaveScheduled = if (isFutureScheduled && currentLessonToLog != null) {
+            { duration, notes, pricingMode, rateOrFeeInput ->
+                viewModel.onSaveScheduledLesson(currentLessonToLog, duration, notes, pricingMode, rateOrFeeInput)
+            }
+        } else null
     )
 
     LogLessonDialog(
