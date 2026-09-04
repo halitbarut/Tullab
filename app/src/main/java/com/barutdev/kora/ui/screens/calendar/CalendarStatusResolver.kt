@@ -20,7 +20,7 @@ data class DayIndicators(
     val homeworkColor: Color?
 )
 
-internal enum class InternalLessonStatus { RED, YELLOW, BLUE, GREEN }
+internal enum class InternalLessonStatus { RED_PAST_DUE, YELLOW, BLUE, GREEN, RED_CANCELLED }
 internal enum class InternalHomeworkStatus { MAGENTA, GRAY, ORANGE, TEAL }
 
 /**
@@ -28,10 +28,11 @@ internal enum class InternalHomeworkStatus { MAGENTA, GRAY, ORANGE, TEAL }
  * of all lessons and homework items on that day.
  *
  * Priority ordering for lessons:
- * - RED: Cancelled lesson, or past-due scheduled lesson
+ * - RED_PAST_DUE: Past-due scheduled lesson
  * - YELLOW: Completed (awaiting payment) lesson
  * - BLUE: Scheduled lesson (future)
  * - GREEN: Paid lesson
+ * - RED_CANCELLED: Cancelled lesson
  *
  * Priority ordering for homework:
  * - MAGENTA: Overdue homework (explicitly OVERDUE, or PENDING and past due date)
@@ -52,15 +53,16 @@ internal fun resolveDayIndicators(
             when (lesson.status) {
                 LessonStatus.PAID -> InternalLessonStatus.GREEN
                 LessonStatus.COMPLETED -> InternalLessonStatus.YELLOW
-                LessonStatus.SCHEDULED -> if (date.isBefore(today)) InternalLessonStatus.RED else InternalLessonStatus.BLUE
-                LessonStatus.CANCELLED -> InternalLessonStatus.RED
+                LessonStatus.SCHEDULED -> if (date.isBefore(today)) InternalLessonStatus.RED_PAST_DUE else InternalLessonStatus.BLUE
+                LessonStatus.CANCELLED -> InternalLessonStatus.RED_CANCELLED
             }
         }
         when {
-            lessonStatuses.any { it == InternalLessonStatus.RED } -> StatusRed
+            lessonStatuses.any { it == InternalLessonStatus.RED_PAST_DUE } -> StatusRed
             lessonStatuses.any { it == InternalLessonStatus.YELLOW } -> StatusYellow
             lessonStatuses.any { it == InternalLessonStatus.BLUE } -> StatusBlue
             lessonStatuses.any { it == InternalLessonStatus.GREEN } -> StatusGreen
+            lessonStatuses.any { it == InternalLessonStatus.RED_CANCELLED } -> StatusRed
             else -> null
         }
     }

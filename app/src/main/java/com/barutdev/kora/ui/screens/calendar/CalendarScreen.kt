@@ -21,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.ChevronRight
@@ -32,6 +33,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -112,6 +114,9 @@ fun CalendarScreen(
     val selectedDate by viewModel.selectedDate.collectAsStateWithLifecycle()
     val isLogLessonDialogVisible by viewModel.isLogLessonDialogVisible.collectAsStateWithLifecycle()
     val lessonToLog by viewModel.lessonToLog.collectAsStateWithLifecycle()
+    val pendingLessonForPayment by viewModel.pendingLessonForPayment.collectAsStateWithLifecycle()
+    val requiresFeePrompt by viewModel.requiresFeePrompt.collectAsStateWithLifecycle()
+    val lessonToRevert by viewModel.lessonToRevert.collectAsStateWithLifecycle()
     val coroutineScope = rememberCoroutineScope()
     val zoneId = remember { ZoneId.systemDefault() }
     val snackbarHostState = scaffoldController.snackbarHostState
@@ -163,6 +168,39 @@ fun CalendarScreen(
             viewModel.onLogLessonMarkNotDone(notes)
         }
     )
+
+    LogLessonDialog(
+        showDialog = pendingLessonForPayment != null,
+        lesson = pendingLessonForPayment,
+        onDismiss = viewModel::dismissMarkLessonAsPaidDialog,
+        onComplete = { _, _ -> },
+        onMarkNotDone = { _ -> },
+        isMarkAsPaidMode = true,
+        requiresFeePrompt = requiresFeePrompt,
+        onMarkAsPaid = { durationStr, feeStr ->
+            val duration = durationStr.trim().replace(',', '.').toDoubleOrNull()
+            val fee = feeStr.trim().replace(',', '.').toDoubleOrNull()
+            viewModel.onConfirmMarkLessonAsPaid(duration, fee)
+        }
+    )
+
+    if (lessonToRevert != null) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = viewModel::dismissRevertDialog,
+            title = { Text(text = koraStringResource(id = R.string.calendar_dialog_revert_payment_title)) },
+            text = { Text(text = koraStringResource(id = R.string.calendar_dialog_revert_payment_message)) },
+            confirmButton = {
+                Button(onClick = viewModel::onConfirmRevertPayment) {
+                    Text(text = koraStringResource(id = R.string.calendar_dialog_revert_payment_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = viewModel::dismissRevertDialog) {
+                    Text(text = koraStringResource(id = R.string.dialog_action_cancel))
+                }
+            }
+        )
+    }
 
     val topBarConfig = remember(
         topBarTitle,
@@ -221,6 +259,8 @@ fun CalendarScreen(
         onNextMonth = viewModel::onNextMonth,
         onSelectDate = viewModel::onSelectDate,
         onLogLessonClick = viewModel::onLogLessonClicked,
+        onLessonMarkAsPaidClick = viewModel::onMarkLessonAsPaidClicked,
+        onRevertPaymentClick = viewModel::onRevertLessonPaymentClicked,
         onToggleHomeworkStatus = viewModel::toggleHomeworkStatus,
         onHomeworkDetailsClick = { homework ->
             viewModel.studentId?.let { studentId ->
@@ -241,6 +281,8 @@ private fun CalendarScreenContent(
     onNextMonth: () -> Unit,
     onSelectDate: (LocalDate) -> Unit,
     onLogLessonClick: (Lesson) -> Unit,
+    onLessonMarkAsPaidClick: (Lesson) -> Unit,
+    onRevertPaymentClick: (Lesson) -> Unit,
     onToggleHomeworkStatus: (Homework) -> Unit,
     onHomeworkDetailsClick: (Homework) -> Unit
 ) {
@@ -296,6 +338,8 @@ private fun CalendarScreenContent(
                 today = today,
                 locale = currentLocale,
                 onLessonActionClick = onLogLessonClick,
+                onLessonMarkAsPaidClick = onLessonMarkAsPaidClick,
+                onRevertPaymentClick = onRevertPaymentClick,
                 onToggleHomeworkStatus = onToggleHomeworkStatus,
                 onHomeworkDetailsClick = onHomeworkDetailsClick
             )
@@ -560,6 +604,8 @@ private fun DayDetailsSection(
     today: LocalDate,
     locale: Locale,
     onLessonActionClick: (Lesson) -> Unit,
+    onLessonMarkAsPaidClick: (Lesson) -> Unit,
+    onRevertPaymentClick: (Lesson) -> Unit,
     onToggleHomeworkStatus: (Homework) -> Unit,
     onHomeworkDetailsClick: (Homework) -> Unit,
     modifier: Modifier = Modifier
@@ -609,7 +655,9 @@ private fun DayDetailsSection(
                         dateFormatter = dateFormatter,
                         today = today,
                         locale = locale,
-                        onActionClick = onLessonActionClick
+                        onActionClick = onLessonActionClick,
+                        onMarkAsPaidClick = onLessonMarkAsPaidClick,
+                        onRevertPaymentClick = onRevertPaymentClick
                     )
                 }
                 homework.forEach { h ->
@@ -774,6 +822,8 @@ private fun LessonDetailCard(
     today: LocalDate,
     locale: Locale,
     onActionClick: (Lesson) -> Unit,
+    onMarkAsPaidClick: (Lesson) -> Unit,
+    onRevertPaymentClick: (Lesson) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val lessonDate = remember(lesson.date) {
@@ -834,6 +884,25 @@ private fun LessonDetailCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+            val paymentTimestamp = lesson.paymentTimestamp
+            if (paymentTimestamp != null) {
+                val paymentDateTimeFormatter = remember(locale) {
+                    DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.SHORT).withLocale(locale)
+                }
+                val formattedPaymentDate = remember(paymentTimestamp, paymentDateTimeFormatter) {
+                    Instant.ofEpochMilli(paymentTimestamp)
+                        .atZone(ZoneId.systemDefault())
+                        .format(paymentDateTimeFormatter)
+                }
+                Text(
+                    text = koraStringResource(
+                        id = R.string.calendar_lesson_details_paid_on,
+                        formattedPaymentDate
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = StatusGreen
+                )
+            }
             val lessonNotes = lesson.notes
             if (!lessonNotes.isNullOrBlank()) {
                 Text(
@@ -854,6 +923,31 @@ private fun LessonDetailCard(
                 )
             ) {
                 Text(text = koraStringResource(id = actionTextRes))
+            }
+            if (lesson.status != LessonStatus.PAID) {
+                Button(
+                    onClick = { onMarkAsPaidClick(lesson) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = StatusGreen,
+                        contentColor = Color.White
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.size(8.dp))
+                    Text(text = koraStringResource(id = R.string.calendar_lesson_action_mark_as_paid))
+                }
+            } else {
+                OutlinedButton(
+                    onClick = { onRevertPaymentClick(lesson) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = koraStringResource(id = R.string.calendar_lesson_action_revert_payment))
+                }
             }
         }
     }
@@ -944,6 +1038,8 @@ private fun CalendarScreenPreview() {
             onNextMonth = {},
             onSelectDate = {},
             onLogLessonClick = {},
+            onLessonMarkAsPaidClick = {},
+            onRevertPaymentClick = {},
             onToggleHomeworkStatus = {},
             onHomeworkDetailsClick = {}
         )

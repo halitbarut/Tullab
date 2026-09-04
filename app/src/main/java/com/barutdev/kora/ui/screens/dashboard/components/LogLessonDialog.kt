@@ -35,7 +35,10 @@ fun LogLessonDialog(
     lesson: Lesson?,
     onDismiss: () -> Unit,
     onComplete: (duration: String, notes: String) -> Unit,
-    onMarkNotDone: (notes: String) -> Unit
+    onMarkNotDone: (notes: String) -> Unit,
+    isMarkAsPaidMode: Boolean = false,
+    requiresFeePrompt: Boolean = false,
+    onMarkAsPaid: ((duration: String, customFee: String) -> Unit)? = null
 ) {
     if (!showDialog || lesson == null) return
 
@@ -57,12 +60,18 @@ fun LogLessonDialog(
     var notes by rememberSaveable(lesson.id) {
         mutableStateOf(lesson.notes.orEmpty())
     }
+    var customFee by rememberSaveable(lesson.id) {
+        mutableStateOf("")
+    }
 
-    val isCompleteEnabled = duration.trim().replace(',', '.').toDoubleOrNull()?.let { it > 0.0 } == true
+    val isDurationValid = duration.trim().replace(',', '.').toDoubleOrNull()?.let { it > 0.0 } == true
+    val isFeeValid = !requiresFeePrompt || customFee.trim().replace(',', '.').toDoubleOrNull()?.let { it > 0.0 } == true
+    val isCompleteEnabled = isDurationValid && isFeeValid
 
     fun resetInputs() {
-        duration = ""
-        notes = ""
+        duration = lesson.durationInHours?.toString().orEmpty()
+        notes = lesson.notes.orEmpty()
+        customFee = ""
     }
 
     AlertDialog(
@@ -71,7 +80,13 @@ fun LogLessonDialog(
             onDismiss()
         },
         title = {
-            Text(text = koraStringResource(id = R.string.dashboard_log_lesson_dialog_title))
+            Text(
+                text = if (isMarkAsPaidMode) {
+                    koraStringResource(id = R.string.calendar_lesson_action_mark_as_paid)
+                } else {
+                    koraStringResource(id = R.string.dashboard_log_lesson_dialog_title)
+                }
+            )
         },
         text = {
             Column {
@@ -98,40 +113,84 @@ fun LogLessonDialog(
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text(text = koraStringResource(id = R.string.dashboard_log_lesson_duration_label)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true
+                    singleLine = true,
+                    enabled = lesson.status != com.barutdev.kora.domain.model.LessonStatus.PAID,
+                    supportingText = if (lesson.status == com.barutdev.kora.domain.model.LessonStatus.PAID) {
+                        { Text(text = koraStringResource(id = R.string.calendar_lesson_duration_locked_helper)) }
+                    } else null
                 )
-                Spacer(modifier = Modifier.height(16.dp))
-                TextField(
-                    value = notes,
-                    onValueChange = { notes = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text(text = koraStringResource(id = R.string.dashboard_log_lesson_notes_label)) },
-                    singleLine = false,
-                    minLines = 2,
-                    maxLines = 4
-                )
+                if (requiresFeePrompt) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    TextField(
+                        value = customFee,
+                        onValueChange = { newValue ->
+                            val normalized = newValue.replace(',', '.')
+                            var decimalAdded = false
+                            val sanitized = buildString {
+                                normalized.forEach { char ->
+                                    when {
+                                        char.isDigit() -> append(char)
+                                        char == '.' && !decimalAdded -> {
+                                            append(char)
+                                            decimalAdded = true
+                                        }
+                                    }
+                                }
+                            }
+                            customFee = sanitized
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text(text = koraStringResource(id = R.string.calendar_dialog_mark_paid_fee_prompt)) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        singleLine = true
+                    )
+                }
+                if (!isMarkAsPaidMode) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    TextField(
+                        value = notes,
+                        onValueChange = { notes = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text(text = koraStringResource(id = R.string.dashboard_log_lesson_notes_label)) },
+                        singleLine = false,
+                        minLines = 2,
+                        maxLines = 4
+                    )
+                }
             }
         },
         confirmButton = {
             Button(
                 onClick = {
-                    onComplete(duration, notes)
+                    if (isMarkAsPaidMode) {
+                        onMarkAsPaid?.invoke(duration, customFee)
+                    } else {
+                        onComplete(duration, notes)
+                    }
                     resetInputs()
                 },
                 enabled = isCompleteEnabled
             ) {
-                Text(text = koraStringResource(id = R.string.dashboard_log_lesson_complete_button))
+                Text(
+                    text = if (isMarkAsPaidMode) {
+                        koraStringResource(id = R.string.calendar_lesson_action_mark_as_paid)
+                    } else {
+                        koraStringResource(id = R.string.dashboard_log_lesson_complete_button)
+                    }
+                )
             }
         },
         dismissButton = {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton(
-                    onClick = {
-                        onMarkNotDone(notes)
-                        resetInputs()
+                if (!isMarkAsPaidMode) {
+                    TextButton(
+                        onClick = {
+                            onMarkNotDone(notes)
+                            resetInputs()
+                        }
+                    ) {
+                        Text(text = koraStringResource(id = R.string.dashboard_log_lesson_mark_not_done_button))
                     }
-                ) {
-                    Text(text = koraStringResource(id = R.string.dashboard_log_lesson_mark_not_done_button))
                 }
                 TextButton(
                     onClick = {
@@ -145,3 +204,4 @@ fun LogLessonDialog(
         }
     )
 }
+

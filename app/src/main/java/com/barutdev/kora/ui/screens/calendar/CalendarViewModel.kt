@@ -27,8 +27,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+
+import com.barutdev.kora.domain.repository.PaymentRepository
 
 @HiltViewModel
 class CalendarViewModel @Inject constructor(
@@ -37,6 +40,7 @@ class CalendarViewModel @Inject constructor(
     private val lessonRepository: LessonRepository,
     private val homeworkRepository: HomeworkRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
+    private val paymentRepository: PaymentRepository,
     private val scheduleNotificationAlarmsUseCase: ScheduleNotificationAlarmsUseCase,
     private val cancelNotificationAlarmsUseCase: CancelNotificationAlarmsUseCase
 ) : ViewModel() {
@@ -186,6 +190,63 @@ class CalendarViewModel @Inject constructor(
     private fun clearLogLessonSelection() {
         logLessonDialogVisibility.value = false
         selectedLessonForLogging.value = null
+    }
+
+    private val pendingLessonForPaymentState = MutableStateFlow<Lesson?>(null)
+    val pendingLessonForPayment: StateFlow<Lesson?> = pendingLessonForPaymentState.asStateFlow()
+
+    private val requiresFeePromptState = MutableStateFlow(false)
+    val requiresFeePrompt: StateFlow<Boolean> = requiresFeePromptState.asStateFlow()
+
+    fun onMarkLessonAsPaidClicked(lesson: Lesson) {
+        viewModelScope.launch {
+            val targetStudentId = studentId ?: return@launch
+            val student = studentRepository.getStudentById(targetStudentId).firstOrNull()
+            val prefs = userPreferencesRepository.userPreferences.first()
+            val rate = student?.customHourlyRate ?: student?.hourlyRate ?: prefs.defaultHourlyRate
+            
+            if (lesson.status == LessonStatus.COMPLETED && lesson.durationInHours != null && rate > 0.0) {
+                paymentRepository.markLessonAsPaid(lesson.id, lesson.durationInHours, null)
+            } else {
+                requiresFeePromptState.value = rate <= 0.0
+                pendingLessonForPaymentState.value = lesson
+            }
+        }
+    }
+
+    fun dismissMarkLessonAsPaidDialog() {
+        pendingLessonForPaymentState.value = null
+        requiresFeePromptState.value = false
+    }
+
+    fun onConfirmMarkLessonAsPaid(duration: Double?, customFee: Double?) {
+        val lessonId = pendingLessonForPaymentState.value?.id ?: return
+        viewModelScope.launch {
+            if (pendingLessonForPaymentState.value?.status == LessonStatus.SCHEDULED) {
+                cancelNotificationAlarmsUseCase(lessonId)
+            }
+            paymentRepository.markLessonAsPaid(lessonId, duration, customFee)
+            pendingLessonForPaymentState.value = null
+        }
+    }
+
+    private val lessonToRevertState = MutableStateFlow<Lesson?>(null)
+    val lessonToRevert: StateFlow<Lesson?> = lessonToRevertState.asStateFlow()
+
+    fun onRevertLessonPaymentClicked(lesson: Lesson) {
+        lessonToRevertState.value = lesson
+    }
+
+    fun dismissRevertDialog() {
+        lessonToRevertState.value = null
+    }
+
+    fun onConfirmRevertPayment() {
+        val lessonId = lessonToRevertState.value?.id ?: return
+        viewModelScope.launch {
+            paymentRepository.revertLessonPayment(lessonId)
+            lessonToRevertState.value = null
+        }
     }
 
     fun toggleHomeworkStatus(homework: Homework) {

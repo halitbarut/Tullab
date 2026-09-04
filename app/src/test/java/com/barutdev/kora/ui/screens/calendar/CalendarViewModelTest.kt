@@ -3,10 +3,13 @@ package com.barutdev.kora.ui.screens.calendar
 import androidx.lifecycle.SavedStateHandle
 import com.barutdev.kora.domain.model.Homework
 import com.barutdev.kora.domain.model.HomeworkStatus
+import com.barutdev.kora.domain.model.Lesson
+import com.barutdev.kora.domain.model.LessonStatus
 import com.barutdev.kora.domain.repository.HomeworkRepository
 import com.barutdev.kora.domain.repository.LessonRepository
 import com.barutdev.kora.domain.repository.StudentRepository
 import com.barutdev.kora.domain.repository.UserPreferencesRepository
+import com.barutdev.kora.domain.repository.PaymentRepository
 import com.barutdev.kora.domain.usecase.notification.CancelNotificationAlarmsUseCase
 import com.barutdev.kora.domain.usecase.notification.ScheduleNotificationAlarmsUseCase
 import com.barutdev.kora.navigation.STUDENT_ID_ARG
@@ -39,7 +42,7 @@ class CalendarViewModelTest {
     private lateinit var userPreferencesRepository: UserPreferencesRepository
     private lateinit var scheduleNotificationAlarmsUseCase: ScheduleNotificationAlarmsUseCase
     private lateinit var cancelNotificationAlarmsUseCase: CancelNotificationAlarmsUseCase
-
+    private lateinit var paymentRepository: PaymentRepository
     private lateinit var viewModel: CalendarViewModel
 
     @Before
@@ -53,6 +56,7 @@ class CalendarViewModelTest {
         userPreferencesRepository = mockk(relaxed = true)
         scheduleNotificationAlarmsUseCase = mockk(relaxed = true)
         cancelNotificationAlarmsUseCase = mockk(relaxed = true)
+        paymentRepository = mockk(relaxed = true)
 
         // Make state flows emit correctly
         every { studentRepository.getStudentById(1) } returns flowOf(null)
@@ -65,6 +69,7 @@ class CalendarViewModelTest {
             lessonRepository = lessonRepository,
             homeworkRepository = homeworkRepository,
             userPreferencesRepository = userPreferencesRepository,
+            paymentRepository = paymentRepository,
             scheduleNotificationAlarmsUseCase = scheduleNotificationAlarmsUseCase,
             cancelNotificationAlarmsUseCase = cancelNotificationAlarmsUseCase
         )
@@ -133,5 +138,84 @@ class CalendarViewModelTest {
         advanceUntilIdle()
 
         coVerify(exactly = 0) { homeworkRepository.updateHomework(any()) }
+    }
+
+    @Test
+    fun `onMarkLessonAsPaidClicked sets pendingLessonForPayment if SCHEDULED`() = runTest {
+        val lesson = Lesson(id = 1, studentId = 1, date = 0L, status = LessonStatus.SCHEDULED, durationInHours = null, notes = null)
+        every { userPreferencesRepository.userPreferences } returns flowOf(
+            com.barutdev.kora.domain.model.UserPreferences(
+                isDarkMode = false,
+                languageCode = "en",
+                currencyCode = "USD",
+                defaultHourlyRate = 50.0,
+                lessonRemindersEnabled = false,
+                logReminderEnabled = false,
+                lessonReminderHour = 18,
+                lessonReminderMinute = 0,
+                logReminderHour = 20,
+                logReminderMinute = 0
+            )
+        )
+        every { studentRepository.getStudentById(1) } returns flowOf(
+            com.barutdev.kora.domain.model.Student(
+                id = 1,
+                fullName = "Test User",
+                hourlyRate = 50.0
+            )
+        )
+
+        viewModel.onMarkLessonAsPaidClicked(lesson)
+        advanceUntilIdle()
+
+        assertEquals(lesson, viewModel.pendingLessonForPayment.value)
+        assertEquals(false, viewModel.requiresFeePrompt.value)
+    }
+
+    @Test
+    fun `onMarkLessonAsPaidClicked directly pays if COMPLETED and has duration and rate`() = runTest {
+        val lesson = Lesson(id = 1, studentId = 1, date = 0L, status = LessonStatus.COMPLETED, durationInHours = 1.0, notes = null)
+        every { userPreferencesRepository.userPreferences } returns flowOf(
+            com.barutdev.kora.domain.model.UserPreferences(
+                isDarkMode = false,
+                languageCode = "en",
+                currencyCode = "USD",
+                defaultHourlyRate = 50.0,
+                lessonRemindersEnabled = false,
+                logReminderEnabled = false,
+                lessonReminderHour = 18,
+                lessonReminderMinute = 0,
+                logReminderHour = 20,
+                logReminderMinute = 0
+            )
+        )
+        every { studentRepository.getStudentById(1) } returns flowOf(
+            com.barutdev.kora.domain.model.Student(
+                id = 1,
+                fullName = "Test User",
+                hourlyRate = 50.0
+            )
+        )
+
+        viewModel.onMarkLessonAsPaidClicked(lesson)
+        advanceUntilIdle()
+
+        coVerify { paymentRepository.markLessonAsPaid(lesson.id, lesson.durationInHours, null) }
+        assertEquals(null, viewModel.pendingLessonForPayment.value)
+    }
+
+    @Test
+    fun `onConfirmRevertPayment calls paymentRepository and clears state`() = runTest {
+        val lesson = Lesson(id = 1, studentId = 1, date = 0L, status = LessonStatus.PAID, durationInHours = 1.0, notes = null)
+        coEvery { paymentRepository.revertLessonPayment(1) } returns Unit
+
+        viewModel.onRevertLessonPaymentClicked(lesson)
+        assertEquals(lesson, viewModel.lessonToRevert.value)
+
+        viewModel.onConfirmRevertPayment()
+        advanceUntilIdle()
+
+        coVerify { paymentRepository.revertLessonPayment(1) }
+        assertEquals(null, viewModel.lessonToRevert.value)
     }
 }

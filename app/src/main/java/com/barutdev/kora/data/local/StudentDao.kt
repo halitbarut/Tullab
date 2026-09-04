@@ -22,7 +22,7 @@ interface StudentDao {
     suspend fun delete(student: StudentEntity)
 
     @Query("UPDATE students SET lastPaymentDate = :lastPaymentDate WHERE id = :studentId")
-    suspend fun updateLastPaymentDate(studentId: Int, lastPaymentDate: Long)
+    suspend fun updateLastPaymentDate(studentId: Int, lastPaymentDate: Long?)
 
     @Query("SELECT * FROM students WHERE id = :id")
     fun getStudentById(id: Int): Flow<StudentEntity?>
