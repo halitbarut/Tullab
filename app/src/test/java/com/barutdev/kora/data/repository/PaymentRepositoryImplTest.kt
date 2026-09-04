@@ -75,7 +75,7 @@ class PaymentRepositoryImplTest {
     @Test
     fun `markLessonAsPaid updates lesson and creates payment record`() = runTest {
         val student = StudentEntity(id = 1, fullName = "Test", hourlyRate = 50.0, customHourlyRate = null)
-        val lesson = LessonEntity(id = 10, studentId = 1, date = 0L, durationInHours = 2.0, status = LessonStatus.COMPLETED, notes = null)
+        val lesson = LessonEntity(id = 10, studentId = 1, date = 0L, durationInHours = 2.0, status = LessonStatus.COMPLETED, notes = null, pricingMode = com.barutdev.kora.domain.model.PricingMode.PER_HOUR, rateOrFee = 50.0)
 
         coEvery { lessonDao.getLessonById(10) } returns lesson
         coEvery { studentDao.getStudentsSnapshot() } returns listOf(student)
@@ -100,7 +100,7 @@ class PaymentRepositoryImplTest {
     @Test
     fun `revertLessonPayment restores completed status and removes payment record`() = runTest {
         val paidTimestamp = 123456789L
-        val lesson = LessonEntity(id = 10, studentId = 1, date = 0L, durationInHours = 2.0, status = LessonStatus.PAID, paymentTimestamp = paidTimestamp, notes = null)
+        val lesson = LessonEntity(id = 10, studentId = 1, date = 0L, durationInHours = 2.0, status = LessonStatus.PAID, paymentTimestamp = paidTimestamp, notes = null, pricingMode = com.barutdev.kora.domain.model.PricingMode.PER_HOUR, rateOrFee = 0.0)
 
         coEvery { lessonDao.getLessonById(10) } returns lesson
         coEvery { paymentRecordDao.getLatestPaymentRecord(1) } returns null

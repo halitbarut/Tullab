@@ -109,7 +109,9 @@ class DataBackupManager @Inject constructor(
         entity.status.name,
         entity.durationInHours?.toString() ?: "",
         entity.notes ?: "",
-        entity.paymentTimestamp?.toString() ?: ""
+        entity.paymentTimestamp?.toString() ?: "",
+        entity.pricingMode.name,
+        entity.rateOrFee.toString()
     )
 
     private fun formatHomework(entity: HomeworkEntity): String = buildCsvRecord(
@@ -176,6 +178,17 @@ class DataBackupManager @Inject constructor(
         val duration = fields[4].takeIf { it.isNotBlank() }?.toDoubleOrNull()
         val notes = fields[5].takeIf { it.isNotBlank() }
         val paymentTimestamp = fields.getOrNull(6)?.takeIf { it.isNotBlank() }?.toLongOrNull()
+        
+        val pricingModeStr = fields.getOrNull(7)
+        val pricingMode = if (!pricingModeStr.isNullOrBlank()) {
+            runCatching { com.barutdev.kora.domain.model.PricingMode.valueOf(pricingModeStr) }
+                .getOrDefault(com.barutdev.kora.domain.model.PricingMode.PER_HOUR)
+        } else {
+            com.barutdev.kora.domain.model.PricingMode.PER_HOUR
+        }
+        
+        val rateOrFee = fields.getOrNull(8)?.toDoubleOrNull() ?: 0.0
+
         return LessonEntity(
             id = id,
             studentId = studentId,
@@ -183,7 +196,9 @@ class DataBackupManager @Inject constructor(
             status = status,
             durationInHours = duration,
             notes = notes,
-            paymentTimestamp = paymentTimestamp
+            paymentTimestamp = paymentTimestamp,
+            pricingMode = pricingMode,
+            rateOrFee = rateOrFee
         )
     }
 

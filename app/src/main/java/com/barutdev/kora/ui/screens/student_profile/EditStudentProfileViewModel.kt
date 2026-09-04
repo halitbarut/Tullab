@@ -31,10 +31,16 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+import com.barutdev.kora.domain.repository.LessonRepository
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+
 @HiltViewModel
 class EditStudentProfileViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val studentRepository: StudentRepository,
+    private val lessonRepository: LessonRepository,
     private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
 
@@ -165,7 +171,6 @@ class EditStudentProfileViewModel @Inject constructor(
         val customHourlyRate = parseHourlyRateInput(state.hourlyRateInput)
 
         viewModelScope.launch {
-            updateState { it.copy(isSaving = true) }
             val update = StudentProfileUpdate(
                 id = studentId,
                 fullName = fullName,
@@ -174,14 +179,73 @@ class EditStudentProfileViewModel @Inject constructor(
                 notes = notes,
                 customHourlyRate = customHourlyRate
             )
-            try {
-                studentRepository.updateStudentProfile(update)
-                _events.emit(ProfileSaved)
-            } catch (exception: Exception) {
-                _events.emit(SaveFailed)
-            } finally {
-                updateState { it.copy(isSaving = false) }
+
+            val initialRate = initialSnapshot?.hourlyRateInput
+            val hasRateChanged = state.hourlyRateInput != initialRate && (customHourlyRate != null || initialRate?.isNotEmpty() == true)
+            
+            if (hasRateChanged) {
+                val scheduledLessons = lessonRepository.getScheduledLessonsForStudent(studentId)
+                if (scheduledLessons.isNotEmpty()) {
+                    val today = LocalDate.now(ZoneId.systemDefault())
+                    val zoneId = ZoneId.systemDefault()
+                    val hasPast = scheduledLessons.any { lesson ->
+                        Instant.ofEpochMilli(lesson.date).atZone(zoneId).toLocalDate().isBefore(today)
+                    }
+                    val hasFuture = scheduledLessons.any { lesson ->
+                        !Instant.ofEpochMilli(lesson.date).atZone(zoneId).toLocalDate().isBefore(today)
+                    }
+                    val scope = when {
+                        hasPast && hasFuture -> ScheduledLessonsScope.MIXED
+                        hasPast -> ScheduledLessonsScope.PAST_ONLY
+                        else -> ScheduledLessonsScope.FUTURE_ONLY
+                    }
+                    updateState { it.copy(
+                        isScheduledLessonsPromptVisible = true,
+                        scheduledLessonsCount = scheduledLessons.size,
+                        scheduledLessonsScope = scope,
+                        pendingProfileUpdate = update
+                    ) }
+                    return@launch
+                }
             }
+
+            executeSaveProfile(update, updateScheduledLessons = false)
+        }
+    }
+
+    fun onConfirmScheduledLessonsRateUpdate(updateScheduled: Boolean) {
+        val state = _uiState.value
+        val pendingUpdate = state.pendingProfileUpdate ?: return
+        
+        updateState { it.copy(
+            isScheduledLessonsPromptVisible = false,
+            pendingProfileUpdate = null
+        ) }
+
+        viewModelScope.launch {
+            executeSaveProfile(pendingUpdate, updateScheduled)
+        }
+    }
+
+    fun onDismissScheduledLessonsPrompt() {
+        updateState { it.copy(
+            isScheduledLessonsPromptVisible = false,
+            pendingProfileUpdate = null
+        ) }
+    }
+
+    private suspend fun executeSaveProfile(update: StudentProfileUpdate, updateScheduledLessons: Boolean) {
+        updateState { it.copy(isSaving = true) }
+        try {
+            studentRepository.updateStudentProfile(update)
+            if (updateScheduledLessons && update.customHourlyRate != null) {
+                lessonRepository.updateScheduledLessonsRate(studentId, update.customHourlyRate)
+            }
+            _events.emit(ProfileSaved)
+        } catch (exception: Exception) {
+            _events.emit(SaveFailed)
+        } finally {
+            updateState { it.copy(isSaving = false) }
         }
     }
 

@@ -9,6 +9,7 @@ import com.barutdev.kora.data.local.PaymentRecordDao
 import com.barutdev.kora.data.local.StudentDao
 import com.barutdev.kora.data.local.migrations.MIGRATION_7_8
 import com.barutdev.kora.data.local.migrations.MIGRATION_8_9
+import com.barutdev.kora.data.local.migrations.MIGRATION_9_10
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -30,7 +31,7 @@ object DatabaseModule {
         context,
         KoraDatabase::class.java,
         DATABASE_NAME
-    ).addMigrations(MIGRATION_7_8, MIGRATION_8_9)
+    ).addMigrations(MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
         .fallbackToDestructiveMigration()
         .build()
 

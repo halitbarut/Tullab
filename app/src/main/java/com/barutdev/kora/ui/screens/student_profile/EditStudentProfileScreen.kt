@@ -46,6 +46,8 @@ import com.barutdev.kora.util.LocalMessageNotifier
 import com.barutdev.kora.util.formatCurrency
 import com.barutdev.kora.util.koraStringResource
 
+import com.barutdev.kora.ui.screens.student_profile.components.ScheduledLessonsRatePromptDialog
+
 @Composable
 fun EditStudentProfileScreen(
     onBack: () -> Unit,
@@ -74,6 +76,15 @@ fun EditStudentProfileScreen(
                 }
             }
         }
+    }
+
+    if (uiState.isScheduledLessonsPromptVisible) {
+        ScheduledLessonsRatePromptDialog(
+            scheduledLessonsCount = uiState.scheduledLessonsCount,
+            scope = uiState.scheduledLessonsScope,
+            onConfirm = viewModel::onConfirmScheduledLessonsRateUpdate,
+            onDismiss = viewModel::onDismissScheduledLessonsPrompt
+        )
     }
 
     StudentProfileContent(

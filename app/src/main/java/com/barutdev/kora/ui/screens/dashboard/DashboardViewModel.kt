@@ -34,6 +34,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -46,6 +47,8 @@ data class DashboardUiState(
     val totalHours: Double = 0.0,
     val totalAmountDue: Double = 0.0,
     val completedLessonsAwaitingPayment: List<Lesson> = emptyList(),
+    /** Breakdown of the current payment cycle by (pricingMode, rateOrFee) — drives multi-rate display in PaymentTrackingCard. */
+    val rateBreakdownTiers: List<PaymentBreakdownTier> = emptyList(),
     val lastPaymentDate: Long? = null,
     val isAddLessonDialogVisible: Boolean = false,
     val upcomingLessons: List<Lesson> = emptyList(),
@@ -206,8 +209,9 @@ class DashboardViewModel @Inject constructor(
             studentName = student?.fullName.orEmpty(),
             hourlyRate = hourlyRate,
             totalHours = computation.totalHours,
-            totalAmountDue = computation.totalHours * hourlyRate,
+            totalAmountDue = computation.completedLessons.sumOf { it.calculatedValue },
             completedLessonsAwaitingPayment = computation.completedLessons,
+            rateBreakdownTiers = computePaymentBreakdownTiers(computation.completedLessons),
             lastPaymentDate = computation.lastPaymentDate,
             isAddLessonDialogVisible = computation.isAddLessonDialogVisible,
             upcomingLessons = computation.upcomingLessons,
@@ -240,29 +244,38 @@ class DashboardViewModel @Inject constructor(
         addLessonDialogVisibility.value = false
     }
 
-    suspend fun addLesson(duration: String, notes: String) {
+    suspend fun addLesson(duration: String, notes: String, pricingMode: com.barutdev.kora.domain.model.PricingMode, rateOrFeeInput: String) {
         val normalizedDuration = duration.trim().replace(',', '.')
         val durationValue = normalizedDuration.toDoubleOrNull()
-        if (durationValue == null || durationValue <= 0.0) {
+        if (pricingMode == com.barutdev.kora.domain.model.PricingMode.PER_HOUR && (durationValue == null || durationValue <= 0.0)) {
             return
         }
+
+        val studentSnapshot = studentRepository.getStudentById(studentId).firstOrNull() ?: return
+        val prefs = userPreferencesRepository.userPreferences.first()
+        val activeRate = studentSnapshot.customHourlyRate ?: if (studentSnapshot.hourlyRate > 0.0) studentSnapshot.hourlyRate else prefs.defaultHourlyRate
+
+        val parsedRateOrFee = rateOrFeeInput.trim().replace(',', '.').toDoubleOrNull()
+        val finalRateOrFee = parsedRateOrFee ?: activeRate
 
         val lesson = Lesson(
             id = 0,
             studentId = studentId,
             date = System.currentTimeMillis(),
             status = LessonStatus.COMPLETED,
-            durationInHours = durationValue,
-            notes = notes.trim().takeIf { it.isNotBlank() }
+            durationInHours = if (pricingMode == com.barutdev.kora.domain.model.PricingMode.PER_HOUR) durationValue else null,
+            notes = notes.trim().takeIf { it.isNotBlank() },
+            pricingMode = pricingMode,
+            rateOrFee = finalRateOrFee
         )
 
         lessonRepository.insertLesson(lesson)
         addLessonDialogVisibility.value = false
     }
 
-    fun onSaveLesson(duration: String, notes: String) {
+    fun onSaveLesson(duration: String, notes: String, pricingMode: com.barutdev.kora.domain.model.PricingMode, rateOrFeeInput: String) {
         viewModelScope.launch {
-            addLesson(duration, notes)
+            addLesson(duration, notes, pricingMode, rateOrFeeInput)
         }
     }
 
@@ -275,10 +288,10 @@ class DashboardViewModel @Inject constructor(
         clearLogLessonSelection()
     }
 
-    fun onLogLessonComplete(duration: String, notes: String) {
+    fun onLogLessonComplete(duration: String, notes: String, pricingMode: com.barutdev.kora.domain.model.PricingMode, rateOrFeeInput: String) {
         val lessonId = selectedLessonForLogging.value?.id ?: return
         viewModelScope.launch {
-            completeLesson(lessonId, duration, notes)
+            completeLesson(lessonId, duration, notes, pricingMode, rateOrFeeInput)
         }
     }
 
@@ -295,17 +308,20 @@ class DashboardViewModel @Inject constructor(
         paymentRepository.markStudentAsPaid(studentId)
     }
 
-    private suspend fun completeLesson(lessonId: Int, duration: String, notes: String) {
+    private suspend fun completeLesson(lessonId: Int, duration: String, notes: String, pricingMode: com.barutdev.kora.domain.model.PricingMode, rateOrFeeInput: String) {
         val normalizedDuration = duration.trim().replace(',', '.')
         val durationValue = normalizedDuration.toDoubleOrNull()
-        if (durationValue == null || durationValue <= 0.0) {
+        if (pricingMode == com.barutdev.kora.domain.model.PricingMode.PER_HOUR && (durationValue == null || durationValue <= 0.0)) {
             return
         }
+        val parsedRateOrFee = rateOrFeeInput.trim().replace(',', '.').toDoubleOrNull()
         val lesson = lessons.value.firstOrNull { it.id == lessonId } ?: return
         val updatedLesson = lesson.copy(
             status = LessonStatus.COMPLETED,
-            durationInHours = durationValue,
-            notes = notes.trim().takeIf { it.isNotBlank() }
+            durationInHours = if (pricingMode == com.barutdev.kora.domain.model.PricingMode.PER_HOUR) durationValue else null,
+            notes = notes.trim().takeIf { it.isNotBlank() },
+            pricingMode = pricingMode,
+            rateOrFee = parsedRateOrFee ?: lesson.rateOrFee
         )
         lessonRepository.updateLesson(updatedLesson)
         cancelNotificationAlarmsUseCase(lessonId)

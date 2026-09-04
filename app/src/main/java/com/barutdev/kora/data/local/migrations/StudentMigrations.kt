@@ -18,3 +18,20 @@ val MIGRATION_8_9 = object : Migration(8, 9) {
         database.execSQL("DROP TABLE IF EXISTS `ai_insights`")
     }
 }
+
+val MIGRATION_9_10 = object : Migration(9, 10) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL("ALTER TABLE lessons ADD COLUMN pricingMode TEXT NOT NULL DEFAULT 'PER_HOUR'")
+        database.execSQL("ALTER TABLE lessons ADD COLUMN rateOrFee REAL NOT NULL DEFAULT 0.0")
+        
+        // Backfill legacy lessons using the student's active rate
+        database.execSQL("""
+            UPDATE lessons 
+            SET rateOrFee = (
+                SELECT COALESCE(customHourlyRate, hourlyRate) 
+                FROM students 
+                WHERE students.id = lessons.studentId
+            )
+        """)
+    }
+}

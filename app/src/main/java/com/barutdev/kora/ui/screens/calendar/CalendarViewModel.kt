@@ -116,13 +116,19 @@ class CalendarViewModel @Inject constructor(
 
     suspend fun saveLesson(date: Long) {
         val targetStudentId = studentId ?: return
+        val student = studentRepository.getStudentById(targetStudentId).firstOrNull() ?: return
+        val prefs = userPreferencesRepository.userPreferences.first()
+        val activeRate = student.customHourlyRate ?: student.hourlyRate.takeIf { it > 0.0 } ?: prefs.defaultHourlyRate
+        
         val lesson = Lesson(
             id = 0,
             studentId = targetStudentId,
             date = date,
             status = LessonStatus.SCHEDULED,
             durationInHours = null,
-            notes = null
+            notes = null,
+            pricingMode = com.barutdev.kora.domain.model.PricingMode.PER_HOUR,
+            rateOrFee = activeRate
         )
         val lessonId = lessonRepository.insertLesson(lesson)
         scheduleNotificationAlarmsUseCase(lessonId)
@@ -144,10 +150,29 @@ class CalendarViewModel @Inject constructor(
         clearLogLessonSelection()
     }
 
-    fun onLogLessonComplete(duration: String, notes: String) {
+    fun onLogLessonComplete(duration: String, notes: String, pricingMode: com.barutdev.kora.domain.model.PricingMode, rateOrFeeInput: String) {
         val lessonId = selectedLessonForLogging.value?.id ?: return
         viewModelScope.launch {
-            completeLesson(lessonId, duration, notes)
+            completeLesson(lessonId, duration, notes, pricingMode, rateOrFeeInput)
+        }
+    }
+
+    fun onSaveScheduledLesson(lesson: Lesson, duration: String, notes: String, pricingMode: com.barutdev.kora.domain.model.PricingMode, rateOrFee: String) {
+        viewModelScope.launch {
+            val normalizedDuration = duration.trim().replace(',', '.')
+            val durationValue = normalizedDuration.toDoubleOrNull()
+            
+            val normalizedRate = rateOrFee.trim().replace(',', '.')
+            val rateValue = normalizedRate.toDoubleOrNull() ?: lesson.rateOrFee
+
+            val updatedLesson = lesson.copy(
+                durationInHours = durationValue,
+                notes = notes.trim().ifEmpty { null },
+                pricingMode = pricingMode,
+                rateOrFee = rateValue
+            )
+            lessonRepository.updateLesson(updatedLesson)
+            clearLogLessonSelection()
         }
     }
 
@@ -158,17 +183,20 @@ class CalendarViewModel @Inject constructor(
         }
     }
 
-    private suspend fun completeLesson(lessonId: Int, duration: String, notes: String) {
+    private suspend fun completeLesson(lessonId: Int, duration: String, notes: String, pricingMode: com.barutdev.kora.domain.model.PricingMode, rateOrFeeInput: String) {
         val normalizedDuration = duration.trim().replace(',', '.')
         val durationValue = normalizedDuration.toDoubleOrNull()
-        if (durationValue == null || durationValue <= 0.0) {
+        if (pricingMode == com.barutdev.kora.domain.model.PricingMode.PER_HOUR && (durationValue == null || durationValue <= 0.0)) {
             return
         }
+        val parsedRateOrFee = rateOrFeeInput.trim().replace(',', '.').toDoubleOrNull()
         val lesson = lessons.value.firstOrNull { it.id == lessonId } ?: return
         val updatedLesson = lesson.copy(
             status = LessonStatus.COMPLETED,
-            durationInHours = durationValue,
-            notes = notes.trim().takeIf { it.isNotBlank() }
+            durationInHours = if (pricingMode == com.barutdev.kora.domain.model.PricingMode.PER_HOUR) durationValue else null,
+            notes = notes.trim().takeIf { it.isNotBlank() },
+            pricingMode = pricingMode,
+            rateOrFee = parsedRateOrFee ?: lesson.rateOrFee
         )
         lessonRepository.updateLesson(updatedLesson)
         cancelNotificationAlarmsUseCase(lessonId)
@@ -192,41 +220,44 @@ class CalendarViewModel @Inject constructor(
         selectedLessonForLogging.value = null
     }
 
-    private val pendingLessonForPaymentState = MutableStateFlow<Lesson?>(null)
-    val pendingLessonForPayment: StateFlow<Lesson?> = pendingLessonForPaymentState.asStateFlow()
+    private val _pendingLessonForPayment = MutableStateFlow<Lesson?>(null)
+    val pendingLessonForPayment = _pendingLessonForPayment.asStateFlow()
+    
+    val currencyCode = userPreferencesRepository.userPreferences
+        .map { it.currencyCode }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = "USD"
+        )
 
     private val requiresFeePromptState = MutableStateFlow(false)
     val requiresFeePrompt: StateFlow<Boolean> = requiresFeePromptState.asStateFlow()
 
     fun onMarkLessonAsPaidClicked(lesson: Lesson) {
         viewModelScope.launch {
-            val targetStudentId = studentId ?: return@launch
-            val student = studentRepository.getStudentById(targetStudentId).firstOrNull()
-            val prefs = userPreferencesRepository.userPreferences.first()
-            val rate = student?.customHourlyRate ?: student?.hourlyRate ?: prefs.defaultHourlyRate
-            
-            if (lesson.status == LessonStatus.COMPLETED && lesson.durationInHours != null && rate > 0.0) {
+            if (lesson.status == LessonStatus.COMPLETED && lesson.durationInHours != null && lesson.rateOrFee > 0.0) {
                 paymentRepository.markLessonAsPaid(lesson.id, lesson.durationInHours, null)
             } else {
-                requiresFeePromptState.value = rate <= 0.0
-                pendingLessonForPaymentState.value = lesson
+                requiresFeePromptState.value = lesson.rateOrFee <= 0.0
+                _pendingLessonForPayment.value = lesson
             }
         }
     }
 
     fun dismissMarkLessonAsPaidDialog() {
-        pendingLessonForPaymentState.value = null
+        _pendingLessonForPayment.value = null
         requiresFeePromptState.value = false
     }
 
     fun onConfirmMarkLessonAsPaid(duration: Double?, customFee: Double?) {
-        val lessonId = pendingLessonForPaymentState.value?.id ?: return
+        val lessonId = _pendingLessonForPayment.value?.id ?: return
         viewModelScope.launch {
-            if (pendingLessonForPaymentState.value?.status == LessonStatus.SCHEDULED) {
+            if (_pendingLessonForPayment.value?.status == LessonStatus.SCHEDULED) {
                 cancelNotificationAlarmsUseCase(lessonId)
             }
             paymentRepository.markLessonAsPaid(lessonId, duration, customFee)
-            pendingLessonForPaymentState.value = null
+            _pendingLessonForPayment.value = null
         }
     }
 

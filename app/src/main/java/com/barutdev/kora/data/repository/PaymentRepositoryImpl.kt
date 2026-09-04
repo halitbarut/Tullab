@@ -29,16 +29,11 @@ class PaymentRepositoryImpl @Inject constructor(
         paymentRecordDao.observeByStudent(studentId).map { it.toDomain() }
 
     override suspend fun markStudentAsPaid(studentId: Int) {
-        val defaultHourlyRate = userPreferencesRepository.userPreferences.first().defaultHourlyRate
         val now = System.currentTimeMillis()
         database.withTransaction {
-            val students = studentDao.getStudentsSnapshot()
-            val student = students.firstOrNull { it.id == studentId } ?: return@withTransaction
             val lessons = lessonDao.getLessonsSnapshot()
             val completed = lessons.filter { it.studentId == studentId && it.status == LessonStatus.COMPLETED }
-            val totalHours = completed.mapNotNull { it.durationInHours }.sum()
-            val effectiveRate = student.customHourlyRate ?: defaultHourlyRate
-            val amount = totalHours * effectiveRate
+            val amount = completed.sumOf { it.toDomain().calculatedValue }
             val amountMinor = (amount * 100.0).roundToLong()
             if (amountMinor > 0L) {
                 val record = PaymentRecordEntity(
@@ -58,25 +53,29 @@ class PaymentRepositoryImpl @Inject constructor(
             )
         }
     }
+
     override suspend fun markLessonAsPaid(lessonId: Int, durationInHours: Double?, customFee: Double?) {
-        val defaultHourlyRate = userPreferencesRepository.userPreferences.first().defaultHourlyRate
         val now = System.currentTimeMillis()
         
         database.withTransaction {
             val lesson = lessonDao.getLessonById(lessonId) ?: return@withTransaction
             val studentId = lesson.studentId
-            val students = studentDao.getStudentsSnapshot()
-            val student = students.firstOrNull { it.id == studentId } ?: return@withTransaction
 
             val effectiveDuration = durationInHours ?: lesson.durationInHours ?: 0.0
-            val effectiveRate = customFee ?: student.customHourlyRate ?: student.hourlyRate.takeIf { it > 0.0 } ?: defaultHourlyRate
-            val amount = effectiveDuration * effectiveRate
+            val effectiveRate = customFee ?: lesson.rateOrFee
+            
+            val amount = if (lesson.pricingMode == com.barutdev.kora.domain.model.PricingMode.PER_HOUR) {
+                effectiveDuration * effectiveRate
+            } else {
+                effectiveRate
+            }
             val amountMinor = (amount * 100.0).roundToLong()
 
             val updatedLesson = lesson.copy(
                 status = LessonStatus.PAID,
                 paymentTimestamp = now,
-                durationInHours = effectiveDuration
+                durationInHours = effectiveDuration,
+                rateOrFee = effectiveRate
             )
             lessonDao.update(updatedLesson)
 

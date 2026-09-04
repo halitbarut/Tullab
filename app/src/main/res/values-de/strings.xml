@@ -34,6 +34,17 @@
     <string name="add_student_profile_title">Neue:n Schüler:in hinzufügen</string>
     <string name="add_student_profile_save_success">Schüler:in hinzugefügt.</string>
 
+    <!-- Pricing Modes -->
+    <string name="pricing_mode_per_hour">Pro Stunde</string>
+    <string name="pricing_mode_flat_fee">Pauschalgebühr</string>
+    <string name="fee_label_hourly">Stundensatz</string>
+    <string name="fee_label_flat">Pauschalgebühr</string>
+
+    <string name="rate_change_prompt_title">Geplante Stunden aktualisieren?</string>
+    <string name="rate_change_prompt_message">Du hast den Standardstundensatz geändert. Möchtest du diesen neuen Satz auch auf zukünftig geplante Stunden anwenden?</string>
+    <string name="rate_change_prompt_apply_all">Auf geplante anwenden</string>
+    <string name="rate_change_prompt_keep_current">Nur für neue Stunden</string>
+
     <!-- Navigation & Screen Titles -->
     <string name="dashboard_title">Dashboard</string>
     <string name="calendar_title">Kalender</string>
@@ -263,4 +274,42 @@
     <string name="reports_chart_accessibility_bar">%1$s Einnahmen: %2$s</string>
     <string name="reports_message_empty_period">Für diesen Zeitraum wurden keine Aktivitäten aufgezeichnet.</string>
     <string name="reports_action_retry">Erneut versuchen</string>
+
+    <string name="dashboard_completed_lessons_total">Gesamt: %1$s</string>
+    <string name="notification_lesson_reminder_title_new">Kommende Lektion: %1$s</string>
+    <string name="notification_lesson_reminder_content">Ihre Lektion ist heute um %1$s. Vergessen Sie nicht, sich vorzubereiten!</string>
+    <string name="notification_note_reminder_title">Lektionsnotizen speichern: %1$s</string>
+    <string name="notification_note_reminder_content">Fügen Sie Ihre Notizen und Beobachtungen für die Lektion hinzu, die Sie heute um %1$s hatten.</string>
+    <string name="channel_lesson_reminders_name">Lektionserinnerungen</string>
+    <string name="channel_lesson_reminders_desc">Benachrichtigungen zur Vorbereitung auf kommende Lektionen</string>
+    <string name="channel_lesson_notes_name">Lektionsnotizen</string>
+    <string name="channel_lesson_notes_desc">Erinnerungen zum Speichern von Notizen für abgeschlossene Lektionen</string>
+    <string name="calendar_lesson_details_pricing_mode">Preismodell: %1$s</string>
+    <string name="calendar_lesson_details_total">Gesamt: %1$s</string>
+    <string name="calendar_homework_section_title">Hausaufgaben für %1$s</string>
+    <string name="calendar_no_homework_message">Keine Hausaufgaben für diesen Tag zugewiesen.</string>
+    <string name="log_lesson_fee_label">Gebühr</string>
+    <string name="rate_change_dialog_title">Geplante Lektionen aktualisieren?</string>
+    <string name="rate_change_dialog_message">Dieser Schüler hat zukünftige geplante Lektionen. Soll der neue Tarif auf sie angewendet werden?</string>
+    <string name="rate_change_dialog_update_all">Zukünftige Lektionen aktualisieren</string>
+    <string name="rate_change_dialog_future_only">Ursprünglichen Tarif beibehalten</string>
+
+    <!-- Rate change dialog: context-aware scope strings (005-lesson-rate-fixes) -->
+    <string name="rate_change_dialog_title_past">Vergangene unvollendete Lektionen aktualisieren?</string>
+    <string name="rate_change_dialog_message_past">Dieser Schüler hat unvollendete Lektionen aus früheren Terminen. Soll der neue Tarif auf sie angewendet werden?</string>
+    <string name="rate_change_dialog_update_past">Vergangene Lektionen aktualisieren</string>
+    <string name="rate_change_dialog_title_future">Geplante Lektionen aktualisieren?</string>
+    <string name="rate_change_dialog_message_future">Dieser Schüler hat bevorstehende geplante Lektionen. Soll der neue Tarif auf sie angewendet werden?</string>
+    <string name="rate_change_dialog_update_future">Zukünftige Lektionen aktualisieren</string>
+    <string name="rate_change_dialog_title_mixed">Bestehende Lektionen aktualisieren?</string>
+    <string name="rate_change_dialog_message_mixed">Dieser Schüler hat sowohl vergangene als auch bevorstehende unvollendete Lektionen. Soll der neue Tarif auf sie angewendet werden?</string>
+    <string name="rate_change_dialog_update_mixed">Alle Lektionen aktualisieren</string>
+    <string name="rate_change_dialog_keep_original">Ursprünglichen Tarif beibehalten</string>
+
+    <!-- Payment breakdown tier formatting (005-lesson-rate-fixes) -->
+    <string name="dashboard_payment_flat_fee_tier">%1$d Pauschalgebühren × %2$s</string>
+
+    <!-- Calendar: Save Changes action for future scheduled lessons (005-lesson-rate-fixes) -->
+    <string name="calendar_lesson_action_save_changes">Änderungen speichern</string>
+
 </resources>

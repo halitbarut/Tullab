@@ -179,6 +179,9 @@ private class FakeLessonRepository : LessonRepository {
     override suspend fun updateLesson(lesson: Lesson) = error("Not needed")
 
     override suspend fun deleteLesson(lessonId: Int) = error("Not needed")
+    override suspend fun getScheduledLessonCount(studentId: Int): Int = 0
+    override suspend fun getScheduledLessonsForStudent(studentId: Int): List<Lesson> = emptyList()
+    override suspend fun updateScheduledLessonsRate(studentId: Int, newRate: Double) {}
 
     override suspend fun markCompletedLessonsAsPaid(studentId: Int) = error("Not needed")
 

@@ -76,8 +76,21 @@ class StudentListViewModelTest {
         advanceUntilIdle()
 
         viewModel.viewModelScope.cancel()
+    @Test
+    fun studentDebtIsComputedUsingLessonCalculatedValue() = runTest {
+        val viewModel = createViewModel()
+        
+        // Given that student 1 has a completed lesson with rate 100.0 and duration 1.5
+        // Debt should be 1.5 * 100.0 = 150.0
+        val state = viewModel.uiState.first { it.hasAnyStudents }
+        
+        val studentWithDebt = state.students.first { it.student.id == 1 }
+        assertEquals(150.0, studentWithDebt.currentDebt, 0.0)
+        
+        viewModel.viewModelScope.cancel()
         advanceUntilIdle()
     }
+}
 
     private fun createViewModel(): StudentListViewModel {
         val students = listOf(
@@ -93,7 +106,9 @@ class StudentListViewModelTest {
                 date = 0L,
                 status = LessonStatus.COMPLETED,
                 durationInHours = 1.5,
-                notes = null
+                notes = null,
+                pricingMode = com.barutdev.kora.domain.model.PricingMode.PER_HOUR,
+                rateOrFee = 100.0
             )
         )
         val lessonRepository = FakeLessonRepository(lessons)
@@ -171,6 +186,11 @@ private class FakeLessonRepository(
     override suspend fun deleteLesson(lessonId: Int) = error("Not needed in tests")
 
     override suspend fun markCompletedLessonsAsPaid(studentId: Int) = error("Not needed in tests")
+
+    override suspend fun getScheduledLessonCount(studentId: Int): Int = error("Not needed in tests")
+    override suspend fun getScheduledLessonsForStudent(studentId: Int): List<Lesson> = emptyList()
+    
+    override suspend fun updateScheduledLessonsRate(studentId: Int, newRate: Double) = error("Not needed in tests")
 
     override fun getLessonsForDate(date: java.time.LocalDate): Flow<List<Lesson>> = error("Not needed in tests")
 
