@@ -299,4 +299,22 @@
     <string name="rate_change_dialog_update_all">Update Future Lessons</string>
     <string name="rate_change_dialog_future_only">Keep Original Rate</string>
 
+    <!-- Rate change dialog: context-aware scope strings (005-lesson-rate-fixes) -->
+    <string name="rate_change_dialog_title_past">Update Past Uncompleted Lessons?</string>
+    <string name="rate_change_dialog_message_past">This student has uncompleted lessons from earlier dates. Should the new rate apply to them?</string>
+    <string name="rate_change_dialog_update_past">Update Past Lessons</string>
+    <string name="rate_change_dialog_title_future">Update Scheduled Lessons?</string>
+    <string name="rate_change_dialog_message_future">This student has upcoming scheduled lessons. Should the new rate apply to them?</string>
+    <string name="rate_change_dialog_update_future">Update Future Lessons</string>
+    <string name="rate_change_dialog_title_mixed">Update Existing Lessons?</string>
+    <string name="rate_change_dialog_message_mixed">This student has both past and upcoming uncompleted lessons. Should the new rate apply to them?</string>
+    <string name="rate_change_dialog_update_mixed">Update All Lessons</string>
+    <string name="rate_change_dialog_keep_original">Keep Original Rate</string>
+
+    <!-- Payment breakdown tier formatting (005-lesson-rate-fixes) -->
+    <string name="dashboard_payment_flat_fee_tier">%1$d flat fees × %2$s</string>
+
+    <!-- Calendar: Save Changes action for future scheduled lessons (005-lesson-rate-fixes) -->
+    <string name="calendar_lesson_action_save_changes">Save Changes</string>
+
 </resources>

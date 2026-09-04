@@ -81,6 +81,7 @@ fun EditStudentProfileScreen(
     if (uiState.isScheduledLessonsPromptVisible) {
         ScheduledLessonsRatePromptDialog(
             scheduledLessonsCount = uiState.scheduledLessonsCount,
+            scope = uiState.scheduledLessonsScope,
             onConfirm = viewModel::onConfirmScheduledLessonsRateUpdate,
             onDismiss = viewModel::onDismissScheduledLessonsPrompt
         )

@@ -293,4 +293,23 @@
     <string name="rate_change_dialog_message">Bu öğrencinin gelecekte planlanmış dersleri var. Yeni ücret onlara uygulansın mı?</string>
     <string name="rate_change_dialog_update_all">Gelecek Dersleri Güncelle</string>
     <string name="rate_change_dialog_future_only">Orijinal Ücreti Koru</string>
+
+    <!-- Rate change dialog: context-aware scope strings (005-lesson-rate-fixes) -->
+    <string name="rate_change_dialog_title_past">Geçmiş Tamamlanmamış Dersleri Güncelle?</string>
+    <string name="rate_change_dialog_message_past">Bu öğrencinin önceki tarihlerde tamamlanmamış dersleri var. Yeni ücret onlara uygulansın mı?</string>
+    <string name="rate_change_dialog_update_past">Geçmiş Dersleri Güncelle</string>
+    <string name="rate_change_dialog_title_future">Planlanan Dersleri Güncelle?</string>
+    <string name="rate_change_dialog_message_future">Bu öğrencinin ilerleyen günlerde planlanmış dersleri var. Yeni ücret onlara uygulansın mı?</string>
+    <string name="rate_change_dialog_update_future">Gelecek Dersleri Güncelle</string>
+    <string name="rate_change_dialog_title_mixed">Mevcut Dersleri Güncelle?</string>
+    <string name="rate_change_dialog_message_mixed">Bu öğrencinin hem geçmiş hem de ilerleyen tarihlerde tamamlanmamış dersleri var. Yeni ücret onlara uygulansın mı?</string>
+    <string name="rate_change_dialog_update_mixed">Tüm Dersleri Güncelle</string>
+    <string name="rate_change_dialog_keep_original">Orijinal Ücreti Koru</string>
+
+    <!-- Payment breakdown tier formatting (005-lesson-rate-fixes) -->
+    <string name="dashboard_payment_flat_fee_tier">%1$d sabit ücret × %2$s</string>
+
+    <!-- Calendar: Save Changes action for future scheduled lessons (005-lesson-rate-fixes) -->
+    <string name="calendar_lesson_action_save_changes">Değişiklikleri Kaydet</string>
+
 </resources>

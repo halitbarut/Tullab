@@ -62,6 +62,10 @@ class LessonRepositoryImpl @Inject constructor(
         return lessonDao.getScheduledLessonCount(studentId)
     }
 
+    override suspend fun getScheduledLessonsForStudent(studentId: Int): List<Lesson> {
+        return lessonDao.getScheduledLessonsForStudent(studentId).toDomain()
+    }
+
     override suspend fun updateScheduledLessonsRate(studentId: Int, newRate: Double) {
         lessonDao.updateScheduledLessonsRate(studentId, newRate)
     }

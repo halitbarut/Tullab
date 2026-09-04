@@ -293,4 +293,23 @@
     <string name="rate_change_dialog_message">Dieser Schüler hat zukünftige geplante Lektionen. Soll der neue Tarif auf sie angewendet werden?</string>
     <string name="rate_change_dialog_update_all">Zukünftige Lektionen aktualisieren</string>
     <string name="rate_change_dialog_future_only">Ursprünglichen Tarif beibehalten</string>
+
+    <!-- Rate change dialog: context-aware scope strings (005-lesson-rate-fixes) -->
+    <string name="rate_change_dialog_title_past">Vergangene unvollendete Lektionen aktualisieren?</string>
+    <string name="rate_change_dialog_message_past">Dieser Schüler hat unvollendete Lektionen aus früheren Terminen. Soll der neue Tarif auf sie angewendet werden?</string>
+    <string name="rate_change_dialog_update_past">Vergangene Lektionen aktualisieren</string>
+    <string name="rate_change_dialog_title_future">Geplante Lektionen aktualisieren?</string>
+    <string name="rate_change_dialog_message_future">Dieser Schüler hat bevorstehende geplante Lektionen. Soll der neue Tarif auf sie angewendet werden?</string>
+    <string name="rate_change_dialog_update_future">Zukünftige Lektionen aktualisieren</string>
+    <string name="rate_change_dialog_title_mixed">Bestehende Lektionen aktualisieren?</string>
+    <string name="rate_change_dialog_message_mixed">Dieser Schüler hat sowohl vergangene als auch bevorstehende unvollendete Lektionen. Soll der neue Tarif auf sie angewendet werden?</string>
+    <string name="rate_change_dialog_update_mixed">Alle Lektionen aktualisieren</string>
+    <string name="rate_change_dialog_keep_original">Ursprünglichen Tarif beibehalten</string>
+
+    <!-- Payment breakdown tier formatting (005-lesson-rate-fixes) -->
+    <string name="dashboard_payment_flat_fee_tier">%1$d Pauschalgebühren × %2$s</string>
+
+    <!-- Calendar: Save Changes action for future scheduled lessons (005-lesson-rate-fixes) -->
+    <string name="calendar_lesson_action_save_changes">Änderungen speichern</string>
+
 </resources>

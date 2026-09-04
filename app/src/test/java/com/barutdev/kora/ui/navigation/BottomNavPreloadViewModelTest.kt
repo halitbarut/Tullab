@@ -76,6 +76,7 @@ private class RecordingLessonRepository : LessonRepository {
     override suspend fun markCompletedLessonsAsPaid(studentId: Int) = error("unused")
     override suspend fun deleteLesson(lessonId: Int) = error("unused")
     override suspend fun getScheduledLessonCount(studentId: Int): Int = 0
+    override suspend fun getScheduledLessonsForStudent(studentId: Int): List<Lesson> = emptyList()
     override suspend fun updateScheduledLessonsRate(studentId: Int, newRate: Double) {}
     override fun getLessonsForDate(date: java.time.LocalDate): Flow<List<Lesson>> = error("unused")
     override fun getCompletedLessonsForDate(date: java.time.LocalDate): Flow<List<Lesson>> = error("unused")

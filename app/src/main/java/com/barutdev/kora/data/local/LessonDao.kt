@@ -102,4 +102,14 @@ interface LessonDao {
         scheduledStatus: LessonStatus = LessonStatus.SCHEDULED,
         pricingMode: com.barutdev.kora.domain.model.PricingMode = com.barutdev.kora.domain.model.PricingMode.PER_HOUR
     )
+
+    /**
+     * Returns a one-shot list of all SCHEDULED lessons for a given student.
+     * Used for date classification in the rate-change scope detection (005-lesson-rate-fixes).
+     */
+    @Query("SELECT * FROM lessons WHERE studentId = :studentId AND status = :scheduledStatus")
+    suspend fun getScheduledLessonsForStudent(
+        studentId: Int,
+        scheduledStatus: LessonStatus = LessonStatus.SCHEDULED
+    ): List<LessonEntity>
 }

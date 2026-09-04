@@ -20,6 +20,9 @@ interface LessonRepository {
 
     suspend fun getScheduledLessonCount(studentId: Int): Int
 
+    /** Returns all SCHEDULED lessons for a student (one-shot snapshot, not a Flow). */
+    suspend fun getScheduledLessonsForStudent(studentId: Int): List<Lesson>
+
     suspend fun updateScheduledLessonsRate(studentId: Int, newRate: Double)
 
     // New methods for context-aware notifications feature

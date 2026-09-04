@@ -188,6 +188,7 @@ private class FakeLessonRepository(
     override suspend fun markCompletedLessonsAsPaid(studentId: Int) = error("Not needed in tests")
 
     override suspend fun getScheduledLessonCount(studentId: Int): Int = error("Not needed in tests")
+    override suspend fun getScheduledLessonsForStudent(studentId: Int): List<Lesson> = emptyList()
     
     override suspend fun updateScheduledLessonsRate(studentId: Int, newRate: Double) = error("Not needed in tests")
 

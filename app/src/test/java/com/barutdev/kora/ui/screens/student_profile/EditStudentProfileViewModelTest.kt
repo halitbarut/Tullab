@@ -4,6 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.barutdev.kora.MainDispatcherRule
 import com.barutdev.kora.domain.model.Lesson
+import com.barutdev.kora.domain.model.LessonStatus
+import com.barutdev.kora.domain.model.PricingMode
 import com.barutdev.kora.domain.model.Student
 import com.barutdev.kora.domain.model.StudentProfileUpdate
 import com.barutdev.kora.domain.model.UserPreferences
@@ -27,6 +29,9 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class EditStudentProfileViewModelTest {
@@ -110,12 +115,102 @@ class EditStudentProfileViewModelTest {
         advanceUntilIdle()
     }
 
+    // --- T007: Date-based scope classification tests ---
+
+    @Test
+    fun onSave_whenAllScheduledLessonsAreInFuture_setsScope_FUTURE_ONLY() = runTest {
+        val today = LocalDate.now()
+        val futureDateMillis = today.plusDays(3).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val lessons = listOf(
+            makeScheduledLesson(id = 10, dateMillis = futureDateMillis),
+            makeScheduledLesson(id = 11, dateMillis = today.plusDays(7).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli())
+        )
+        val (viewModel, _) = createViewModel(
+            student = Student(id = 1, fullName = "Test", hourlyRate = 50.0, customHourlyRate = 50.0),
+            scheduledLessons = lessons
+        )
+
+        viewModel.uiState.first { !it.isLoading }
+        viewModel.onHourlyRateChanged("75")
+        viewModel.onSave()
+
+        val state = viewModel.uiState.first { it.isScheduledLessonsPromptVisible }
+
+        assertEquals(ScheduledLessonsScope.FUTURE_ONLY, state.scheduledLessonsScope)
+
+        viewModel.viewModelScope.cancel()
+        advanceUntilIdle()
+    }
+
+    @Test
+    fun onSave_whenAllScheduledLessonsAreInPast_setsScope_PAST_ONLY() = runTest {
+        val today = LocalDate.now()
+        val pastDateMillis = today.minusDays(3).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val lessons = listOf(
+            makeScheduledLesson(id = 12, dateMillis = pastDateMillis),
+            makeScheduledLesson(id = 13, dateMillis = today.minusDays(7).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli())
+        )
+        val (viewModel, _) = createViewModel(
+            student = Student(id = 1, fullName = "Test", hourlyRate = 50.0, customHourlyRate = 50.0),
+            scheduledLessons = lessons
+        )
+
+        viewModel.uiState.first { !it.isLoading }
+        viewModel.onHourlyRateChanged("75")
+        viewModel.onSave()
+
+        val state = viewModel.uiState.first { it.isScheduledLessonsPromptVisible }
+
+        assertEquals(ScheduledLessonsScope.PAST_ONLY, state.scheduledLessonsScope)
+
+        viewModel.viewModelScope.cancel()
+        advanceUntilIdle()
+    }
+
+    @Test
+    fun onSave_whenScheduledLessonsSpanPastAndFuture_setsScope_MIXED() = runTest {
+        val today = LocalDate.now()
+        val futureDateMillis = today.plusDays(3).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val pastDateMillis = today.minusDays(3).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val lessons = listOf(
+            makeScheduledLesson(id = 14, dateMillis = futureDateMillis),
+            makeScheduledLesson(id = 15, dateMillis = pastDateMillis)
+        )
+        val (viewModel, _) = createViewModel(
+            student = Student(id = 1, fullName = "Test", hourlyRate = 50.0, customHourlyRate = 50.0),
+            scheduledLessons = lessons
+        )
+
+        viewModel.uiState.first { !it.isLoading }
+        viewModel.onHourlyRateChanged("75")
+        viewModel.onSave()
+
+        val state = viewModel.uiState.first { it.isScheduledLessonsPromptVisible }
+
+        assertEquals(ScheduledLessonsScope.MIXED, state.scheduledLessonsScope)
+
+        viewModel.viewModelScope.cancel()
+        advanceUntilIdle()
+    }
+
+    private fun makeScheduledLesson(id: Int, dateMillis: Long) = Lesson(
+        id = id,
+        studentId = 1,
+        date = dateMillis,
+        status = LessonStatus.SCHEDULED,
+        durationInHours = null,
+        notes = null,
+        pricingMode = PricingMode.PER_HOUR,
+        rateOrFee = 50.0
+    )
+
     private fun createViewModel(
         student: Student,
-        scheduledLessonsCount: Int
+        scheduledLessonsCount: Int = 0,
+        scheduledLessons: List<Lesson> = emptyList()
     ): Pair<EditStudentProfileViewModel, LessonRepository> {
         val savedStateHandle = SavedStateHandle(mapOf(STUDENT_ID_ARG to student.id))
-        
+
         val studentRepository = object : StudentRepository {
             override fun getAllStudents(): Flow<List<Student>> = MutableStateFlow(listOf(student))
             override fun getStudentById(id: Int): Flow<Student?> = MutableStateFlow(student)
@@ -124,10 +219,18 @@ class EditStudentProfileViewModelTest {
             override suspend fun updateStudentProfile(update: StudentProfileUpdate) {}
             override suspend fun deleteStudent(studentId: Int) {}
         }
-        
+
         val lessonRepository = mockk<LessonRepository>(relaxed = true)
-        coEvery { lessonRepository.getScheduledLessonCount(student.id) } returns scheduledLessonsCount
-        
+        // Support both the old count-based approach and new list approach
+        val effectiveList = if (scheduledLessons.isEmpty() && scheduledLessonsCount > 0) {
+            List(scheduledLessonsCount) { makeScheduledLesson(it, System.currentTimeMillis() + 86400000L) } // Future lessons
+        } else {
+            scheduledLessons
+        }
+        val effectiveCount = effectiveList.size
+        coEvery { lessonRepository.getScheduledLessonCount(student.id) } returns effectiveCount
+        coEvery { lessonRepository.getScheduledLessonsForStudent(student.id) } returns effectiveList
+
         val userPreferencesRepository = object : UserPreferencesRepository {
             override val userPreferences = MutableStateFlow(UserPreferences(isDarkMode = false, languageCode = "en", currencyCode = "USD", defaultHourlyRate = 50.0, lessonRemindersEnabled = false, logReminderEnabled = false, lessonReminderHour = 9, lessonReminderMinute = 0, logReminderHour = 18, logReminderMinute = 0))
             override suspend fun isFirstRunCompleted(): Boolean = false
@@ -146,14 +249,14 @@ class EditStudentProfileViewModelTest {
             override suspend fun updateLogReminderTime(hour: Int, minute: Int) {}
             override suspend fun resetPreferences() {}
         }
-        
+
         val viewModel = EditStudentProfileViewModel(
             savedStateHandle = savedStateHandle,
             studentRepository = studentRepository,
             lessonRepository = lessonRepository,
             userPreferencesRepository = userPreferencesRepository
         )
-        
+
         return Pair(viewModel, lessonRepository)
     }
 }

@@ -32,6 +32,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 import com.barutdev.kora.domain.repository.LessonRepository
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 
 @HiltViewModel
 class EditStudentProfileViewModel @Inject constructor(
@@ -181,11 +184,25 @@ class EditStudentProfileViewModel @Inject constructor(
             val hasRateChanged = state.hourlyRateInput != initialRate && (customHourlyRate != null || initialRate?.isNotEmpty() == true)
             
             if (hasRateChanged) {
-                val scheduledLessonsCount = lessonRepository.getScheduledLessonCount(studentId)
-                if (scheduledLessonsCount > 0) {
+                val scheduledLessons = lessonRepository.getScheduledLessonsForStudent(studentId)
+                if (scheduledLessons.isNotEmpty()) {
+                    val today = LocalDate.now(ZoneId.systemDefault())
+                    val zoneId = ZoneId.systemDefault()
+                    val hasPast = scheduledLessons.any { lesson ->
+                        Instant.ofEpochMilli(lesson.date).atZone(zoneId).toLocalDate().isBefore(today)
+                    }
+                    val hasFuture = scheduledLessons.any { lesson ->
+                        !Instant.ofEpochMilli(lesson.date).atZone(zoneId).toLocalDate().isBefore(today)
+                    }
+                    val scope = when {
+                        hasPast && hasFuture -> ScheduledLessonsScope.MIXED
+                        hasPast -> ScheduledLessonsScope.PAST_ONLY
+                        else -> ScheduledLessonsScope.FUTURE_ONLY
+                    }
                     updateState { it.copy(
                         isScheduledLessonsPromptVisible = true,
-                        scheduledLessonsCount = scheduledLessonsCount,
+                        scheduledLessonsCount = scheduledLessons.size,
+                        scheduledLessonsScope = scope,
                         pendingProfileUpdate = update
                     ) }
                     return@launch

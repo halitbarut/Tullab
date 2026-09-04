@@ -16,6 +16,8 @@ data class StudentProfileUiState(
     val canSave: Boolean = false,
     val isScheduledLessonsPromptVisible: Boolean = false,
     val scheduledLessonsCount: Int = 0,
+    /** Temporal scope of the affected scheduled lessons — drives context-aware dialog copy. */
+    val scheduledLessonsScope: ScheduledLessonsScope = ScheduledLessonsScope.FUTURE_ONLY,
     val pendingProfileUpdate: StudentProfileUpdate? = null
 )
 
