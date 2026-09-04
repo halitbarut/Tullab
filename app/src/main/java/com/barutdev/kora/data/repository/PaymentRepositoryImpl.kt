@@ -58,4 +58,57 @@ class PaymentRepositoryImpl @Inject constructor(
             )
         }
     }
+    override suspend fun markLessonAsPaid(lessonId: Int, durationInHours: Double?, customFee: Double?) {
+        val defaultHourlyRate = userPreferencesRepository.userPreferences.first().defaultHourlyRate
+        val now = System.currentTimeMillis()
+        
+        database.withTransaction {
+            val lesson = lessonDao.getLessonById(lessonId) ?: return@withTransaction
+            val studentId = lesson.studentId
+            val students = studentDao.getStudentsSnapshot()
+            val student = students.firstOrNull { it.id == studentId } ?: return@withTransaction
+
+            val effectiveDuration = durationInHours ?: lesson.durationInHours ?: 0.0
+            val effectiveRate = customFee ?: student.customHourlyRate ?: defaultHourlyRate
+            val amount = effectiveDuration * effectiveRate
+            val amountMinor = (amount * 100.0).roundToLong()
+
+            val updatedLesson = lesson.copy(
+                status = LessonStatus.PAID,
+                paymentTimestamp = now,
+                durationInHours = effectiveDuration
+            )
+            lessonDao.update(updatedLesson)
+
+            if (amountMinor > 0L) {
+                val record = PaymentRecordEntity(
+                    studentId = studentId,
+                    amountMinor = amountMinor,
+                    paidAtEpochMs = now
+                )
+                paymentRecordDao.insert(record)
+            }
+
+            studentDao.updateLastPaymentDate(studentId, now)
+        }
+    }
+
+    override suspend fun revertLessonPayment(lessonId: Int) {
+        database.withTransaction {
+            val lesson = lessonDao.getLessonById(lessonId) ?: return@withTransaction
+            val studentId = lesson.studentId
+            val paidAt = lesson.paymentTimestamp ?: return@withTransaction
+
+            paymentRecordDao.deleteByStudentAndTimestamp(studentId, paidAt)
+
+            val updatedLesson = lesson.copy(
+                status = LessonStatus.COMPLETED,
+                paymentTimestamp = null
+            )
+            lessonDao.update(updatedLesson)
+
+            val latestPayment = paymentRecordDao.getLatestPaymentRecord(studentId)
+            studentDao.updateLastPaymentDate(studentId, latestPayment?.paidAtEpochMs)
+        }
+    }
 }

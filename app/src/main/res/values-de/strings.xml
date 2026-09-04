@@ -194,6 +194,13 @@
     <string name="calendar_lesson_details_notes">Notizen: %1$s</string>
     <string name="calendar_lesson_action_edit">Bearbeiten</string>
     <string name="calendar_lesson_action_log_details">Details protokollieren</string>
+    <string name="calendar_lesson_action_mark_as_paid">Als bezahlt markieren</string>
+    <string name="calendar_lesson_action_revert_payment">Zahlung stornieren</string>
+    <string name="calendar_dialog_revert_payment_title">Zahlung stornieren?</string>
+    <string name="calendar_dialog_revert_payment_message">Durch das Stornieren wird diese Stunde als unbezahlt markiert und diese Zahlung aus dem Zahlungsverlauf des Schülers entfernt.</string>
+    <string name="calendar_dialog_revert_payment_confirm">Stornieren</string>
+    <string name="calendar_dialog_mark_paid_fee_prompt">Stundensatz / Gebühr</string>
+    <string name="calendar_lesson_duration_locked_helper">Die Dauer ist für bezahlte Stunden gesperrt. Zahlung stornieren, um sie zu ändern.</string>
     <string name="calendar_status_paid">Bezahlt</string>
     <string name="calendar_status_completed">Abgeschlossen (wartet auf Zahlung)</string>
     <string name="calendar_status_scheduled">Geplant</string>

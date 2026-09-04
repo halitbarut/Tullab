@@ -17,4 +17,14 @@ interface PaymentRecordDao {
         "SELECT * FROM payment_records WHERE studentId = :studentId ORDER BY paidAtEpochMs DESC"
     )
     fun observeByStudent(studentId: Int): Flow<List<PaymentRecordEntity>>
+
+    @Query(
+        "DELETE FROM payment_records WHERE studentId = :studentId AND paidAtEpochMs = :paidAtEpochMs"
+    )
+    suspend fun deleteByStudentAndTimestamp(studentId: Int, paidAtEpochMs: Long): Int
+
+    @Query(
+        "SELECT * FROM payment_records WHERE studentId = :studentId ORDER BY paidAtEpochMs DESC LIMIT 1"
+    )
+    suspend fun getLatestPaymentRecord(studentId: Int): PaymentRecordEntity?
 }

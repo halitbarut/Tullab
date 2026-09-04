@@ -99,7 +99,7 @@ class StudentRepositoryImplTest {
 
         override suspend fun delete(student: StudentEntity) = error("Not required")
 
-        override suspend fun updateLastPaymentDate(studentId: Int, lastPaymentDate: Long) = error("Not required")
+        override suspend fun updateLastPaymentDate(studentId: Int, lastPaymentDate: Long?) = error("Not required")
 
         override fun getStudentById(id: Int): Flow<StudentEntity?> = emptyFlow()
 

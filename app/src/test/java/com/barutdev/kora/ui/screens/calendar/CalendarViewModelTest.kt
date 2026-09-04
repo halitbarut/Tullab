@@ -7,6 +7,7 @@ import com.barutdev.kora.domain.repository.HomeworkRepository
 import com.barutdev.kora.domain.repository.LessonRepository
 import com.barutdev.kora.domain.repository.StudentRepository
 import com.barutdev.kora.domain.repository.UserPreferencesRepository
+import com.barutdev.kora.domain.repository.PaymentRepository
 import com.barutdev.kora.domain.usecase.notification.CancelNotificationAlarmsUseCase
 import com.barutdev.kora.domain.usecase.notification.ScheduleNotificationAlarmsUseCase
 import com.barutdev.kora.navigation.STUDENT_ID_ARG
@@ -39,7 +40,7 @@ class CalendarViewModelTest {
     private lateinit var userPreferencesRepository: UserPreferencesRepository
     private lateinit var scheduleNotificationAlarmsUseCase: ScheduleNotificationAlarmsUseCase
     private lateinit var cancelNotificationAlarmsUseCase: CancelNotificationAlarmsUseCase
-
+    private lateinit var paymentRepository: PaymentRepository
     private lateinit var viewModel: CalendarViewModel
 
     @Before
@@ -53,6 +54,7 @@ class CalendarViewModelTest {
         userPreferencesRepository = mockk(relaxed = true)
         scheduleNotificationAlarmsUseCase = mockk(relaxed = true)
         cancelNotificationAlarmsUseCase = mockk(relaxed = true)
+        paymentRepository = mockk(relaxed = true)
 
         // Make state flows emit correctly
         every { studentRepository.getStudentById(1) } returns flowOf(null)
@@ -65,6 +67,7 @@ class CalendarViewModelTest {
             lessonRepository = lessonRepository,
             homeworkRepository = homeworkRepository,
             userPreferencesRepository = userPreferencesRepository,
+            paymentRepository = paymentRepository,
             scheduleNotificationAlarmsUseCase = scheduleNotificationAlarmsUseCase,
             cancelNotificationAlarmsUseCase = cancelNotificationAlarmsUseCase
         )
