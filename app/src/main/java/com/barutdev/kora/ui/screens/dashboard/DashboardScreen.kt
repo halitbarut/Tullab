@@ -228,6 +228,7 @@ PaymentHistoryDialog(
         hourlyRate = uiState.hourlyRate,
         totalAmountDue = uiState.totalAmountDue,
         completedLessonsAwaitingPayment = uiState.completedLessonsAwaitingPayment,
+        rateBreakdownTiers = uiState.rateBreakdownTiers,
         lastPaymentDate = uiState.lastPaymentDate,
         upcomingLessons = uiState.upcomingLessons,
         pastLessonsToLog = uiState.pastLessonsToLog,
@@ -245,6 +246,7 @@ private fun DashboardBody(
     hourlyRate: Double,
     totalAmountDue: Double,
     completedLessonsAwaitingPayment: List<Lesson>,
+    rateBreakdownTiers: List<PaymentBreakdownTier>,
     lastPaymentDate: Long?,
     upcomingLessons: List<Lesson>,
     pastLessonsToLog: List<Lesson>,
@@ -270,6 +272,7 @@ private fun DashboardBody(
                 totalHours = totalHours,
                 hourlyRate = hourlyRate,
                 totalAmountDue = totalAmountDue,
+                rateBreakdownTiers = rateBreakdownTiers,
                 lastPaymentDate = lastPaymentDate,
                 onMarkPaidClick = {
                     if (totalAmountDue > 0.0) {
@@ -388,6 +391,7 @@ fun PaymentTrackingCard(
     totalHours: Double,
     hourlyRate: Double,
     totalAmountDue: Double,
+    rateBreakdownTiers: List<PaymentBreakdownTier>,
     lastPaymentDate: Long?,
     onMarkPaidClick: () -> Unit,
     onShowPaymentHistory: () -> Unit,
@@ -463,15 +467,47 @@ fun PaymentTrackingCard(
                     style = MaterialTheme.typography.headlineMedium,
                     modifier = Modifier.testTag("PaymentAmountText")
                 )
-                Text(
-                    text = koraStringResource(
-                        id = R.string.dashboard_payment_rate_info,
-                        hoursText,
-                        hourlyRateText
-                    ),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                if (rateBreakdownTiers.isEmpty()) {
+                    Text(
+                        text = koraStringResource(
+                            id = R.string.dashboard_payment_rate_info,
+                            hoursText,
+                            hourlyRateText
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    rateBreakdownTiers.forEach { tier ->
+                        val tierText = when (tier.pricingMode) {
+                            com.barutdev.kora.domain.model.PricingMode.PER_HOUR -> {
+                                val formattedHours = NumberFormat.getNumberInstance(locale).apply {
+                                    maximumFractionDigits = 2
+                                    minimumFractionDigits = 0
+                                }.format(tier.totalHours)
+                                val formattedRate = formatCurrency(tier.rateOrFee, currencyCode)
+                                koraStringResource(
+                                    id = R.string.dashboard_payment_rate_info,
+                                    formattedHours,
+                                    formattedRate
+                                )
+                            }
+                            com.barutdev.kora.domain.model.PricingMode.FLAT_FEE -> {
+                                val formattedFee = formatCurrency(tier.rateOrFee, currencyCode)
+                                koraStringResource(
+                                    id = R.string.dashboard_payment_flat_fee_tier,
+                                    tier.lessonCount,
+                                    formattedFee
+                                )
+                            }
+                        }
+                        Text(
+                            text = tierText,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
             Text(
                 text = sinceLastPaymentText,
@@ -796,6 +832,7 @@ private fun DashboardScreenPreview() {
             hourlyRate = previewUiState.hourlyRate,
             totalAmountDue = previewUiState.totalAmountDue,
             completedLessonsAwaitingPayment = previewUiState.completedLessonsAwaitingPayment,
+            rateBreakdownTiers = previewUiState.rateBreakdownTiers,
             lastPaymentDate = previewUiState.lastPaymentDate,
             upcomingLessons = previewUiState.upcomingLessons,
             pastLessonsToLog = previewUiState.pastLessonsToLog,

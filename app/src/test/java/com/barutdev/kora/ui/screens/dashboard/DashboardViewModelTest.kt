@@ -64,6 +64,102 @@ class DashboardViewModelTest {
         advanceUntilIdle()
     }
 
+    // --- T012: rateBreakdownTiers tests ---
+
+    @Test
+    fun rateBreakdownTiers_singlePerHourLesson_producesOneTier() = runTest {
+        val student = Student(id = 1, fullName = "Test Student", hourlyRate = 80.0)
+        val lessons = listOf(
+            Lesson(
+                id = 2, studentId = 1, date = 0L,
+                status = LessonStatus.COMPLETED,
+                durationInHours = 1.5, notes = null,
+                pricingMode = PricingMode.PER_HOUR,
+                rateOrFee = 80.0
+            )
+        )
+
+        val viewModel = createViewModel(student, lessons)
+        val state = viewModel.uiState.first { it.studentId == 1 && it.completedLessonsAwaitingPayment.isNotEmpty() }
+
+        assertEquals(1, state.rateBreakdownTiers.size)
+        val tier = state.rateBreakdownTiers.first()
+        assertEquals(PricingMode.PER_HOUR, tier.pricingMode)
+        assertEquals(1.5, tier.totalHours, 0.001)
+        assertEquals(80.0, tier.rateOrFee, 0.001)
+        assertEquals(120.0, tier.subtotal, 0.001)
+
+        viewModel.viewModelScope.cancel()
+        advanceUntilIdle()
+    }
+
+    @Test
+    fun rateBreakdownTiers_flatFeeLessons_producesOneFlatFeeTier() = runTest {
+        val student = Student(id = 1, fullName = "Test Student", hourlyRate = 80.0)
+        val lessons = listOf(
+            Lesson(
+                id = 3, studentId = 1, date = 0L,
+                status = LessonStatus.COMPLETED,
+                durationInHours = null, notes = null,
+                pricingMode = PricingMode.FLAT_FEE,
+                rateOrFee = 50.0
+            ),
+            Lesson(
+                id = 4, studentId = 1, date = 0L,
+                status = LessonStatus.COMPLETED,
+                durationInHours = null, notes = null,
+                pricingMode = PricingMode.FLAT_FEE,
+                rateOrFee = 50.0
+            )
+        )
+
+        val viewModel = createViewModel(student, lessons)
+        val state = viewModel.uiState.first { it.studentId == 1 && it.completedLessonsAwaitingPayment.isNotEmpty() }
+
+        assertEquals(1, state.rateBreakdownTiers.size)
+        val tier = state.rateBreakdownTiers.first()
+        assertEquals(PricingMode.FLAT_FEE, tier.pricingMode)
+        assertEquals(2, tier.lessonCount)
+        assertEquals(50.0, tier.rateOrFee, 0.001)
+        assertEquals(100.0, tier.subtotal, 0.001)
+
+        viewModel.viewModelScope.cancel()
+        advanceUntilIdle()
+    }
+
+    @Test
+    fun rateBreakdownTiers_mixedPricingModes_producesTwoTiers() = runTest {
+        val student = Student(id = 1, fullName = "Test Student", hourlyRate = 80.0)
+        val lessons = listOf(
+            Lesson(
+                id = 5, studentId = 1, date = 0L,
+                status = LessonStatus.COMPLETED,
+                durationInHours = 2.0, notes = null,
+                pricingMode = PricingMode.PER_HOUR,
+                rateOrFee = 80.0
+            ),
+            Lesson(
+                id = 6, studentId = 1, date = 0L,
+                status = LessonStatus.COMPLETED,
+                durationInHours = null, notes = null,
+                pricingMode = PricingMode.FLAT_FEE,
+                rateOrFee = 60.0
+            )
+        )
+
+        val viewModel = createViewModel(student, lessons)
+        val state = viewModel.uiState.first { it.studentId == 1 && it.completedLessonsAwaitingPayment.isNotEmpty() }
+
+        assertEquals(2, state.rateBreakdownTiers.size)
+        val perHourTier = state.rateBreakdownTiers.first { it.pricingMode == PricingMode.PER_HOUR }
+        val flatFeeTier = state.rateBreakdownTiers.first { it.pricingMode == PricingMode.FLAT_FEE }
+        assertEquals(160.0, perHourTier.subtotal, 0.001)
+        assertEquals(60.0, flatFeeTier.subtotal, 0.001)
+
+        viewModel.viewModelScope.cancel()
+        advanceUntilIdle()
+    }
+
     private fun createViewModel(
         student: Student,
         lessons: List<Lesson>
@@ -87,6 +183,7 @@ class DashboardViewModelTest {
             override suspend fun deleteLesson(lessonId: Int) {}
             override suspend fun markCompletedLessonsAsPaid(studentId: Int) {}
             override suspend fun getScheduledLessonCount(studentId: Int): Int = 0
+            override suspend fun getScheduledLessonsForStudent(studentId: Int): List<Lesson> = emptyList()
             override suspend fun updateScheduledLessonsRate(studentId: Int, newRate: Double) {}
             override fun getLessonsForDate(date: java.time.LocalDate): Flow<List<Lesson>> = MutableStateFlow(emptyList())
             override fun getCompletedLessonsForDate(date: java.time.LocalDate): Flow<List<Lesson>> = MutableStateFlow(emptyList())

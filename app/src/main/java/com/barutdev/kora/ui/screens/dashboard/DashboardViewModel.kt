@@ -47,6 +47,8 @@ data class DashboardUiState(
     val totalHours: Double = 0.0,
     val totalAmountDue: Double = 0.0,
     val completedLessonsAwaitingPayment: List<Lesson> = emptyList(),
+    /** Breakdown of the current payment cycle by (pricingMode, rateOrFee) — drives multi-rate display in PaymentTrackingCard. */
+    val rateBreakdownTiers: List<PaymentBreakdownTier> = emptyList(),
     val lastPaymentDate: Long? = null,
     val isAddLessonDialogVisible: Boolean = false,
     val upcomingLessons: List<Lesson> = emptyList(),
@@ -209,6 +211,7 @@ class DashboardViewModel @Inject constructor(
             totalHours = computation.totalHours,
             totalAmountDue = computation.completedLessons.sumOf { it.calculatedValue },
             completedLessonsAwaitingPayment = computation.completedLessons,
+            rateBreakdownTiers = computePaymentBreakdownTiers(computation.completedLessons),
             lastPaymentDate = computation.lastPaymentDate,
             isAddLessonDialogVisible = computation.isAddLessonDialogVisible,
             upcomingLessons = computation.upcomingLessons,
