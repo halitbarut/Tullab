@@ -140,8 +140,8 @@ fun LogLessonDialog(
                             customFee = sanitized
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text(text = "Custom Fee (Required)") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        label = { Text(text = koraStringResource(id = R.string.calendar_dialog_mark_paid_fee_prompt)) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         singleLine = true
                     )
                 }

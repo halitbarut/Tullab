@@ -67,6 +67,11 @@ class PaymentRepositoryImplTest {
         )
     }
 
+    @org.junit.After
+    fun tearDown() {
+        io.mockk.unmockkStatic("androidx.room.RoomDatabaseKt")
+    }
+
     @Test
     fun `markLessonAsPaid updates lesson and creates payment record`() = runTest {
         val student = StudentEntity(id = 1, fullName = "Test", hourlyRate = 50.0, customHourlyRate = null)

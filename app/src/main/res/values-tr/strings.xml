@@ -175,6 +175,7 @@
     <string name="calendar_no_lessons_message">Bu gün için planlanmış etkinlik yok.</string>
     <string name="calendar_lesson_details_title">%1$s tarihli ders</string>
     <string name="calendar_lesson_details_status">Durum: %1$s</string>
+    <string name="calendar_lesson_details_paid_on">%1$s tarihinde ödendi</string>
     <string name="calendar_lesson_details_duration">Süre: %1$s saat</string>
     <string name="calendar_lesson_details_notes">Notlar: %1$s</string>
     <string name="calendar_lesson_action_edit">Düzenle</string>

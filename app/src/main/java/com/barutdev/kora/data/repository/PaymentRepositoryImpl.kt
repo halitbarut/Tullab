@@ -69,7 +69,7 @@ class PaymentRepositoryImpl @Inject constructor(
             val student = students.firstOrNull { it.id == studentId } ?: return@withTransaction
 
             val effectiveDuration = durationInHours ?: lesson.durationInHours ?: 0.0
-            val effectiveRate = customFee ?: student.customHourlyRate ?: defaultHourlyRate
+            val effectiveRate = customFee ?: student.customHourlyRate ?: student.hourlyRate.takeIf { it > 0.0 } ?: defaultHourlyRate
             val amount = effectiveDuration * effectiveRate
             val amountMinor = (amount * 100.0).roundToLong()
 

@@ -216,6 +216,7 @@ class CalendarViewModel @Inject constructor(
 
     fun dismissMarkLessonAsPaidDialog() {
         pendingLessonForPaymentState.value = null
+        requiresFeePromptState.value = false
     }
 
     fun onConfirmMarkLessonAsPaid(duration: Double?, customFee: Double?) {

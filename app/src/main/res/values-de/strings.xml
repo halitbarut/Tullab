@@ -190,6 +190,7 @@
     <string name="calendar_no_lessons_message">Für diesen Tag sind keine Termine geplant.</string>
     <string name="calendar_lesson_details_title">Stunde am %1$s</string>
     <string name="calendar_lesson_details_status">Status: %1$s</string>
+    <string name="calendar_lesson_details_paid_on">Bezahlt am %1$s</string>
     <string name="calendar_lesson_details_duration">Dauer: %1$s Stunden</string>
     <string name="calendar_lesson_details_notes">Notizen: %1$s</string>
     <string name="calendar_lesson_action_edit">Bearbeiten</string>
