@@ -31,10 +31,13 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+import com.barutdev.kora.domain.repository.LessonRepository
+
 @HiltViewModel
 class EditStudentProfileViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val studentRepository: StudentRepository,
+    private val lessonRepository: LessonRepository,
     private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
 
@@ -165,7 +168,6 @@ class EditStudentProfileViewModel @Inject constructor(
         val customHourlyRate = parseHourlyRateInput(state.hourlyRateInput)
 
         viewModelScope.launch {
-            updateState { it.copy(isSaving = true) }
             val update = StudentProfileUpdate(
                 id = studentId,
                 fullName = fullName,
@@ -174,14 +176,59 @@ class EditStudentProfileViewModel @Inject constructor(
                 notes = notes,
                 customHourlyRate = customHourlyRate
             )
-            try {
-                studentRepository.updateStudentProfile(update)
-                _events.emit(ProfileSaved)
-            } catch (exception: Exception) {
-                _events.emit(SaveFailed)
-            } finally {
-                updateState { it.copy(isSaving = false) }
+
+            val initialRate = initialSnapshot?.hourlyRateInput
+            val hasRateChanged = state.hourlyRateInput != initialRate && (customHourlyRate != null || initialRate?.isNotEmpty() == true)
+            
+            if (hasRateChanged) {
+                val scheduledLessonsCount = lessonRepository.getScheduledLessonCount(studentId)
+                if (scheduledLessonsCount > 0) {
+                    updateState { it.copy(
+                        isScheduledLessonsPromptVisible = true,
+                        scheduledLessonsCount = scheduledLessonsCount,
+                        pendingProfileUpdate = update
+                    ) }
+                    return@launch
+                }
             }
+
+            executeSaveProfile(update, updateScheduledLessons = false)
+        }
+    }
+
+    fun onConfirmScheduledLessonsRateUpdate(updateScheduled: Boolean) {
+        val state = _uiState.value
+        val pendingUpdate = state.pendingProfileUpdate ?: return
+        
+        updateState { it.copy(
+            isScheduledLessonsPromptVisible = false,
+            pendingProfileUpdate = null
+        ) }
+
+        viewModelScope.launch {
+            executeSaveProfile(pendingUpdate, updateScheduled)
+        }
+    }
+
+    fun onDismissScheduledLessonsPrompt() {
+        updateState { it.copy(
+            isScheduledLessonsPromptVisible = false,
+            pendingProfileUpdate = null
+        ) }
+    }
+
+    private suspend fun executeSaveProfile(update: StudentProfileUpdate, updateScheduledLessons: Boolean) {
+        updateState { it.copy(isSaving = true) }
+        try {
+            studentRepository.updateStudentProfile(update)
+            if (updateScheduledLessons && update.customHourlyRate != null) {
+                lessonRepository.updateScheduledLessonsRate(studentId, update.customHourlyRate)
+            }
+            _events.emit(ProfileSaved)
+        } catch (exception: Exception) {
+            _events.emit(SaveFailed)
+        } finally {
+            updateState { it.copy(isSaving = false) }
         }
     }
 

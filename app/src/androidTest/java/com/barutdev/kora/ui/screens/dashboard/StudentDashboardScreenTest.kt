@@ -92,7 +92,7 @@ private fun TestHostWithPrecondition(totalAmountDue: Double) {
             notifier.showMessage(R.string.no_debt_to_pay_toast)
         }
     }) {
-        Text(text = context.getString(R.string.dashboard_payment_mark_paid))
+        Text(text = androidx.compose.ui.res.stringResource(R.string.dashboard_payment_mark_paid))
     }
 
     MarkAsPaidConfirmDialog(

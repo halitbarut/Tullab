@@ -24,9 +24,9 @@ data class StudentWithDebt(
     val currentDebt: Double
 )
 
-private data class StudentHours(
+private data class StudentDebt(
     val student: Student,
-    val totalHours: Double
+    val currentDebt: Double
 )
 
 data class StudentListUiState(
@@ -49,7 +49,7 @@ class StudentListViewModel @Inject constructor(
     private val lessonsFlow = lessonRepository.getAllLessons()
     private val searchQuery = MutableStateFlow("")
 
-    private val studentHoursFlow: Flow<List<StudentHours>> = combine(
+    private val studentDebtFlow: Flow<List<StudentDebt>> = combine(
         studentsFlow,
         lessonsFlow
     ) { students, lessons ->
@@ -58,12 +58,12 @@ class StudentListViewModel @Inject constructor(
             .groupBy { lesson -> lesson.studentId }
 
         students.map { student ->
-            val totalHours = completedLessonsByStudent[student.id]
-                ?.sumOf { lesson -> lesson.durationInHours ?: 0.0 }
+            val totalDebt = completedLessonsByStudent[student.id]
+                ?.sumOf { lesson -> lesson.calculatedValue }
                 ?: 0.0
-            StudentHours(
+            StudentDebt(
                 student = student,
-                totalHours = totalHours
+                currentDebt = totalDebt
             )
         }
     }.flowOn(Dispatchers.Default)
@@ -72,15 +72,14 @@ class StudentListViewModel @Inject constructor(
         .map { preferences -> preferences.defaultHourlyRate }
 
     val uiState: StateFlow<StudentListUiState> = combine(
-        studentHoursFlow,
+        studentDebtFlow,
         defaultHourlyRateFlow,
         searchQuery
-    ) { studentHours, defaultHourlyRate, query ->
-        val studentsWithDebt = studentHours.map { (student, totalHours) ->
-            val effectiveRate = student.customHourlyRate ?: defaultHourlyRate
+    ) { studentDebts, defaultHourlyRate, query ->
+        val studentsWithDebt = studentDebts.map { (student, currentDebt) ->
             StudentWithDebt(
                 student = student,
-                currentDebt = totalHours * effectiveRate
+                currentDebt = currentDebt
             )
         }
         val trimmedQuery = query.trim()

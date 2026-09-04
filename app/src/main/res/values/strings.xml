@@ -34,6 +34,17 @@
     <string name="add_student_profile_title">Add New Student</string>
     <string name="add_student_profile_save_success">Student added.</string>
 
+    <!-- Pricing Modes -->
+    <string name="pricing_mode_per_hour">Per Hour</string>
+    <string name="pricing_mode_flat_fee">Flat Fee</string>
+    <string name="fee_label_hourly">Hourly Rate</string>
+    <string name="fee_label_flat">Flat Fee</string>
+
+    <string name="rate_change_prompt_title">Update Scheduled Lessons?</string>
+    <string name="rate_change_prompt_message">You changed the default hourly rate. Do you want to apply this new rate to future scheduled lessons as well?</string>
+    <string name="rate_change_prompt_apply_all">Apply to Scheduled</string>
+    <string name="rate_change_prompt_keep_current">Only for New Lessons</string>
+
     <!-- Generic Dialog Actions -->
     <string name="dialog_action_cancel">Cancel</string>
     <string name="dialog_action_ok">OK</string>
@@ -148,6 +159,7 @@
     <string name="dashboard_completed_lessons_title">Completed Lessons Awaiting Payment</string>
     <string name="dashboard_completed_lessons_empty">No completed lessons waiting for payment.</string>
     <string name="dashboard_completed_lessons_duration">Duration: %1$s hours</string>
+    <string name="dashboard_completed_lessons_total">Total: %1$s</string>
     <string name="dashboard_completed_lessons_notes">Notes: %1$s</string>
     <string name="dashboard_log_lesson_dialog_title">Log Lesson</string>
     <string name="dashboard_log_lesson_dialog_date">Lesson on %1$s</string>
@@ -192,6 +204,8 @@
     <string name="calendar_lesson_details_status">Status: %1$s</string>
     <string name="calendar_lesson_details_paid_on">Paid on %1$s</string>
     <string name="calendar_lesson_details_duration">Duration: %1$s hours</string>
+    <string name="calendar_lesson_details_pricing_mode">Pricing Mode: %1$s</string>
+    <string name="calendar_lesson_details_total">Total: %1$s</string>
     <string name="calendar_lesson_details_notes">Notes: %1$s</string>
     <string name="calendar_lesson_action_edit">Edit</string>
     <string name="calendar_lesson_action_log_details">Log Details</string>
@@ -277,5 +291,12 @@
     <string name="onboarding_get_started">Get Started</string>
     <string name="onboarding_legal_title">One Last Step</string>
     <string name="onboarding_legal_body">Please review and accept our policies to continue.</string>
+
+
+    <string name="log_lesson_fee_label">Fee</string>
+    <string name="rate_change_dialog_title">Update Scheduled Lessons?</string>
+    <string name="rate_change_dialog_message">This student has future scheduled lessons. Should the new rate apply to them?</string>
+    <string name="rate_change_dialog_update_all">Update Future Lessons</string>
+    <string name="rate_change_dialog_future_only">Keep Original Rate</string>
 
 </resources>

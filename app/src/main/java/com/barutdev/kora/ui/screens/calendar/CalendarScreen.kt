@@ -50,7 +50,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.graphicsLayer
 import com.barutdev.kora.R
 import com.barutdev.kora.domain.model.Lesson
+import com.barutdev.kora.domain.model.PricingMode
+import com.barutdev.kora.util.formatCurrency
 import com.barutdev.kora.domain.model.LessonStatus
+import com.barutdev.kora.util.formatCurrency
 import com.barutdev.kora.ui.navigation.FabConfig
 import com.barutdev.kora.ui.navigation.LocalKoraScaffoldController
 import com.barutdev.kora.ui.navigation.ScreenScaffoldConfig
@@ -117,6 +120,7 @@ fun CalendarScreen(
     val pendingLessonForPayment by viewModel.pendingLessonForPayment.collectAsStateWithLifecycle()
     val requiresFeePrompt by viewModel.requiresFeePrompt.collectAsStateWithLifecycle()
     val lessonToRevert by viewModel.lessonToRevert.collectAsStateWithLifecycle()
+    val currencyCode by viewModel.currencyCode.collectAsStateWithLifecycle()
     val coroutineScope = rememberCoroutineScope()
     val zoneId = remember { ZoneId.systemDefault() }
     val snackbarHostState = scaffoldController.snackbarHostState
@@ -161,8 +165,8 @@ fun CalendarScreen(
         showDialog = isLogLessonDialogVisible,
         lesson = lessonToLog,
         onDismiss = viewModel::dismissLogLessonDialog,
-        onComplete = { duration, notes ->
-            viewModel.onLogLessonComplete(duration, notes)
+        onComplete = { duration, notes, pricingMode, rateOrFeeInput ->
+            viewModel.onLogLessonComplete(duration, notes, pricingMode, rateOrFeeInput)
         },
         onMarkNotDone = { notes ->
             viewModel.onLogLessonMarkNotDone(notes)
@@ -173,7 +177,7 @@ fun CalendarScreen(
         showDialog = pendingLessonForPayment != null,
         lesson = pendingLessonForPayment,
         onDismiss = viewModel::dismissMarkLessonAsPaidDialog,
-        onComplete = { _, _ -> },
+        onComplete = { _, _, _, _ -> },
         onMarkNotDone = { _ -> },
         isMarkAsPaidMode = true,
         requiresFeePrompt = requiresFeePrompt,
@@ -255,6 +259,7 @@ fun CalendarScreen(
         selectedDate = selectedDate,
         lessons = lessons,
         homework = homework,
+        currencyCode = currencyCode,
         onPreviousMonth = viewModel::onPreviousMonth,
         onNextMonth = viewModel::onNextMonth,
         onSelectDate = viewModel::onSelectDate,
@@ -277,6 +282,7 @@ private fun CalendarScreenContent(
     selectedDate: LocalDate,
     lessons: List<Lesson>,
     homework: List<Homework>,
+    currencyCode: String,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
     onSelectDate: (LocalDate) -> Unit,
@@ -337,6 +343,7 @@ private fun CalendarScreenContent(
                 homework = selectedDateHomework,
                 today = today,
                 locale = currentLocale,
+                currencyCode = currencyCode,
                 onLessonActionClick = onLogLessonClick,
                 onLessonMarkAsPaidClick = onLessonMarkAsPaidClick,
                 onRevertPaymentClick = onRevertPaymentClick,
@@ -603,6 +610,7 @@ private fun DayDetailsSection(
     homework: List<Homework>,
     today: LocalDate,
     locale: Locale,
+    currencyCode: String,
     onLessonActionClick: (Lesson) -> Unit,
     onLessonMarkAsPaidClick: (Lesson) -> Unit,
     onRevertPaymentClick: (Lesson) -> Unit,
@@ -655,6 +663,7 @@ private fun DayDetailsSection(
                         dateFormatter = dateFormatter,
                         today = today,
                         locale = locale,
+                        currencyCode = currencyCode,
                         onActionClick = onLessonActionClick,
                         onMarkAsPaidClick = onLessonMarkAsPaidClick,
                         onRevertPaymentClick = onRevertPaymentClick
@@ -821,6 +830,7 @@ private fun LessonDetailCard(
     dateFormatter: DateTimeFormatter,
     today: LocalDate,
     locale: Locale,
+    currencyCode: String,
     onActionClick: (Lesson) -> Unit,
     onMarkAsPaidClick: (Lesson) -> Unit,
     onRevertPaymentClick: (Lesson) -> Unit,
@@ -874,7 +884,19 @@ private fun LessonDetailCard(
                 style = MaterialTheme.typography.bodyMedium,
                 color = statusDisplay.color
             )
-            if (durationText != null) {
+            val pricingModeRes = remember(lesson.pricingMode) {
+                if (lesson.pricingMode == PricingMode.FLAT_FEE) R.string.pricing_mode_flat_fee
+                else R.string.pricing_mode_per_hour
+            }
+            Text(
+                text = koraStringResource(
+                    id = R.string.calendar_lesson_details_pricing_mode,
+                    koraStringResource(id = pricingModeRes)
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            if (lesson.pricingMode != PricingMode.FLAT_FEE && durationText != null) {
                 Text(
                     text = koraStringResource(
                         id = R.string.calendar_lesson_details_duration,
@@ -884,6 +906,18 @@ private fun LessonDetailCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+            
+            val totalText = remember(lesson.calculatedValue, currencyCode) {
+                formatCurrency(lesson.calculatedValue, currencyCode)
+            }
+            Text(
+                text = koraStringResource(
+                    id = R.string.calendar_lesson_details_total,
+                    totalText
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             val paymentTimestamp = lesson.paymentTimestamp
             if (paymentTimestamp != null) {
                 val paymentDateTimeFormatter = remember(locale) {
@@ -1006,7 +1040,9 @@ private fun CalendarScreenPreview() {
             date = today.minusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli(),
             status = LessonStatus.SCHEDULED,
             durationInHours = null,
-            notes = null
+            notes = null,
+            pricingMode = PricingMode.PER_HOUR,
+            rateOrFee = 50.0
         ),
         Lesson(
             id = 2,
@@ -1014,7 +1050,9 @@ private fun CalendarScreenPreview() {
             date = today.atStartOfDay(zoneId).toInstant().toEpochMilli(),
             status = LessonStatus.COMPLETED,
             durationInHours = 1.5,
-            notes = "Worked on algebra problems."
+            notes = "Worked on algebra problems.",
+            pricingMode = PricingMode.PER_HOUR,
+            rateOrFee = 50.0
         ),
         Lesson(
             id = 3,
@@ -1022,7 +1060,9 @@ private fun CalendarScreenPreview() {
             date = today.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli(),
             status = LessonStatus.PAID,
             durationInHours = 2.0,
-            notes = null
+            notes = null,
+            pricingMode = PricingMode.FLAT_FEE,
+            rateOrFee = 80.0
         )
     )
     val selectedDate = today
@@ -1034,6 +1074,7 @@ private fun CalendarScreenPreview() {
             selectedDate = selectedDate,
             lessons = previewLessons,
             homework = emptyList(),
+            currencyCode = "USD",
             onPreviousMonth = {},
             onNextMonth = {},
             onSelectDate = {},

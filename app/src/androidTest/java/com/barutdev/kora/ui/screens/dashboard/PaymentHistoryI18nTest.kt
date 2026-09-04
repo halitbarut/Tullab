@@ -68,10 +68,11 @@ class PaymentHistoryI18nTest {
 @Composable
 private fun TurkishToastInvoker() {
     val context = LocalContext.current
-    val localizedContext = remember(context) {
-        val configuration = Configuration(context.resources.configuration)
-        configuration.setLocale(java.util.Locale("tr"))
-        context.createConfigurationContext(configuration)
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val localizedContext = remember(context, configuration) {
+        val newConfiguration = Configuration(configuration)
+        newConfiguration.setLocale(java.util.Locale("tr"))
+        context.createConfigurationContext(newConfiguration)
     }
     val notifier = LocalMessageNotifier.current
     Button(onClick = {

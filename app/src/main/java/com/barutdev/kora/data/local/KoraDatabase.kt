@@ -10,10 +10,10 @@ import com.barutdev.kora.data.local.entity.StudentEntity
 
 @Database(
     entities = [StudentEntity::class, LessonEntity::class, HomeworkEntity::class, PaymentRecordEntity::class],
-    version = 9,
+    version = 10,
     exportSchema = true
 )
-@TypeConverters(LessonStatusConverter::class, HomeworkStatusConverter::class)
+@TypeConverters(LessonStatusConverter::class, HomeworkStatusConverter::class, PricingModeConverter::class)
 abstract class KoraDatabase : RoomDatabase() {
 
     abstract fun studentDao(): StudentDao

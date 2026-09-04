@@ -13,8 +13,9 @@ inline fun koraStringResource(
 ): String {
     val context = LocalContext.current
     val locale = LocalLocale.current
-    val configuration = Configuration(context.resources.configuration)
-    configuration.setLocale(locale)
-    val localizedContext = context.createConfigurationContext(configuration)
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val newConfiguration = Configuration(configuration)
+    newConfiguration.setLocale(locale)
+    val localizedContext = context.createConfigurationContext(newConfiguration)
     return localizedContext.resources.getString(id, *formatArgs)
 }

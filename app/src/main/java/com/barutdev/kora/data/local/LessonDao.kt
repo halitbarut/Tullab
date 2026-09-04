@@ -88,4 +88,18 @@ interface LessonDao {
         currentDate: Long,
         cancelledStatus: LessonStatus = LessonStatus.CANCELLED
     ): Flow<List<LessonEntity>>
+
+    @Query("SELECT COUNT(*) FROM lessons WHERE studentId = :studentId AND status = :scheduledStatus")
+    suspend fun getScheduledLessonCount(
+        studentId: Int,
+        scheduledStatus: LessonStatus = LessonStatus.SCHEDULED
+    ): Int
+
+    @Query("UPDATE lessons SET rateOrFee = :newRate WHERE studentId = :studentId AND status = :scheduledStatus AND pricingMode = :pricingMode")
+    suspend fun updateScheduledLessonsRate(
+        studentId: Int,
+        newRate: Double,
+        scheduledStatus: LessonStatus = LessonStatus.SCHEDULED,
+        pricingMode: com.barutdev.kora.domain.model.PricingMode = com.barutdev.kora.domain.model.PricingMode.PER_HOUR
+    )
 }

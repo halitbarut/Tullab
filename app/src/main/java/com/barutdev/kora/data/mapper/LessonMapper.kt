@@ -10,6 +10,8 @@ fun LessonEntity.toDomain(): Lesson = Lesson(
     status = status,
     durationInHours = durationInHours,
     notes = notes,
+    pricingMode = pricingMode,
+    rateOrFee = rateOrFee,
     paymentTimestamp = paymentTimestamp
 )
 
@@ -22,5 +24,7 @@ fun Lesson.toEntity(): LessonEntity = LessonEntity(
     status = status,
     durationInHours = durationInHours,
     notes = notes,
+    pricingMode = pricingMode,
+    rateOrFee = rateOrFee,
     paymentTimestamp = paymentTimestamp
 )

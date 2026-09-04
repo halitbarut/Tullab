@@ -38,7 +38,9 @@ class CalendarStatusLogicTest {
         date = 0L,
         status = status,
         durationInHours = 1.0,
-        notes = null
+        notes = null,
+        pricingMode = com.barutdev.kora.domain.model.PricingMode.PER_HOUR,
+        rateOrFee = 0.0
     )
 
     private fun homework(status: HomeworkStatus) = Homework(

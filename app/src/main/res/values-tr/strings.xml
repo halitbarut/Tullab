@@ -34,6 +34,17 @@
     <string name="add_student_profile_title">Yeni Öğrenci Ekle</string>
     <string name="add_student_profile_save_success">Öğrenci eklendi.</string>
 
+    <!-- Pricing Modes -->
+    <string name="pricing_mode_per_hour">Saatlik</string>
+    <string name="pricing_mode_flat_fee">Sabit Ücret</string>
+    <string name="fee_label_hourly">Saatlik Ücret</string>
+    <string name="fee_label_flat">Sabit Ücret</string>
+
+    <string name="rate_change_prompt_title">Planlanmış Dersleri Güncelle?</string>
+    <string name="rate_change_prompt_message">Varsayılan saatlik ücreti değiştirdiniz. Bu yeni ücreti gelecekteki planlanmış derslere de uygulamak ister misiniz?</string>
+    <string name="rate_change_prompt_apply_all">Planlananlara Uygula</string>
+    <string name="rate_change_prompt_keep_current">Sadece Yeni Dersler İçin</string>
+
     <!-- Navigation & Screen Titles -->
     <string name="dashboard_title">Gösterge Paneli</string>
     <string name="calendar_title">Takvim</string>
@@ -263,4 +274,23 @@
     <string name="reports_chart_accessibility_bar">%1$s kazancı: %2$s</string>
     <string name="reports_message_empty_period">Bu dönem için faaliyet bulunmuyor.</string>
     <string name="reports_action_retry">Tekrar dene</string>
+
+    <string name="dashboard_completed_lessons_total">Toplam: %1$s</string>
+    <string name="notification_lesson_reminder_title_new">Yaklaşan Ders: %1$s</string>
+    <string name="notification_lesson_reminder_content">Dersiniz bugün saat %1$s. Hazırlanmayı unutmayın!</string>
+    <string name="notification_note_reminder_title">Ders Notlarını Kaydet: %1$s</string>
+    <string name="notification_note_reminder_content">Bugün saat %1$s\'deki dersiniz için notlarınızı ve gözlemlerinizi ekleyin.</string>
+    <string name="channel_lesson_reminders_name">Ders Hatırlatıcıları</string>
+    <string name="channel_lesson_reminders_desc">Yaklaşan dersler için hazırlanma bildirimleri</string>
+    <string name="channel_lesson_notes_name">Ders Notları</string>
+    <string name="channel_lesson_notes_desc">Tamamlanan dersler için not kaydetme hatırlatıcıları</string>
+    <string name="calendar_lesson_details_pricing_mode">Fiyatlandırma Modu: %1$s</string>
+    <string name="calendar_lesson_details_total">Toplam: %1$s</string>
+    <string name="calendar_homework_section_title">%1$s için Ödev</string>
+    <string name="calendar_no_homework_message">Bu gün için atanan ödev yok.</string>
+    <string name="log_lesson_fee_label">Ücret</string>
+    <string name="rate_change_dialog_title">Planlanan Dersleri Güncelle?</string>
+    <string name="rate_change_dialog_message">Bu öğrencinin gelecekte planlanmış dersleri var. Yeni ücret onlara uygulansın mı?</string>
+    <string name="rate_change_dialog_update_all">Gelecek Dersleri Güncelle</string>
+    <string name="rate_change_dialog_future_only">Orijinal Ücreti Koru</string>
 </resources>

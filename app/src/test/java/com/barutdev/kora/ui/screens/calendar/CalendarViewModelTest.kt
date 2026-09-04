@@ -142,7 +142,7 @@ class CalendarViewModelTest {
 
     @Test
     fun `onMarkLessonAsPaidClicked sets pendingLessonForPayment if SCHEDULED`() = runTest {
-        val lesson = Lesson(id = 1, studentId = 1, date = 0L, status = LessonStatus.SCHEDULED, durationInHours = null, notes = null)
+        val lesson = Lesson(id = 1, studentId = 1, date = 0L, status = LessonStatus.SCHEDULED, durationInHours = null, notes = null, pricingMode = com.barutdev.kora.domain.model.PricingMode.PER_HOUR, rateOrFee = 50.0)
         every { userPreferencesRepository.userPreferences } returns flowOf(
             com.barutdev.kora.domain.model.UserPreferences(
                 isDarkMode = false,
@@ -174,7 +174,7 @@ class CalendarViewModelTest {
 
     @Test
     fun `onMarkLessonAsPaidClicked directly pays if COMPLETED and has duration and rate`() = runTest {
-        val lesson = Lesson(id = 1, studentId = 1, date = 0L, status = LessonStatus.COMPLETED, durationInHours = 1.0, notes = null)
+        val lesson = Lesson(id = 1, studentId = 1, date = 0L, status = LessonStatus.COMPLETED, durationInHours = 1.0, notes = null, pricingMode = com.barutdev.kora.domain.model.PricingMode.PER_HOUR, rateOrFee = 50.0)
         every { userPreferencesRepository.userPreferences } returns flowOf(
             com.barutdev.kora.domain.model.UserPreferences(
                 isDarkMode = false,
@@ -206,7 +206,7 @@ class CalendarViewModelTest {
 
     @Test
     fun `onConfirmRevertPayment calls paymentRepository and clears state`() = runTest {
-        val lesson = Lesson(id = 1, studentId = 1, date = 0L, status = LessonStatus.PAID, durationInHours = 1.0, notes = null)
+        val lesson = Lesson(id = 1, studentId = 1, date = 0L, status = LessonStatus.PAID, durationInHours = 1.0, notes = null, pricingMode = com.barutdev.kora.domain.model.PricingMode.PER_HOUR, rateOrFee = 0.0)
         coEvery { paymentRepository.revertLessonPayment(1) } returns Unit
 
         viewModel.onRevertLessonPaymentClicked(lesson)

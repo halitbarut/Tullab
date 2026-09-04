@@ -26,5 +26,7 @@ data class LessonEntity(
     val status: LessonStatus,
     val durationInHours: Double?,
     val notes: String?,
+    val pricingMode: com.barutdev.kora.domain.model.PricingMode,
+    val rateOrFee: Double,
     val paymentTimestamp: Long? = null
 )

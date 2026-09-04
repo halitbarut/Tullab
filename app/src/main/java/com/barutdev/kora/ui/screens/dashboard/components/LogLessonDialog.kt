@@ -29,12 +29,18 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
+import com.barutdev.kora.domain.model.PricingMode
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.material3.RadioButton
+import androidx.compose.ui.Alignment
+
 @Composable
 fun LogLessonDialog(
     showDialog: Boolean,
     lesson: Lesson?,
     onDismiss: () -> Unit,
-    onComplete: (duration: String, notes: String) -> Unit,
+    onComplete: (duration: String, notes: String, pricingMode: PricingMode, rateOrFee: String) -> Unit,
     onMarkNotDone: (notes: String) -> Unit,
     isMarkAsPaidMode: Boolean = false,
     requiresFeePrompt: Boolean = false,
@@ -63,15 +69,30 @@ fun LogLessonDialog(
     var customFee by rememberSaveable(lesson.id) {
         mutableStateOf("")
     }
+    var pricingMode by rememberSaveable(lesson.id) {
+        mutableStateOf(lesson.pricingMode)
+    }
+    var rateOrFeeInput by rememberSaveable(lesson.id) {
+        mutableStateOf(lesson.rateOrFee.let { 
+            if (it % 1.0 == 0.0) it.toInt().toString() else it.toString()
+        })
+    }
 
     val isDurationValid = duration.trim().replace(',', '.').toDoubleOrNull()?.let { it > 0.0 } == true
     val isFeeValid = !requiresFeePrompt || customFee.trim().replace(',', '.').toDoubleOrNull()?.let { it > 0.0 } == true
-    val isCompleteEnabled = isDurationValid && isFeeValid
+    val isRateOrFeeValid = rateOrFeeInput.trim().replace(',', '.').toDoubleOrNull() != null
+    val isCompleteEnabled = if (pricingMode == PricingMode.PER_HOUR) {
+        isDurationValid && isFeeValid && isRateOrFeeValid
+    } else {
+        isFeeValid && isRateOrFeeValid
+    }
 
     fun resetInputs() {
         duration = lesson.durationInHours?.toString().orEmpty()
         notes = lesson.notes.orEmpty()
         customFee = ""
+        pricingMode = lesson.pricingMode
+        rateOrFeeInput = lesson.rateOrFee.let { if (it % 1.0 == 0.0) it.toInt().toString() else it.toString() }
     }
 
     AlertDialog(
@@ -92,33 +113,87 @@ fun LogLessonDialog(
             Column {
                 Text(text = koraStringResource(id = R.string.dashboard_log_lesson_dialog_date, formattedDate))
                 Spacer(modifier = Modifier.height(16.dp))
-                TextField(
-                    value = duration,
-                    onValueChange = { newValue ->
-                        val normalized = newValue.replace(',', '.')
-                        var decimalAdded = false
-                        val sanitized = buildString {
-                            normalized.forEach { char ->
-                                when {
-                                    char.isDigit() -> append(char)
-                                    char == '.' && !decimalAdded -> {
-                                        append(char)
-                                        decimalAdded = true
+
+                if (!isMarkAsPaidMode) {
+                    Column(Modifier.selectableGroup()) {
+                        Row(
+                            Modifier.fillMaxWidth().selectable(
+                                selected = (pricingMode == PricingMode.PER_HOUR),
+                                onClick = { pricingMode = PricingMode.PER_HOUR }
+                            ),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = (pricingMode == PricingMode.PER_HOUR),
+                                onClick = { pricingMode = PricingMode.PER_HOUR }
+                            )
+                            Text(text = koraStringResource(id = R.string.pricing_mode_per_hour))
+                        }
+                        Row(
+                            Modifier.fillMaxWidth().selectable(
+                                selected = (pricingMode == PricingMode.FLAT_FEE),
+                                onClick = { pricingMode = PricingMode.FLAT_FEE }
+                            ),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = (pricingMode == PricingMode.FLAT_FEE),
+                                onClick = { pricingMode = PricingMode.FLAT_FEE }
+                            )
+                            Text(text = koraStringResource(id = R.string.pricing_mode_flat_fee))
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                if (pricingMode == PricingMode.PER_HOUR || isMarkAsPaidMode) {
+                    TextField(
+                        value = duration,
+                        onValueChange = { newValue ->
+                            val normalized = newValue.replace(',', '.')
+                            var decimalAdded = false
+                            val sanitized = buildString {
+                                normalized.forEach { char ->
+                                    when {
+                                        char.isDigit() -> append(char)
+                                        char == '.' && !decimalAdded -> {
+                                            append(char)
+                                            decimalAdded = true
+                                        }
                                     }
                                 }
                             }
-                        }
-                        duration = sanitized
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text(text = koraStringResource(id = R.string.dashboard_log_lesson_duration_label)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true,
-                    enabled = lesson.status != com.barutdev.kora.domain.model.LessonStatus.PAID,
-                    supportingText = if (lesson.status == com.barutdev.kora.domain.model.LessonStatus.PAID) {
-                        { Text(text = koraStringResource(id = R.string.calendar_lesson_duration_locked_helper)) }
-                    } else null
-                )
+                            duration = sanitized
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text(text = koraStringResource(id = R.string.dashboard_log_lesson_duration_label)) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        enabled = lesson.status != com.barutdev.kora.domain.model.LessonStatus.PAID && !isMarkAsPaidMode,
+                        supportingText = if (lesson.status == com.barutdev.kora.domain.model.LessonStatus.PAID || isMarkAsPaidMode) {
+                            { Text(text = koraStringResource(id = R.string.calendar_lesson_duration_locked_helper)) }
+                        } else null
+                    )
+                }
+
+                if (!isMarkAsPaidMode) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    val rateLabel = if (pricingMode == PricingMode.PER_HOUR) {
+                        koraStringResource(id = R.string.student_profile_hourly_rate_label)
+                    } else {
+                        koraStringResource(id = R.string.log_lesson_fee_label)
+                    }
+                    TextField(
+                        value = rateOrFeeInput,
+                        onValueChange = { rateOrFeeInput = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text(text = rateLabel) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        enabled = lesson.status != com.barutdev.kora.domain.model.LessonStatus.PAID
+                    )
+                }
+
                 if (requiresFeePrompt) {
                     Spacer(modifier = Modifier.height(16.dp))
                     TextField(
@@ -165,7 +240,7 @@ fun LogLessonDialog(
                     if (isMarkAsPaidMode) {
                         onMarkAsPaid?.invoke(duration, customFee)
                     } else {
-                        onComplete(duration, notes)
+                        onComplete(duration, notes, pricingMode, rateOrFeeInput)
                     }
                     resetInputs()
                 },

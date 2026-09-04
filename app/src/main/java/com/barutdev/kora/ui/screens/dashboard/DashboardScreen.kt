@@ -80,7 +80,9 @@ import com.barutdev.kora.util.LocalMessageNotifier
 private data class CompletedLessonUiModel(
     val dateText: String,
     val durationText: String?,
-    val notes: String?
+    val notes: String?,
+    val totalText: String,
+    val isFlatFee: Boolean
 )
 
 
@@ -100,10 +102,11 @@ fun DashboardScreen(
     val userPreferences = LocalUserPreferences.current
     val locale = LocalLocale.current
     val context = LocalContext.current
-    val localizedContext = remember(context, locale) {
-        val configuration = Configuration(context.resources.configuration)
-        configuration.setLocale(locale)
-        context.createConfigurationContext(configuration)
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val localizedContext = remember(context, locale, configuration) {
+        val newConfiguration = Configuration(configuration)
+        newConfiguration.setLocale(locale)
+        context.createConfigurationContext(newConfiguration)
     }
     val messageNotifier = LocalMessageNotifier.current
 
@@ -189,8 +192,8 @@ LaunchedEffect(viewModel) {
     AddLessonDialog(
         showDialog = uiState.isAddLessonDialogVisible,
         onDismiss = viewModel::dismissAddLessonDialog,
-        onSave = { duration, notes ->
-            viewModel.onSaveLesson(duration, notes)
+        onSave = { duration, notes, pricingMode, rateOrFeeInput ->
+            viewModel.onSaveLesson(duration, notes, pricingMode, rateOrFeeInput)
         }
     )
 
@@ -212,8 +215,8 @@ PaymentHistoryDialog(
         showDialog = uiState.isLogLessonDialogVisible,
         lesson = uiState.lessonToLog,
         onDismiss = viewModel::dismissLogLessonDialog,
-        onComplete = { duration, notes ->
-            viewModel.onLogLessonComplete(duration, notes)
+        onComplete = { duration, notes, pricingMode, rateOrFeeInput ->
+            viewModel.onLogLessonComplete(duration, notes, pricingMode, rateOrFeeInput)
         },
         onMarkNotDone = { notes ->
             viewModel.onLogLessonMarkNotDone(notes)
@@ -285,7 +288,8 @@ private fun DashboardBody(
         AnimatedListItem(index = 1) {
             CompletedLessonsCard(
                 lessons = completedLessonsAwaitingPayment,
-                locale = locale
+                locale = locale,
+                currencyCode = currencyCode
             )
         }
         
@@ -555,15 +559,14 @@ fun MarkAsPaidConfirmDialog(
         }
     )
 }
-
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CompletedLessonsCard(
     lessons: List<Lesson>,
     locale: Locale,
+    currencyCode: String,
     modifier: Modifier = Modifier
 ) {
-    val items = remember(lessons, locale) {
+    val items = remember(lessons, locale, currencyCode) {
         if (lessons.isEmpty()) {
             emptyList()
         } else {
@@ -585,7 +588,9 @@ private fun CompletedLessonsCard(
                 CompletedLessonUiModel(
                     dateText = dateText,
                     durationText = durationText,
-                    notes = lesson.notes
+                    notes = lesson.notes,
+                    totalText = formatCurrency(lesson.calculatedValue, currencyCode),
+                    isFlatFee = lesson.pricingMode == com.barutdev.kora.domain.model.PricingMode.FLAT_FEE
                 )
             }
         }
@@ -629,16 +634,24 @@ private fun CompletedLessonsCard(
                                     text = item.dateText,
                                     style = MaterialTheme.typography.bodyLarge
                                 )
-                                item.durationText?.let { duration ->
+                                if (!item.isFlatFee && item.durationText != null) {
                                     Text(
                                         text = koraStringResource(
                                             id = R.string.dashboard_completed_lessons_duration,
-                                            duration
+                                            item.durationText
                                         ),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
+                                Text(
+                                    text = koraStringResource(
+                                        id = R.string.dashboard_completed_lessons_total,
+                                        item.totalText
+                                    ),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                                 item.notes?.let { notes ->
                                     Text(
                                         text = koraStringResource(
@@ -736,7 +749,9 @@ private fun DashboardScreenPreview() {
                 date = System.currentTimeMillis() - 172_800_000L,
                 status = LessonStatus.COMPLETED,
                 durationInHours = 2.0,
-                notes = "Exam prep"
+                notes = "Exam prep",
+                pricingMode = com.barutdev.kora.domain.model.PricingMode.PER_HOUR,
+                rateOrFee = 80.0
             ),
             Lesson(
                 id = 4,
@@ -744,7 +759,9 @@ private fun DashboardScreenPreview() {
                 date = System.currentTimeMillis() - 259_200_000L,
                 status = LessonStatus.COMPLETED,
                 durationInHours = 2.5,
-                notes = null
+                notes = null,
+                pricingMode = com.barutdev.kora.domain.model.PricingMode.PER_HOUR,
+                rateOrFee = 80.0
             )
         ),
         lastPaymentDate = System.currentTimeMillis() - 604_800_000L,
@@ -755,7 +772,9 @@ private fun DashboardScreenPreview() {
                 date = System.currentTimeMillis(),
                 status = LessonStatus.SCHEDULED,
                 durationInHours = null,
-                notes = null
+                notes = null,
+                pricingMode = com.barutdev.kora.domain.model.PricingMode.PER_HOUR,
+                rateOrFee = 80.0
             )
         ),
         pastLessonsToLog = listOf(
@@ -765,7 +784,9 @@ private fun DashboardScreenPreview() {
                 date = System.currentTimeMillis() - 86_400_000L,
                 status = LessonStatus.SCHEDULED,
                 durationInHours = null,
-                notes = null
+                notes = null,
+                pricingMode = com.barutdev.kora.domain.model.PricingMode.PER_HOUR,
+                rateOrFee = 80.0
             )
         )
     )

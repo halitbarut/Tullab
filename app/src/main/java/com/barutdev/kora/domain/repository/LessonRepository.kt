@@ -18,6 +18,10 @@ interface LessonRepository {
 
     suspend fun markCompletedLessonsAsPaid(studentId: Int)
 
+    suspend fun getScheduledLessonCount(studentId: Int): Int
+
+    suspend fun updateScheduledLessonsRate(studentId: Int, newRate: Double)
+
     // New methods for context-aware notifications feature
 
     /**

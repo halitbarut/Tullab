@@ -58,6 +58,14 @@ class LessonRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getScheduledLessonCount(studentId: Int): Int {
+        return lessonDao.getScheduledLessonCount(studentId)
+    }
+
+    override suspend fun updateScheduledLessonsRate(studentId: Int, newRate: Double) {
+        lessonDao.updateScheduledLessonsRate(studentId, newRate)
+    }
+
     // Context-aware notification methods
 
     override fun getLessonsForDate(date: LocalDate): Flow<List<Lesson>> {
