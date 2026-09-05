@@ -1,0 +1,72 @@
+package com.barutdev.tullab.ui.theme
+
+import androidx.compose.ui.graphics.Color
+
+/**
+ * Tullab Color System
+ * 
+ * Extended color palette for professional UI with gradients,
+ * surface variants, and semantic colors.
+ */
+
+// Primary Brand Colors
+val ProfessionalBlue = Color(0xFF4A90E2)
+val ProfessionalBlueDark = Color(0xFF2C6FBA)
+val ProfessionalBlueLight = Color(0xFF82B5F4)
+
+// Surface Colors
+val TullabBackground = Color(0xFFF7F9FC)
+val TullabSurface = Color(0xFFFFFFFF)
+val TullabOnSurface = Color(0xFF1F2430)
+val TullabOnSurfaceVariant = Color(0xFF526070)
+
+// Surface Container Variants (Material 3)
+val TullabSurfaceContainerLowest = Color(0xFFFFFFFF)
+val TullabSurfaceContainerLow = Color(0xFFF8FAFC)
+val TullabSurfaceContainer = Color(0xFFF1F5F9)
+val TullabSurfaceContainerHigh = Color(0xFFE2E8F0)
+val TullabSurfaceContainerHighest = Color(0xFFCBD5E1)
+
+// Status Colors
+val StatusGreen = Color(0xFF2E7D32)
+val StatusYellow = Color(0xFFF9A825)
+val StatusBlue = Color(0xFF1E88E5)
+val StatusOrange = Color(0xFFFB8C00)
+val StatusRed = Color(0xFFD32F2F)
+
+// Status Colors with Containers
+val StatusGreenContainer = Color(0xFFE8F5E9)
+val StatusYellowContainer = Color(0xFFFFF8E1)
+val StatusBlueContainer = Color(0xFFE3F2FD)
+val StatusOrangeContainer = Color(0xFFFFF3E0)
+val StatusRedContainer = Color(0xFFFFEBEE)
+
+// Homework Status Colors
+val HomeworkTeal = Color(0xFF009688)           // Completed
+val HomeworkTealContainer = Color(0xFFE0F2F1)  // Completed card bg
+val HomeworkMagenta = Color(0xFFE91E63)        // Overdue
+val HomeworkMagentaContainer = Color(0xFFFCE4EC) // Overdue card bg
+val HomeworkGray = Color(0xFF9E9E9E)           // Cancelled
+val HomeworkGrayContainer = Color(0xFFF5F5F5)  // Cancelled card bg
+
+// Gradient Colors
+val GradientPrimaryStart = Color(0xFF4A90E2)
+val GradientPrimaryEnd = Color(0xFF7C3AED)
+val GradientSuccessStart = Color(0xFF10B981)
+val GradientSuccessEnd = Color(0xFF059669)
+val GradientWarmStart = Color(0xFFF97316)
+val GradientWarmEnd = Color(0xFFEAB308)
+
+// Overlay & Effect Colors
+val ScrimColor = Color(0x52000000)
+val ShimmerHighlight = Color(0xFFF8FAFC)
+val ShimmerBase = Color(0xFFE2E8F0)
+val RippleColor = Color(0x1F000000)
+val RippleColorOnPrimary = Color(0x1FFFFFFF)
+
+// Dark Theme Specific
+val DarkBackground = Color(0xFF0D111C)
+val DarkSurface = Color(0xFF131826)
+val DarkSurfaceVariant = Color(0xFF2A3242)
+val DarkOnSurface = Color(0xFFE0E5ED)
+val DarkOnSurfaceVariant = Color(0xFFC4CAD7)

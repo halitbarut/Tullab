@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Kora</string>
+    <string name="app_name">Tullab</string>
 
     <!-- Student List Screen -->
     <string name="student_list_title">Öğrencilerim</string>
@@ -171,7 +171,7 @@
     <string name="notification_lesson_reminder_title">Ders hatırlatıcısı</string>
     <string name="notification_lesson_reminder_day_before">Hatırlatma: Yarın %1$s ile bir dersiniz var.</string>
     <string name="notification_lesson_reminder_day_of">Hatırlatma: Bugün %1$s ile bir dersiniz var.</string>
-    <string name="notification_default_message">Kora\'dan yeni bir hatırlatmanız var.</string>
+    <string name="notification_default_message">Tullab\'dan yeni bir hatırlatmanız var.</string>
     <string name="notification_log_reminder_message">Bugünkü derslerinizi kaydetmeyi unutmayın.</string>
 
     <!-- Calendar Screen -->
@@ -242,7 +242,7 @@
 
     <!-- Onboarding -->
     <string name="onboarding_title">Hoş Geldiniz</string>
-    <string name="onboarding_welcome_title">Kora’ya Hoş Geldiniz</string>
+    <string name="onboarding_welcome_title">Tullab’ya Hoş Geldiniz</string>
     <string name="onboarding_feature1_title">Kolay Öğrenci Yönetimi</string>
     <string name="onboarding_feature1_body">Tüm öğrencilerinizi, derslerinizi ve notlarınızı tek bir yerde düzenleyin.</string>
     <string name="onboarding_feature2_title">Otomatik Ödeme Takibi</string>

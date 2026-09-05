@@ -1,0 +1,845 @@
+package com.barutdev.tullab.ui.screens.dashboard
+
+import android.util.Log
+
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.CalendarToday
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Groups
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.History
+
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.IconButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import com.barutdev.tullab.util.tullabStringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.platform.testTag
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.barutdev.tullab.R
+import com.barutdev.tullab.domain.model.Lesson
+import com.barutdev.tullab.domain.model.LessonStatus
+import com.barutdev.tullab.domain.model.PaymentRecord
+import com.barutdev.tullab.ui.preferences.LocalUserPreferences
+import com.barutdev.tullab.ui.navigation.ScreenScaffoldConfig
+import com.barutdev.tullab.ui.navigation.TopBarAction
+import com.barutdev.tullab.ui.navigation.TopBarConfig
+import com.barutdev.tullab.ui.screens.common.StudentNameUiStatus
+import com.barutdev.tullab.ui.screens.common.deriveStudentNameUiStatus
+import com.barutdev.tullab.ui.screens.dashboard.components.AddLessonDialog
+import com.barutdev.tullab.ui.screens.dashboard.components.LogLessonDialog
+import com.barutdev.tullab.ui.theme.TullabAnimationSpecs
+import com.barutdev.tullab.ui.theme.TullabTheme
+import com.barutdev.tullab.ui.theme.LocalLocale
+import com.barutdev.tullab.ui.components.AnimatedListItem
+import com.barutdev.tullab.util.formatCurrency
+import java.text.NumberFormat
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+import java.util.Locale
+import kotlinx.coroutines.launch
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import android.content.res.Configuration
+import com.barutdev.tullab.util.LocalMessageNotifier
+
+private data class CompletedLessonUiModel(
+    val dateText: String,
+    val durationText: String?,
+    val notes: String?,
+    val totalText: String,
+    val isFlatFee: Boolean
+)
+
+
+@Composable
+fun DashboardScreen(
+    onNavigateToSettings: () -> Unit,
+    onNavigateToStudentList: () -> Unit,
+    onEditStudentProfile: (Int) -> Unit,
+    expectedStudentId: Int? = null,
+    modifier: Modifier = Modifier,
+    viewModel: DashboardViewModel = hiltViewModel(
+        key = expectedStudentId?.let { "dashboard-$it" } ?: "dashboard-default"
+    )
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val coroutineScope = rememberCoroutineScope()
+    val userPreferences = LocalUserPreferences.current
+    val locale = LocalLocale.current
+    val context = LocalContext.current
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val localizedContext = remember(context, locale, configuration) {
+        val newConfiguration = Configuration(configuration)
+        newConfiguration.setLocale(locale)
+        context.createConfigurationContext(newConfiguration)
+    }
+    val messageNotifier = LocalMessageNotifier.current
+
+    LaunchedEffect(expectedStudentId) {
+        Log.d("DashboardScreen", "Composing for expectedStudentId=$expectedStudentId")
+    }
+    LaunchedEffect(viewModel.boundStudentId) {
+        Log.d("DashboardScreen", "ViewModel bound to studentId=${viewModel.boundStudentId}")
+    }
+    LaunchedEffect(uiState.studentId) {
+        uiState.studentId?.let { resolvedId ->
+            Log.d("DashboardScreen", "Rendering dashboard for studentId=$resolvedId")
+        }
+    }
+
+LaunchedEffect(viewModel) {
+        viewModel.events.collect { event ->
+            when (event) {
+                DashboardEvent.StudentRemoved -> onNavigateToStudentList()
+                is DashboardEvent.ShowToast -> {
+                    messageNotifier.showMessage(localizedContext.getString(event.messageRes))
+                }
+            }
+        }
+    }
+
+    val studentNameStatus = deriveStudentNameUiStatus(
+        studentName = uiState.studentName,
+        hasStudentReference = uiState.studentId != null
+    )
+    val fallbackTitle = tullabStringResource(id = R.string.dashboard_title)
+    val resolvedStudentName = uiState.studentName.takeIf {
+        studentNameStatus == StudentNameUiStatus.Ready && it.isNotBlank()
+    }
+    val topBarTitle = resolvedStudentName?.let {
+        tullabStringResource(id = R.string.dashboard_student_label, it)
+    } ?: fallbackTitle
+    val navigateToListDescription = tullabStringResource(
+        id = R.string.top_bar_navigate_to_student_list_content_description
+    )
+    val settingsDescription = tullabStringResource(id = R.string.dashboard_settings_icon_description)
+    val editDescription = tullabStringResource(id = R.string.dashboard_edit_student_content_description)
+
+    val topBarActions = remember(
+        uiState.studentId,
+        editDescription,
+        settingsDescription,
+        onNavigateToSettings,
+        onEditStudentProfile
+    ) {
+        val editAction = uiState.studentId?.let { id ->
+            TopBarAction(
+                icon = Icons.Outlined.Edit,
+                contentDescription = editDescription,
+                onClick = { onEditStudentProfile(id) }
+            )
+        }
+        listOfNotNull(editAction) + TopBarAction(
+            icon = Icons.Filled.Settings,
+            contentDescription = settingsDescription,
+            onClick = onNavigateToSettings
+        )
+    }
+
+    val topBarConfig = remember(
+        topBarTitle,
+        navigateToListDescription,
+        topBarActions,
+        onNavigateToStudentList
+    ) {
+        TopBarConfig(
+            title = topBarTitle,
+            navigationIcon = TopBarAction(
+                icon = Icons.Outlined.Groups,
+                contentDescription = navigateToListDescription,
+                onClick = onNavigateToStudentList
+            ),
+            actions = topBarActions
+        )
+    }
+    ScreenScaffoldConfig(topBarConfig = topBarConfig)
+
+    AddLessonDialog(
+        showDialog = uiState.isAddLessonDialogVisible,
+        onDismiss = viewModel::dismissAddLessonDialog,
+        onSave = { duration, notes, pricingMode, rateOrFeeInput ->
+            viewModel.onSaveLesson(duration, notes, pricingMode, rateOrFeeInput)
+        }
+    )
+
+    val paymentHistory by viewModel.paymentHistory.collectAsStateWithLifecycle()
+PaymentHistoryDialog(
+        showDialog = uiState.isPaymentHistoryDialogVisible,
+        records = paymentHistory,
+        currencyCode = userPreferences.currencyCode,
+        onDismiss = viewModel::dismissPaymentHistoryDialog
+    )
+
+    MarkAsPaidConfirmDialog(
+        showDialog = uiState.isMarkAsPaidDialogVisible,
+        onConfirm = { viewModel.confirmMarkAsPaidAndDismiss() },
+        onDismiss = viewModel::dismissMarkAsPaidDialog
+    )
+
+    LogLessonDialog(
+        showDialog = uiState.isLogLessonDialogVisible,
+        lesson = uiState.lessonToLog,
+        onDismiss = viewModel::dismissLogLessonDialog,
+        onComplete = { duration, notes, pricingMode, rateOrFeeInput ->
+            viewModel.onLogLessonComplete(duration, notes, pricingMode, rateOrFeeInput)
+        },
+        onMarkNotDone = { notes ->
+            viewModel.onLogLessonMarkNotDone(notes)
+        }
+    )
+
+    DashboardBody(
+        totalHours = uiState.totalHours,
+        hourlyRate = uiState.hourlyRate,
+        totalAmountDue = uiState.totalAmountDue,
+        completedLessonsAwaitingPayment = uiState.completedLessonsAwaitingPayment,
+        rateBreakdownTiers = uiState.rateBreakdownTiers,
+        lastPaymentDate = uiState.lastPaymentDate,
+        upcomingLessons = uiState.upcomingLessons,
+        pastLessonsToLog = uiState.pastLessonsToLog,
+        onLogLessonClick = viewModel::onLogLessonClicked,
+onMarkCurrentCycleAsPaid = viewModel::showMarkAsPaidDialog,
+        onShowPaymentHistory = viewModel::showPaymentHistoryDialog,
+        currencyCode = userPreferences.currencyCode,
+        modifier = modifier.fillMaxSize()
+    )
+}
+
+@Composable
+private fun DashboardBody(
+    totalHours: Double,
+    hourlyRate: Double,
+    totalAmountDue: Double,
+    completedLessonsAwaitingPayment: List<Lesson>,
+    rateBreakdownTiers: List<PaymentBreakdownTier>,
+    lastPaymentDate: Long?,
+    upcomingLessons: List<Lesson>,
+    pastLessonsToLog: List<Lesson>,
+    onLogLessonClick: (Lesson) -> Unit,
+    onMarkCurrentCycleAsPaid: () -> Unit,
+    onShowPaymentHistory: () -> Unit,
+    currencyCode: String,
+    modifier: Modifier = Modifier
+) {
+    val locale = LocalLocale.current
+    Column(
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 24.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        val noDebtMessage = tullabStringResource(id = R.string.no_debt_to_pay_toast)
+        val messageNotifier = LocalMessageNotifier.current
+        
+        // Card 0: Payment Tracking
+        AnimatedListItem(index = 0) {
+            PaymentTrackingCard(
+                totalHours = totalHours,
+                hourlyRate = hourlyRate,
+                totalAmountDue = totalAmountDue,
+                rateBreakdownTiers = rateBreakdownTiers,
+                lastPaymentDate = lastPaymentDate,
+                onMarkPaidClick = {
+                    if (totalAmountDue > 0.0) {
+                        onMarkCurrentCycleAsPaid()
+                    } else {
+                        messageNotifier.showMessage(noDebtMessage)
+                    }
+                },
+                onShowPaymentHistory = onShowPaymentHistory,
+                currencyCode = currencyCode,
+                locale = locale
+            )
+        }
+        
+        // Card 1: Completed Lessons
+        AnimatedListItem(index = 1) {
+            CompletedLessonsCard(
+                lessons = completedLessonsAwaitingPayment,
+                locale = locale,
+                currencyCode = currencyCode
+            )
+        }
+        
+        // Card 2: Upcoming Lessons
+        AnimatedListItem(index = 2) {
+            UpcomingLessonsCard(
+                upcomingLessons = upcomingLessons,
+                locale = locale
+            )
+        }
+        
+        // Card 3: Log Past Lessons
+        AnimatedListItem(index = 3) {
+            LogPastLessonsCard(
+                pastLessons = pastLessonsToLog,
+                onLessonClick = onLogLessonClick,
+                locale = locale
+            )
+        }
+        
+    }
+}
+
+@Composable
+@OptIn(ExperimentalFoundationApi::class)
+private fun LogPastLessonsCard(
+    pastLessons: List<Lesson>,
+    onLessonClick: (Lesson) -> Unit,
+    locale: Locale,
+    modifier: Modifier = Modifier
+) {
+    val lessonsWithDates = remember(pastLessons, locale) {
+        val formatter = DateTimeFormatter.ofPattern("EEEE, MMMM d", locale)
+        pastLessons.map { lesson ->
+            val formattedDate = Instant.ofEpochMilli(lesson.date)
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate()
+                .format(formatter)
+            lesson to formattedDate
+        }
+    }
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .animateContentSize(animationSpec = TullabAnimationSpecs.contentSizeSpec),
+        shape = MaterialTheme.shapes.large
+    ) {
+        Column(
+            modifier = Modifier.padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = tullabStringResource(id = R.string.dashboard_log_past_lessons_title),
+                style = MaterialTheme.typography.titleMedium
+            )
+            if (lessonsWithDates.isEmpty()) {
+                Text(
+                    text = tullabStringResource(id = R.string.dashboard_log_past_lessons_empty),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                Text(
+                    text = tullabStringResource(id = R.string.dashboard_log_past_lessons_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    lessonsWithDates.forEach { (lesson, formattedDate) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(onClick = { onLessonClick(lesson) }, role = Role.Button),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.CalendarToday,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = formattedDate,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PaymentTrackingCard(
+    totalHours: Double,
+    hourlyRate: Double,
+    totalAmountDue: Double,
+    rateBreakdownTiers: List<PaymentBreakdownTier>,
+    lastPaymentDate: Long?,
+    onMarkPaidClick: () -> Unit,
+    onShowPaymentHistory: () -> Unit,
+    currencyCode: String,
+    locale: Locale,
+    modifier: Modifier = Modifier
+) {
+    val amountText = remember(totalAmountDue, currencyCode) {
+        formatCurrency(totalAmountDue, currencyCode)
+    }
+    val hourlyRateText = remember(hourlyRate, currencyCode) {
+        formatCurrency(hourlyRate, currencyCode)
+    }
+    val hoursText = remember(totalHours, locale) {
+        NumberFormat.getNumberInstance(locale).apply {
+            maximumFractionDigits = 2
+            minimumFractionDigits = 0
+        }.format(totalHours)
+    }
+    val formattedLastPaymentDate = remember(lastPaymentDate, locale) {
+        lastPaymentDate?.let { timestamp ->
+            DateTimeFormatter
+                .ofLocalizedDate(FormatStyle.LONG)
+                .withLocale(locale)
+                .format(
+                    Instant.ofEpochMilli(timestamp)
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate()
+                )
+        }
+    }
+    val sinceLastPaymentText = if (formattedLastPaymentDate != null) {
+        tullabStringResource(
+            id = R.string.dashboard_payment_since_last_with_date,
+            formattedLastPaymentDate
+        )
+    } else {
+        tullabStringResource(id = R.string.dashboard_payment_since_last_unknown)
+    }
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .animateContentSize(animationSpec = TullabAnimationSpecs.contentSizeSpec),
+        shape = MaterialTheme.shapes.large
+    ) {
+        Column(
+            modifier = Modifier.padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = tullabStringResource(id = R.string.dashboard_payment_cycle_title),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                IconButton(onClick = onShowPaymentHistory) {
+                    Icon(
+                        imageVector = Icons.Outlined.History,
+                        contentDescription = tullabStringResource(id = R.string.dashboard_payment_history_icon_description)
+                    )
+                }
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = tullabStringResource(
+                        id = R.string.dashboard_payment_amount_value,
+                        amountText
+                    ),
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.testTag("PaymentAmountText")
+                )
+                if (rateBreakdownTiers.isEmpty()) {
+                    Text(
+                        text = tullabStringResource(
+                            id = R.string.dashboard_payment_rate_info,
+                            hoursText,
+                            hourlyRateText
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    rateBreakdownTiers.forEach { tier ->
+                        val tierText = when (tier.pricingMode) {
+                            com.barutdev.tullab.domain.model.PricingMode.PER_HOUR -> {
+                                val formattedHours = NumberFormat.getNumberInstance(locale).apply {
+                                    maximumFractionDigits = 2
+                                    minimumFractionDigits = 0
+                                }.format(tier.totalHours)
+                                val formattedRate = formatCurrency(tier.rateOrFee, currencyCode)
+                                tullabStringResource(
+                                    id = R.string.dashboard_payment_rate_info,
+                                    formattedHours,
+                                    formattedRate
+                                )
+                            }
+                            com.barutdev.tullab.domain.model.PricingMode.FLAT_FEE -> {
+                                val formattedFee = formatCurrency(tier.rateOrFee, currencyCode)
+                                tullabStringResource(
+                                    id = R.string.dashboard_payment_flat_fee_tier,
+                                    tier.lessonCount,
+                                    formattedFee
+                                )
+                            }
+                        }
+                        Text(
+                            text = tierText,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+            Text(
+                text = sinceLastPaymentText,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Button(
+                onClick = onMarkPaidClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("MarkAsPaidButton")
+            ) {
+                Text(text = tullabStringResource(id = R.string.dashboard_payment_mark_paid))
+            }
+        }
+    }
+}
+
+@Composable
+fun PaymentHistoryDialog(
+    showDialog: Boolean,
+    records: List<PaymentRecord>,
+    currencyCode: String,
+    onDismiss: () -> Unit
+) {
+    if (!showDialog) return
+val title = tullabStringResource(id = R.string.payment_history_title)
+    val empty = tullabStringResource(id = R.string.no_payment_history_toast)
+    val close = tullabStringResource(id = R.string.close_button)
+    AlertDialog(
+        modifier = Modifier.testTag("PaymentHistoryDialog"),
+        onDismissRequest = onDismiss,
+        title = { Text(text = title) },
+        text = {
+            if (records.isEmpty()) {
+                Text(text = empty)
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    records.forEach { rec ->
+                        val amountText = formatCurrency(rec.amountMinor / 100.0, currencyCode)
+                        val dateText = DateTimeFormatter
+                            .ofLocalizedDate(FormatStyle.LONG)
+                            .format(Instant.ofEpochMilli(rec.paidAtEpochMs).atZone(ZoneId.systemDefault()).toLocalDate())
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = dateText, style = MaterialTheme.typography.bodyLarge)
+                            Text(text = amountText, style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = close)
+            }
+        }
+    )
+}
+
+@Composable
+fun MarkAsPaidConfirmDialog(
+    showDialog: Boolean,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    if (!showDialog) return
+    val title = tullabStringResource(id = R.string.dashboard_mark_paid_confirm_title)
+    val message = tullabStringResource(id = R.string.dashboard_mark_paid_confirm_message)
+    val confirm = tullabStringResource(id = R.string.dashboard_mark_paid_confirm)
+    val cancel = tullabStringResource(id = R.string.dashboard_mark_paid_cancel)
+    AlertDialog(
+        modifier = Modifier.testTag("MarkAsPaidConfirmDialog"),
+        onDismissRequest = onDismiss,
+        title = { Text(text = title) },
+        text = { Text(text = message) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) { Text(text = confirm) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(text = cancel) }
+        }
+    )
+}
+@Composable
+private fun CompletedLessonsCard(
+    lessons: List<Lesson>,
+    locale: Locale,
+    currencyCode: String,
+    modifier: Modifier = Modifier
+) {
+    val items = remember(lessons, locale, currencyCode) {
+        if (lessons.isEmpty()) {
+            emptyList()
+        } else {
+            val dateFormatter = DateTimeFormatter
+                .ofLocalizedDate(FormatStyle.LONG)
+                .withLocale(locale)
+            val durationFormatter = NumberFormat.getNumberInstance(locale).apply {
+                maximumFractionDigits = 2
+                minimumFractionDigits = 0
+            }
+            lessons.map { lesson ->
+                val dateText = Instant.ofEpochMilli(lesson.date)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
+                    .format(dateFormatter)
+                val durationText = lesson.durationInHours?.let { duration ->
+                    durationFormatter.format(duration)
+                }
+                CompletedLessonUiModel(
+                    dateText = dateText,
+                    durationText = durationText,
+                    notes = lesson.notes,
+                    totalText = formatCurrency(lesson.calculatedValue, currencyCode),
+                    isFlatFee = lesson.pricingMode == com.barutdev.tullab.domain.model.PricingMode.FLAT_FEE
+                )
+            }
+        }
+    }
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .animateContentSize(animationSpec = TullabAnimationSpecs.contentSizeSpec),
+        shape = MaterialTheme.shapes.large
+    ) {
+        Column(
+            modifier = Modifier.padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = tullabStringResource(id = R.string.dashboard_completed_lessons_title),
+                style = MaterialTheme.typography.titleMedium
+            )
+            if (items.isEmpty()) {
+                Text(
+                    text = tullabStringResource(id = R.string.dashboard_completed_lessons_empty),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    items.forEach { item ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.CheckCircle,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text(
+                                    text = item.dateText,
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                if (!item.isFlatFee && item.durationText != null) {
+                                    Text(
+                                        text = tullabStringResource(
+                                            id = R.string.dashboard_completed_lessons_duration,
+                                            item.durationText
+                                        ),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Text(
+                                    text = tullabStringResource(
+                                        id = R.string.dashboard_completed_lessons_total,
+                                        item.totalText
+                                    ),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                item.notes?.let { notes ->
+                                    Text(
+                                        text = tullabStringResource(
+                                            id = R.string.dashboard_completed_lessons_notes,
+                                            notes
+                                        ),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun UpcomingLessonsCard(
+    upcomingLessons: List<Lesson>,
+    locale: Locale,
+    modifier: Modifier = Modifier
+) {
+    val formattedLessons = remember(upcomingLessons, locale) {
+        val formatter = DateTimeFormatter.ofPattern("EEEE, MMMM d", locale)
+        upcomingLessons
+            .sortedBy { lesson -> lesson.date }
+            .map { lesson ->
+                Instant.ofEpochMilli(lesson.date)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
+                    .format(formatter)
+            }
+    }
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large
+    ) {
+        Column(
+            modifier = Modifier.padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = tullabStringResource(id = R.string.dashboard_upcoming_lessons_title),
+                style = MaterialTheme.typography.titleMedium
+            )
+            if (formattedLessons.isEmpty()) {
+                Text(
+                    text = tullabStringResource(id = R.string.dashboard_upcoming_lessons_empty),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    formattedLessons.forEach { formattedDate ->
+                        Row(
+                            modifier = Modifier,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.CalendarToday,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = formattedDate,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+@Preview
+@Composable
+private fun DashboardScreenPreview() {
+    val previewUiState = DashboardUiState(
+        studentId = 1,
+        studentName = "Elif Yılmaz",
+        hourlyRate = 80.0,
+        totalHours = 4.5,
+        totalAmountDue = 360.0,
+        completedLessonsAwaitingPayment = listOf(
+            Lesson(
+                id = 3,
+                studentId = 1,
+                date = System.currentTimeMillis() - 172_800_000L,
+                status = LessonStatus.COMPLETED,
+                durationInHours = 2.0,
+                notes = "Exam prep",
+                pricingMode = com.barutdev.tullab.domain.model.PricingMode.PER_HOUR,
+                rateOrFee = 80.0
+            ),
+            Lesson(
+                id = 4,
+                studentId = 1,
+                date = System.currentTimeMillis() - 259_200_000L,
+                status = LessonStatus.COMPLETED,
+                durationInHours = 2.5,
+                notes = null,
+                pricingMode = com.barutdev.tullab.domain.model.PricingMode.PER_HOUR,
+                rateOrFee = 80.0
+            )
+        ),
+        lastPaymentDate = System.currentTimeMillis() - 604_800_000L,
+        upcomingLessons = listOf(
+            Lesson(
+                id = 1,
+                studentId = 1,
+                date = System.currentTimeMillis(),
+                status = LessonStatus.SCHEDULED,
+                durationInHours = null,
+                notes = null,
+                pricingMode = com.barutdev.tullab.domain.model.PricingMode.PER_HOUR,
+                rateOrFee = 80.0
+            )
+        ),
+        pastLessonsToLog = listOf(
+            Lesson(
+                id = 2,
+                studentId = 1,
+                date = System.currentTimeMillis() - 86_400_000L,
+                status = LessonStatus.SCHEDULED,
+                durationInHours = null,
+                notes = null,
+                pricingMode = com.barutdev.tullab.domain.model.PricingMode.PER_HOUR,
+                rateOrFee = 80.0
+            )
+        )
+    )
+    TullabTheme {
+        DashboardBody(
+            totalHours = previewUiState.totalHours,
+            hourlyRate = previewUiState.hourlyRate,
+            totalAmountDue = previewUiState.totalAmountDue,
+            completedLessonsAwaitingPayment = previewUiState.completedLessonsAwaitingPayment,
+            rateBreakdownTiers = previewUiState.rateBreakdownTiers,
+            lastPaymentDate = previewUiState.lastPaymentDate,
+            upcomingLessons = previewUiState.upcomingLessons,
+            pastLessonsToLog = previewUiState.pastLessonsToLog,
+            onLogLessonClick = {},
+            onMarkCurrentCycleAsPaid = {},
+            onShowPaymentHistory = {},
+            currencyCode = "TRY"
+        )
+    }
+}
