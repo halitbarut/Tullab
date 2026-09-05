@@ -125,7 +125,7 @@
     <string name="settings_reset_content_description">Delete all stored data</string>
     <string name="settings_reset_action_value">All data</string>
     <string name="settings_reset_dialog_title">Reset all data?</string>
-    <string name="settings_reset_dialog_message">This will permanently delete all students, lessons, homework, preferences, and AI insights. This action cannot be undone.</string>
+    <string name="settings_reset_dialog_message">This will permanently delete all students, lessons, homework and preferences. This action cannot be undone.</string>
     <string name="settings_reset_dialog_confirm">Reset</string>
     <string name="settings_backup_success">Backup created successfully.</string>
     <string name="settings_backup_failure">Unable to create backup. Please try again.</string>

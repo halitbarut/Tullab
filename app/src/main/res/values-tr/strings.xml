@@ -120,7 +120,7 @@
     <string name="settings_reset_content_description">Kaydedilen tüm verileri sil</string>
     <string name="settings_reset_action_value">Tüm veriler</string>
     <string name="settings_reset_dialog_title">Tüm veriler sıfırlansın mı?</string>
-    <string name="settings_reset_dialog_message">Bu işlem tüm öğrencileri, dersleri, ödevleri, tercihleri ve yapay zeka içgörülerini kalıcı olarak silecek. Bu işlem geri alınamaz.</string>
+    <string name="settings_reset_dialog_message">Bu işlem tüm öğrencileri, dersleri, ödevleri ve tercihleri kalıcı olarak silecek. Bu işlem geri alınamaz.</string>
     <string name="settings_reset_dialog_confirm">Sıfırla</string>
     <string name="settings_backup_success">Yedekleme başarıyla oluşturuldu.</string>
     <string name="settings_backup_failure">Yedekleme oluşturulamadı. Lütfen tekrar deneyin.</string>

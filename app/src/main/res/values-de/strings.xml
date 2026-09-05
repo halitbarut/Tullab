@@ -120,7 +120,7 @@
     <string name="settings_reset_content_description">Alle gespeicherten Daten löschen</string>
     <string name="settings_reset_action_value">Alle Daten</string>
     <string name="settings_reset_dialog_title">Alle Daten zurücksetzen?</string>
-    <string name="settings_reset_dialog_message">Dadurch werden alle Schüler, Stunden, Hausaufgaben, Einstellungen und KI-Einblicke dauerhaft gelöscht. Dieser Vorgang kann nicht rückgängig gemacht werden.</string>
+    <string name="settings_reset_dialog_message">Dadurch werden alle Schüler, Stunden, Hausaufgaben und Einstellungen dauerhaft gelöscht. Dieser Vorgang kann nicht rückgängig gemacht werden.</string>
     <string name="settings_reset_dialog_confirm">Zurücksetzen</string>
     <string name="settings_backup_success">Backup wurde erfolgreich erstellt.</string>
     <string name="settings_backup_failure">Backup konnte nicht erstellt werden. Bitte versuche es erneut.</string>
