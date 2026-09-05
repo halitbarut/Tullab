@@ -132,7 +132,7 @@
     <!-- Onboarding -->
     <string name="onboarding_title">Willkommen</string>
     <string name="onboarding_welcome_title">Willkommen bei Tullab</string>
-    <string name="onboarding_welcome_subtitle">Dein privater, Offline-First-Lehrassistent.</string>
+    <string name="onboarding_welcome_subtitle">Private Lektionen zu verwalten ist jetzt einfacher.</string>
     <string name="onboarding_feature1_title">Schülerverwaltung</string>
     <string name="onboarding_feature1_body">Organisiere alle Schüler, Stunden und Notizen an einem Ort.</string>
     <string name="onboarding_feature2_title">Stunden- &amp; Hausaufgabenplanung</string>

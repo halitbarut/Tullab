@@ -280,7 +280,7 @@
     <!-- Onboarding -->
     <string name="onboarding_title">Welcome</string>
     <string name="onboarding_welcome_title">Welcome to Tullab</string>
-    <string name="onboarding_welcome_subtitle">Your private, offline-first teaching assistant.</string>
+    <string name="onboarding_welcome_subtitle">Managing private lessons is now easier.</string>
     <string name="onboarding_feature1_title">Student Management</string>
     <string name="onboarding_feature1_body">Organize all your students, lessons, and notes in one convenient place.</string>
     <string name="onboarding_feature2_title">Lesson &amp; Homework Scheduling</string>

@@ -243,7 +243,7 @@
     <!-- Onboarding -->
     <string name="onboarding_title">Hoş Geldiniz</string>
     <string name="onboarding_welcome_title">Tullab’a Hoş Geldiniz</string>
-    <string name="onboarding_welcome_subtitle">Özel, çevrimdışı öncelikli öğretmen asistanınız.</string>
+    <string name="onboarding_welcome_subtitle">Özel dersleri yönetmek artık daha kolay.</string>
     <string name="onboarding_feature1_title">Öğrenci Yönetimi</string>
     <string name="onboarding_feature1_body">Tüm öğrencilerinizi, derslerinizi ve notlarınızı tek bir yerde düzenleyin.</string>
     <string name="onboarding_feature2_title">Ders ve Ödev Planlama</string>

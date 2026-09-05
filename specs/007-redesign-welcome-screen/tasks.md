@@ -33,8 +33,8 @@
 
 **Independent Test**: Launch the app with cleared onboarding data; verify the screen renders the official Tullab emblem centered inside a tinted hero container with a bold greeting headline and subtitle, symmetrically aligned with 24dp horizontal padding.
 
-- [ ] T006 [US1] Implement `WelcomeHeroSection` composable with centered brand emblem container, headline, and subtitle in `app/src/main/java/com/barutdev/tullab/ui/screens/onboarding/WelcomeHeroSection.kt`
-- [ ] T007 [US1] Assemble initial single-screen layout in `app/src/main/java/com/barutdev/tullab/ui/screens/onboarding/OnboardingScreen.kt` replacing the legacy `HorizontalPager` with `WelcomeHeroSection`
+- [X] T006 [US1] Implement `WelcomeHeroSection` composable with centered brand emblem container, headline, and subtitle in `app/src/main/java/com/barutdev/tullab/ui/screens/onboarding/WelcomeHeroSection.kt`
+- [X] T007 [US1] Assemble initial single-screen layout in `app/src/main/java/com/barutdev/tullab/ui/screens/onboarding/OnboardingScreen.kt` replacing the legacy `HorizontalPager` with `WelcomeHeroSection`
 
 **Checkpoint**: User Story 1 delivers a centered, visually stunning brand hero greeting without misalignment.
 
@@ -46,8 +46,8 @@
 
 **Independent Test**: Launch the app; verify 3 distinct feature cards render below the hero section with their respective icons, titles, and descriptions, using consistent shape, borders, and theme tokens.
 
-- [ ] T008 [P] [US2] Implement `ValuePillCard` and `ValuePillList` composables for the 3 core pillars in `app/src/main/java/com/barutdev/tullab/ui/screens/onboarding/ValuePillList.kt`
-- [ ] T009 [US2] Integrate `ValuePillList` into the central column of `app/src/main/java/com/barutdev/tullab/ui/screens/onboarding/OnboardingScreen.kt`
+- [X] T008 [P] [US2] Implement `ValuePillCard` and `ValuePillList` composables for the 3 core pillars in `app/src/main/java/com/barutdev/tullab/ui/screens/onboarding/ValuePillList.kt`
+- [X] T009 [US2] Integrate `ValuePillList` into the central column of `app/src/main/java/com/barutdev/tullab/ui/screens/onboarding/OnboardingScreen.kt`
 
 **Checkpoint**: User Story 2 displays all 3 core value pillars in a single cohesive view without obsolete AI references.
 
@@ -59,8 +59,8 @@
 
 **Independent Test**: Switch app/device locale across Turkish, English, and German; verify the headline, subtitle, and all 3 value cards display correct grammar and natural phrasing in each language.
 
-- [ ] T010 [US3] Wire all localized string resources (`tullabStringResource`) into `WelcomeHeroSection` and `ValuePillList` within `app/src/main/java/com/barutdev/tullab/ui/screens/onboarding/OnboardingScreen.kt`
-- [ ] T011 [P] [US3] Verify string key parity and Turkish dative suffix compliance across `app/src/main/res/values/strings.xml`, `app/src/main/res/values-tr/strings.xml`, and `app/src/main/res/values-de/strings.xml`
+- [X] T010 [US3] Wire all localized string resources (`tullabStringResource`) into `WelcomeHeroSection` and `ValuePillList` within `app/src/main/java/com/barutdev/tullab/ui/screens/onboarding/OnboardingScreen.kt`
+- [X] T011 [P] [US3] Verify string key parity and Turkish dative suffix compliance across `app/src/main/res/values/strings.xml`, `app/src/main/res/values-tr/strings.xml`, and `app/src/main/res/values-de/strings.xml`
 
 **Checkpoint**: User Story 3 confirms 0 grammatical errors and complete multilingual parity.
 
@@ -72,10 +72,10 @@
 
 **Independent Test**: Open the welcome screen; observe staggered entrance motion completing under 600ms; tap policy links; toggle consent checkbox to verify button enables, then tap "Get Started" to navigate to the main dashboard.
 
-- [ ] T012 [P] [US4] Implement `LegalConsentSection` with annotated clickable policy links and checkbox in `app/src/main/java/com/barutdev/tullab/ui/screens/onboarding/LegalConsentSection.kt`
-- [ ] T013 [P] [US4] Implement `GetStartedAction` button with animated enabled state and press scaling in `app/src/main/java/com/barutdev/tullab/ui/screens/onboarding/GetStartedAction.kt`
-- [ ] T014 [US4] Implement coordinated entrance transitions (staggered emblem scale, header slide, cards reveal, action fade) using `TullabAnimationSpecs` in `app/src/main/java/com/barutdev/tullab/ui/screens/onboarding/OnboardingScreen.kt`
-- [ ] T015 [US4] Connect consent state and completion callback to `OnboardingViewModel` in `app/src/main/java/com/barutdev/tullab/ui/screens/onboarding/OnboardingScreen.kt`
+- [X] T012 [P] [US4] Implement `LegalConsentSection` with annotated clickable policy links and checkbox in `app/src/main/java/com/barutdev/tullab/ui/screens/onboarding/LegalConsentSection.kt`
+- [X] T013 [P] [US4] Implement `GetStartedAction` button with animated enabled state and press scaling in `app/src/main/java/com/barutdev/tullab/ui/screens/onboarding/GetStartedAction.kt`
+- [X] T014 [US4] Implement coordinated entrance transitions (staggered emblem scale, header slide, cards reveal, action fade) using `TullabAnimationSpecs` in `app/src/main/java/com/barutdev/tullab/ui/screens/onboarding/OnboardingScreen.kt`
+- [X] T015 [US4] Connect consent state and completion callback to `OnboardingViewModel` in `app/src/main/java/com/barutdev/tullab/ui/screens/onboarding/OnboardingScreen.kt`
 
 **Checkpoint**: User Story 4 enables a complete, animated single-screen onboarding journey with 1-check and 1-tap entry.
 
@@ -87,8 +87,8 @@
 
 **Independent Test**: Set font scaling to 200% on a compact screen; verify the entire screen scrolls vertically, text does not truncate or overlap, touch targets meet 48×48 dp, and stable test tags are present.
 
-- [ ] T016 [US5] Add `Modifier.verticalScroll` and dynamic padding to the main container in `app/src/main/java/com/barutdev/tullab/ui/screens/onboarding/OnboardingScreen.kt`
-- [ ] T017 [US5] Assign test tags and accessibility semantics (`contentDescription = null` for decorative icons, minimum 48×48 dp touch targets) per the UI contract in `app/src/main/java/com/barutdev/tullab/ui/screens/onboarding/OnboardingScreen.kt`
+- [X] T016 [US5] Add `Modifier.verticalScroll` and dynamic padding to the main container in `app/src/main/java/com/barutdev/tullab/ui/screens/onboarding/OnboardingScreen.kt`
+- [X] T017 [US5] Assign test tags and accessibility semantics (`contentDescription = null` for decorative icons, minimum 48×48 dp touch targets) per the UI contract in `app/src/main/java/com/barutdev/tullab/ui/screens/onboarding/OnboardingScreen.kt`
 
 **Checkpoint**: User Story 5 guarantees 100% accessibility compliance and layout responsiveness.
 
@@ -98,9 +98,9 @@
 
 **Purpose**: Execute automated tests, run code quality analysis, and perform final end-to-end verification.
 
-- [ ] T018 [P] Execute unit tests via `./gradlew testDebugUnitTest` and verify all tests pass in `app/src/test/java/com/barutdev/tullab/ui/screens/onboarding/OnboardingViewModelTest.kt`
-- [ ] T019 Execute Android lint check via `./gradlew lintDebug` to verify no layout, localization, or accessibility warnings
-- [ ] T020 Run manual and automated verification scenarios per `specs/007-redesign-welcome-screen/quickstart.md`
+- [X] T018 [P] Execute unit tests via `./gradlew testDebugUnitTest` and verify all tests pass in `app/src/test/java/com/barutdev/tullab/ui/screens/onboarding/OnboardingViewModelTest.kt`
+- [X] T019 Execute Android lint check via `./gradlew lintDebug` to verify no layout, localization, or accessibility warnings
+- [X] T020 Run manual and automated verification scenarios per `specs/007-redesign-welcome-screen/quickstart.md`
 
 ---
 
