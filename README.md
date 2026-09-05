@@ -47,7 +47,7 @@ Follow these instructions to get a local copy of Tullab up and running for devel
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-username/Tullab.git
+   git clone https://github.com/halitbarut/Tullab.git
    cd Tullab
    ```
 
@@ -99,7 +99,7 @@ Tullab uses a modern Android development stack:
 ## Help & Support
 
 If you run into issues, need help setting up the project, or have any questions:
-- Open an [Issue](https://github.com/your-username/Tullab/issues) on GitHub.
+- Open an [Issue](https://github.com/halitbarut/Tullab/issues) on GitHub.
 - Reach out directly via email: **[mhbarut66@gmail.com](mailto:mhbarut66@gmail.com)**.
 
 ---
