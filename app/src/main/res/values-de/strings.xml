@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Kora</string>
+    <string name="app_name">Tullab</string>
 
     <!-- Student List Screen -->
     <string name="student_list_title">Meine Schüler</string>
@@ -131,7 +131,7 @@
 
     <!-- Onboarding -->
     <string name="onboarding_title">Willkommen</string>
-    <string name="onboarding_welcome_title">Willkommen bei Kora</string>
+    <string name="onboarding_welcome_title">Willkommen bei Tullab</string>
     <string name="onboarding_feature1_title">Mühelose Schülerverwaltung</string>
     <string name="onboarding_feature1_body">Organisiere alle Schüler, Stunden und Notizen an einem Ort.</string>
     <string name="onboarding_feature2_title">Automatisierte Zahlungsnachverfolgung</string>
@@ -186,7 +186,7 @@
     <string name="notification_lesson_reminder_title">Unterrichtserinnerung</string>
     <string name="notification_lesson_reminder_day_before">Erinnerung: Morgen hast du Unterricht mit %1$s.</string>
     <string name="notification_lesson_reminder_day_of">Erinnerung: Heute hast du Unterricht mit %1$s.</string>
-    <string name="notification_default_message">Du hast eine neue Erinnerung von Kora.</string>
+    <string name="notification_default_message">Du hast eine neue Erinnerung von Tullab.</string>
     <string name="notification_log_reminder_message">Vergiss nicht, deine heutigen Unterrichtsstunden zu protokollieren.</string>
 
     <!-- Calendar Screen -->

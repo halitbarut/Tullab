@@ -1,11 +1,11 @@
-# Kora 🦉
+# Tullab 🦉
 
 Your personal AI-powered assistant for managing private tutoring sessions.
 
 [![CI](https://img.shields.io/badge/ci-TBD-lightgrey.svg)](#) [![License](https://img.shields.io/badge/license-TBD-lightgrey.svg)](#) [![Platform](https://img.shields.io/badge/platform-Android-3DDC84.svg)](#)
 
 ## Introduction
-Kora is a modern Android application built for private tutors, coaches, and instructors who need a clean, reliable way to manage students, lessons, homework, and payments. It solves the chaos of scattered notes, manual payment tracking, and the lack of actionable insights by bringing everything into one thoughtfully designed, privacy‑respecting app.
+Tullab is a modern Android application built for private tutors, coaches, and instructors who need a clean, reliable way to manage students, lessons, homework, and payments. It solves the chaos of scattered notes, manual payment tracking, and the lack of actionable insights by bringing everything into one thoughtfully designed, privacy‑respecting app.
 
 Core principles:
 - Privacy‑First: Your data stays on your device. No servers, no accounts, no hidden syncs.
@@ -42,7 +42,7 @@ Add your screenshots below (replace the links with your actual images):
 ![Payments](link_to_screenshot_payments.png)
 
 ## 🛠️ Tech Stack & Architecture
-Kora is built on a modern Android tech stack, following the MVVM architecture to ensure a scalable and maintainable codebase.
+Tullab is built on a modern Android tech stack, following the MVVM architecture to ensure a scalable and maintainable codebase.
 
 - UI: 100% Jetpack Compose for a declarative, modern UI.
 - Language: Kotlin first, embracing coroutines for asynchronous operations.
@@ -53,8 +53,8 @@ Kora is built on a modern Android tech stack, following the MVVM architecture to
 1) Clone the repository:
 
 ```bash
-git clone https://github.com/your-username/Kora.git
-cd Kora
+git clone https://github.com/your-username/Tullab.git
+cd Tullab
 ```
 
 2) Open the project in Android Studio (latest stable), ensure JDK 17 is configured.
@@ -66,4 +66,4 @@ cd Kora
 ```
 
 ## 💬 Contact & Feedback
-Have ideas, questions, or feedback? Open an issue or reach out at mhbarut66@gmail.com. If you find Kora useful, consider starring the repo!
+Have ideas, questions, or feedback? Open an issue or reach out at mhbarut66@gmail.com. If you find Tullab useful, consider starring the repo!

@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Kora"
+rootProject.name = "Tullab"
 include(":app")
