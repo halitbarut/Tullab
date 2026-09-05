@@ -242,13 +242,14 @@
 
     <!-- Onboarding -->
     <string name="onboarding_title">Hoş Geldiniz</string>
-    <string name="onboarding_welcome_title">Tullab’ya Hoş Geldiniz</string>
-    <string name="onboarding_feature1_title">Kolay Öğrenci Yönetimi</string>
+    <string name="onboarding_welcome_title">Tullab’a Hoş Geldiniz</string>
+    <string name="onboarding_welcome_subtitle">Özel dersleri yönetmek artık daha kolay.</string>
+    <string name="onboarding_feature1_title">Öğrenci Yönetimi</string>
     <string name="onboarding_feature1_body">Tüm öğrencilerinizi, derslerinizi ve notlarınızı tek bir yerde düzenleyin.</string>
-    <string name="onboarding_feature2_title">Otomatik Ödeme Takibi</string>
-    <string name="onboarding_feature2_body">Saatlik ücretinize göre bakiyeleri otomatik hesaplayın ve ödemeleri asla kaçırmayın.</string>
-    <string name="onboarding_feature3_title">Yapay Zeka Destekli İçgörüler</string>
-    <string name="onboarding_feature3_body">Öğrenci performansına göre bir sonraki dersiniz için akıllı, uygulanabilir öneriler alın.</string>
+    <string name="onboarding_feature2_title">Ders ve Ödev Planlama</string>
+    <string name="onboarding_feature2_body">Öğrencilerinizi yolda tutmak için sorunsuzca ders planlayın ve ödev verin.</string>
+    <string name="onboarding_feature3_title">Ücret ve Bakiye Takibi</string>
+    <string name="onboarding_feature3_body">Bakiyeleri otomatik hesaplayın ve ödemeleri takip edin, böylece hiçbir ücreti kaçırmayın.</string>
     <string name="onboarding_consent_template">%1$s ve %2$s’ı okudum ve kabul ediyorum.</string>
     <string name="onboarding_next">İleri</string>
     <string name="onboarding_get_started">Başla</string>
