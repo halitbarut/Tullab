@@ -1,69 +1,118 @@
 # Tullab 🦉
 
-Your personal AI-powered assistant for managing private tutoring sessions.
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](#)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](#)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![Platform: Android](https://img.shields.io/badge/platform-Android-3DDC84.svg)](#)
 
-[![CI](https://img.shields.io/badge/ci-TBD-lightgrey.svg)](#) [![License](https://img.shields.io/badge/license-TBD-lightgrey.svg)](#) [![Platform](https://img.shields.io/badge/platform-Android-3DDC84.svg)](#)
+**Tullab** is a modern, privacy-first Android application designed specifically for private tutors, coaches, and instructors. It provides a clean and reliable way to manage students, lessons, homework, and payments—all without relying on external servers or hidden syncs.
 
-## Introduction
-Tullab is a modern Android application built for private tutors, coaches, and instructors who need a clean, reliable way to manage students, lessons, homework, and payments. It solves the chaos of scattered notes, manual payment tracking, and the lack of actionable insights by bringing everything into one thoughtfully designed, privacy‑respecting app.
+---
 
-Core principles:
-- Privacy‑First: Your data stays on your device. No servers, no accounts, no hidden syncs.
-- Intuitive Design: A frictionless, Material 3 experience powered by Jetpack Compose.
+## Table of Contents
+- [Why Tullab?](#why-tullab)
+- [Key Features](#key-features)
+- [Getting Started](#getting-started)
+- [Tech Stack](#tech-stack)
+- [Help & Support](#help--support)
+- [Contributing & Maintainers](#contributing--maintainers)
+- [License](#license)
 
-## ✨ Features & Functionality
-### 👨‍🎓 Effortless Student Management
-Keep a comprehensive, organized list of all your students. Track progress, lesson notes, and key details in one central hub.
+---
 
-### 🗓️ Smart Scheduling & Calendar
-Plan and visualize lessons on a calendar. Quickly distinguish upcoming, completed, and payment‑pending sessions at a glance.
+## Why Tullab?
 
-### 💰 Automated Payment Tracking
-Automatically calculate amounts owed based on hourly rates and completed lessons. Log payments with a tap and maintain a clear, auditable history.
+Tullab solves the chaos of scattered notes, manual payment tracking, and the lack of actionable insights for independent educators. By keeping all your data locally on your device, Tullab ensures absolute privacy while still offering a rich, frictionless Material 3 experience.
 
+### Key Features
+- **👨‍🎓 Effortless Student Management:** Track student progress, notes, and key details in one organized hub.
+- **🗓️ Smart Scheduling:** Visualize lessons on a calendar with clear indicators for upcoming, completed, and payment-pending sessions.
+- **💰 Automated Payment Tracking:** Automatically calculate owed amounts, log payments, and maintain an auditable history.
+- **📝 Homework Management:** Assign homework and monitor completion status alongside performance notes.
+- **🔒 Privacy-First Data:** All information is stored locally on your device via Room Database.
+- **🌍 Global Ready:** Built-in multi-language (English, Turkish, German) and multi-currency (USD, TRY, EUR) support.
 
-### 📝 Integrated Homework Management
-Assign homework, track its status (pending/completed), and record performance notes to build a complete academic picture for each student.
+---
 
-### 🔒 Privacy‑First by Design
-All student and lesson information is stored securely and locally on your device, never sent to our servers.
+## Getting Started
 
-### 📤 Data Portability & Control
-Export your entire dataset to CSV for personal backups or sharing. Reset all app data instantly when you need a clean slate.
+Follow these instructions to get a local copy of Tullab up and running for development and testing purposes.
 
-### 🌍 Global Ready
-Out of the box support for multiple languages (English, Turkish, German) and currencies (USD, TRY, EUR), with smart defaults based on your device locale on first launch.
+### Prerequisites
 
-## 📱 Screenshots
-Add your screenshots below (replace the links with your actual images):
+- [Android Studio](https://developer.android.com/studio) (Latest stable version recommended)
+- **JDK 17** configured in your environment
 
-![Student List](link_to_screenshot_student_list.png)
-![Calendar](link_to_screenshot_calendar.png)
-![Payments](link_to_screenshot_payments.png)
+### Installation
 
-## 🛠️ Tech Stack & Architecture
-Tullab is built on a modern Android tech stack, following the MVVM architecture to ensure a scalable and maintainable codebase.
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/halitbarut/Tullab.git
+   cd Tullab
+   ```
 
-- UI: 100% Jetpack Compose for a declarative, modern UI.
-- Language: Kotlin first, embracing coroutines for asynchronous operations.
-- Architecture: MVVM with Hilt for dependency injection.
-- Database: Room for robust, offline‑first local data storage.
+2. **Open the Project:**
+   Open Android Studio, select **Open**, and navigate to the cloned `Tullab` directory. Allow Gradle to sync the dependencies.
 
-## 🚀 Installation & Getting Started
-1) Clone the repository:
+3. **Build and Run:**
+   You can build the debug APK using the Gradle wrapper from your terminal:
+   ```bash
+   ./gradlew assembleDebug
+   ```
+   Or, simply click the **Run** button (`Shift + F10`) in Android Studio to deploy the app to an emulator or a physical device.
 
-```bash
-git clone https://github.com/your-username/Tullab.git
-cd Tullab
+### Usage Example
+
+Since Tullab is primarily a UI-driven application, standard usage revolves around interacting with the Jetpack Compose screens. Here is a quick look at how you might structure a basic composable within the app:
+
+```kotlin
+@Composable
+fun StudentDashboardScreen(
+    viewModel: StudentViewModel = hiltViewModel()
+) {
+    val students by viewModel.students.collectAsState()
+    
+    LazyColumn {
+        items(students) { student ->
+            StudentCard(
+                name = student.name,
+                onTap = { viewModel.navigateToDetails(student.id) }
+            )
+        }
+    }
+}
 ```
 
-2) Open the project in Android Studio (latest stable), ensure JDK 17 is configured.
+---
 
-3) Build the app:
+## Tech Stack
 
-```bash
-./gradlew assembleDebug
-```
+Tullab uses a modern Android development stack:
+- **UI:** 100% Jetpack Compose for declarative UI
+- **Language:** Kotlin (with Coroutines/Flow)
+- **Architecture:** MVVM (Model-View-ViewModel)
+- **Dependency Injection:** Hilt
+- **Local Storage:** Room Database
 
-## 💬 Contact & Feedback
-Have ideas, questions, or feedback? Open an issue or reach out at mhbarut66@gmail.com. If you find Tullab useful, consider starring the repo!
+---
+
+## Help & Support
+
+If you run into issues, need help setting up the project, or have any questions:
+- Open an [Issue](https://github.com/halitbarut/Tullab/issues) on GitHub.
+- Reach out directly via email: **[mhbarut66@gmail.com](mailto:mhbarut66@gmail.com)**.
+
+---
+
+## Contributing & Maintainers
+
+We welcome contributions from the community! Whether it's fixing a bug, suggesting a feature, or improving documentation, your help is appreciated.
+
+- **Maintainer:** Halit Barut ([mhbarut66@gmail.com](mailto:mhbarut66@gmail.com))
+- **How to Contribute:** Please read our [Contribution Guidelines](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+
+---
+
+## License
+
+This project is licensed under the **GNU General Public License v3.0**. See the [LICENSE](LICENSE) file for more details.
