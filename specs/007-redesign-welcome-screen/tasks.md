@@ -8,8 +8,8 @@
 
 **Purpose**: Establish data models, presentation models, and unit testing scaffold.
 
-- [ ] T001 Define `FeatureHighlightItem` presentation model in `app/src/main/java/com/barutdev/tullab/ui/screens/onboarding/FeatureHighlightItem.kt`
-- [ ] T002 [P] Create unit test suite for OnboardingViewModel consent toggle and completion in `app/src/test/java/com/barutdev/tullab/ui/screens/onboarding/OnboardingViewModelTest.kt`
+- [X] T001 Define `FeatureHighlightItem` presentation model in `app/src/main/java/com/barutdev/tullab/ui/screens/onboarding/FeatureHighlightItem.kt`
+- [X] T002 [P] Create unit test suite for OnboardingViewModel consent toggle and completion in `app/src/test/java/com/barutdev/tullab/ui/screens/onboarding/OnboardingViewModelTest.kt`
 
 ---
 
@@ -19,9 +19,9 @@
 
 **⚠️ CRITICAL**: String resources must be available before composable assembly begins.
 
-- [ ] T003 [P] Externalize English welcome strings (title, subtitle, 3 value pillars) and purge obsolete AI strings in `app/src/main/res/values/strings.xml`
-- [ ] T004 [P] Externalize Turkish welcome strings with grammatical correction "Tullab’a Hoş Geldiniz", subtitle, and 3 value pillars in `app/src/main/res/values-tr/strings.xml`
-- [ ] T005 [P] Externalize German welcome strings (title, subtitle, 3 value pillars) and purge obsolete AI strings in `app/src/main/res/values-de/strings.xml`
+- [X] T003 [P] Externalize English welcome strings (title, subtitle, 3 value pillars) and purge obsolete AI strings in `app/src/main/res/values/strings.xml`
+- [X] T004 [P] Externalize Turkish welcome strings with grammatical correction "Tullab’a Hoş Geldiniz", subtitle, and 3 value pillars in `app/src/main/res/values-tr/strings.xml`
+- [X] T005 [P] Externalize German welcome strings (title, subtitle, 3 value pillars) and purge obsolete AI strings in `app/src/main/res/values-de/strings.xml`
 
 **Checkpoint**: Foundation ready — all strings and models available for user story implementation.
 
