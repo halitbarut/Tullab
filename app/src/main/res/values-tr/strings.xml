@@ -206,6 +206,7 @@
     <string name="calendar_homework_action_mark_complete">Tamamlandı İşaretle</string>
     <string name="calendar_homework_action_mark_pending">Beklemede İşaretle</string>
     <string name="calendar_homework_action_details">Detaylar</string>
+    <string name="bulk_schedule_cap_reached_warning">Bir seferde maksimum 30 ders planlayabilirsiniz.</string>
     <!-- Genel Dialog Eylemleri -->
     <string name="dialog_action_cancel">İptal</string>
     <string name="dialog_action_ok">Tamam</string>
@@ -312,5 +313,47 @@
 
     <!-- Calendar: Save Changes action for future scheduled lessons (005-lesson-rate-fixes) -->
     <string name="calendar_lesson_action_save_changes">Değişiklikleri Kaydet</string>
+    <!-- Bulk Lesson Scheduling -->
+    <string name="bulk_schedule_title">Toplu Ders Ekle</string>
+    <string name="bulk_schedule_undo_action">Geri Al</string>
+    <string name="bulk_schedule_max_limit_error">Tek seferde en fazla 30 ders planlayabilirsiniz.</string>
+    <string name="bulk_schedule_tab_calendar_grid">Takvim</string>
+    <string name="bulk_schedule_tab_weekly_routine">Haftalık Rutin</string>
+    <string name="bulk_schedule_confirm_button_default">Dersleri Planla</string>
+    <string name="bulk_schedule_confirm_button">%1$d Ders Planla</string>
+    <string name="bulk_schedule_preview_count_with_skipped">%1$d ders oluşturulacak (%2$d çakışma nedeniyle atlandı) • %3$s/saat</string>
+    <string name="bulk_schedule_preview_count_valid">%1$d ders • %2$s/saat</string>
+    <string name="bulk_schedule_routine_start_date">Başlangıç Tarihi</string>
+    <string name="bulk_schedule_routine_end_condition_date">Bitiş Tarihi</string>
+    <string name="bulk_schedule_routine_end_condition_count">Ders Sayısı</string>
+    <string name="bulk_schedule_custom_rate_checkbox">Özel saatlik ücret</string>
+    <string name="bulk_schedule_past_date_warning_title">Geçmiş Tarihler Seçildi</string>
+    <string name="bulk_schedule_past_date_warning_message">Bazı dersler geçmiş tarihlere planlandı. Daha sonra tamamlandı olarak işaretleyebilmeniz için planlanmış (scheduled) durumda eklenecekler.</string>
+    <string name="bulk_schedule_empty_selection_error">Lütfen en az bir tarih veya gün seçin.</string>
+    <string name="bulk_schedule_time_picker_title">Saat Seçin</string>
+    <string name="bulk_schedule_undo_success_toast">Toplu ders ekleme geri alındı.</string>
+
+    <plurals name="bulk_schedule_success_skipped">
+        <item quantity="one">(Çakışma nedeniyle %1$d atlandı)</item>
+        <item quantity="other">(Çakışmalar nedeniyle %1$d atlandı)</item>
+    </plurals>
+
+    <plurals name="bulk_schedule_success_created">
+        <item quantity="one">%1$d ders planlandı</item>
+        <item quantity="other">%1$d ders planlandı</item>
+    </plurals>
+
+    <string name="bulk_schedule_customize_day_times">Gün Saatlerini Özelleştir</string>
+    <string name="bulk_schedule_default_start_time">Varsayılan Başlangıç Saati</string>
+    <string name="bulk_schedule_pricing_override">Özel Fiyatlandırma</string>
+    <string name="bulk_schedule_set_custom_rate">Bu toplu işlem için özel saatlik ücret belirle</string>
+    <string name="bulk_schedule_custom_hourly_rate">Özel Saatlik Ücret</string>
+    <string name="bulk_schedule_repeat_on">Tekrarla</string>
+    <string name="bulk_schedule_ends">Bitiş</string>
+    <string name="bulk_schedule_ends_on">Şu tarihte: </string>
+    <string name="bulk_schedule_date">Tarih</string>
+    <string name="bulk_schedule_after">Şundan sonra: </string>
+    <string name="bulk_schedule_occurrences">Tekrar</string>
+    <string name="bulk_schedule_occurrences_suffix"> tekrar</string>
 
 </resources>

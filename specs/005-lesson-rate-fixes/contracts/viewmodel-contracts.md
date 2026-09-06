@@ -3,7 +3,7 @@
 ## 1. EditStudentProfileViewModel
 
 ### Package
-`com.barutdev.kora.ui.screens.student_profile`
+`com.barutdev.tullab.ui.screens.student_profile`
 
 ### UiState Additions
 ```kotlin
@@ -37,7 +37,7 @@ data class StudentProfileUiState(
 ## 2. CalendarViewModel
 
 ### Package
-`com.barutdev.kora.ui.screens.calendar`
+`com.barutdev.tullab.ui.screens.calendar`
 
 ### Method Additions
 ```kotlin

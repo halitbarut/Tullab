@@ -12,6 +12,8 @@ import com.barutdev.tullab.domain.repository.UserPreferencesRepository
 import com.barutdev.tullab.domain.repository.PaymentRepository
 import com.barutdev.tullab.domain.usecase.notification.CancelNotificationAlarmsUseCase
 import com.barutdev.tullab.domain.usecase.notification.ScheduleNotificationAlarmsUseCase
+import com.barutdev.tullab.domain.usecase.lesson.UndoBulkLessonsUseCase
+import com.barutdev.tullab.domain.model.BatchUndoSession
 import com.barutdev.tullab.navigation.STUDENT_ID_ARG
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -42,6 +44,7 @@ class CalendarViewModelTest {
     private lateinit var userPreferencesRepository: UserPreferencesRepository
     private lateinit var scheduleNotificationAlarmsUseCase: ScheduleNotificationAlarmsUseCase
     private lateinit var cancelNotificationAlarmsUseCase: CancelNotificationAlarmsUseCase
+    private lateinit var undoBulkLessonsUseCase: UndoBulkLessonsUseCase
     private lateinit var paymentRepository: PaymentRepository
     private lateinit var viewModel: CalendarViewModel
 
@@ -56,6 +59,7 @@ class CalendarViewModelTest {
         userPreferencesRepository = mockk(relaxed = true)
         scheduleNotificationAlarmsUseCase = mockk(relaxed = true)
         cancelNotificationAlarmsUseCase = mockk(relaxed = true)
+        undoBulkLessonsUseCase = mockk(relaxed = true)
         paymentRepository = mockk(relaxed = true)
 
         // Make state flows emit correctly
@@ -71,7 +75,8 @@ class CalendarViewModelTest {
             userPreferencesRepository = userPreferencesRepository,
             paymentRepository = paymentRepository,
             scheduleNotificationAlarmsUseCase = scheduleNotificationAlarmsUseCase,
-            cancelNotificationAlarmsUseCase = cancelNotificationAlarmsUseCase
+            cancelNotificationAlarmsUseCase = cancelNotificationAlarmsUseCase,
+            undoBulkLessonsUseCase = undoBulkLessonsUseCase
         )
     }
 
@@ -247,5 +252,20 @@ class CalendarViewModelTest {
             })
         }
         assertEquals(null, viewModel.lessonToLog.value)
+    }
+
+    @Test
+    fun `undoBulkLessons triggers use case and clears state on success`() = runTest {
+        val session = BatchUndoSession(1, listOf(10, 11))
+        viewModel.setBatchUndoSession(session)
+        assertEquals(session, viewModel.batchUndoSession.value)
+
+        coEvery { undoBulkLessonsUseCase(session) } returns Result.success(Unit)
+        
+        viewModel.undoBulkLessons()
+        advanceUntilIdle()
+
+        coVerify { undoBulkLessonsUseCase(session) }
+        assertEquals(null, viewModel.batchUndoSession.value)
     }
 }

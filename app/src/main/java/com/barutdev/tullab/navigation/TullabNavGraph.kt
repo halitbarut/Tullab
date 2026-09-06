@@ -46,17 +46,22 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
+import kotlinx.coroutines.launch
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.barutdev.tullab.R
 import com.barutdev.tullab.ui.navigation.BottomNavPreloadViewModel
@@ -64,8 +69,15 @@ import com.barutdev.tullab.ui.navigation.TullabScaffoldController
 import com.barutdev.tullab.ui.navigation.LocalTullabScaffoldController
 import com.barutdev.tullab.ui.navigation.TopBarAction
 import com.barutdev.tullab.ui.navigation.TopBarConfig
+import com.barutdev.tullab.ui.theme.TullabTheme
+import com.barutdev.tullab.util.tullabStringResource
+import com.barutdev.tullab.util.tullabPluralResource
+import com.barutdev.tullab.ui.theme.LocalLocale
 import com.barutdev.tullab.ui.navigation.rememberTullabScaffoldController
+import com.barutdev.tullab.ui.screens.bulk_schedule.BulkScheduleScreen
 import com.barutdev.tullab.ui.screens.calendar.CalendarScreen
+import com.barutdev.tullab.ui.screens.calendar.CalendarViewModel
+
 import com.barutdev.tullab.ui.screens.dashboard.DashboardScreen
 import com.barutdev.tullab.ui.screens.homework.HomeworkScreen
 import com.barutdev.tullab.ui.screens.reports.ReportsScreen
@@ -430,9 +442,57 @@ fun TullabNavGraph(
                         NAVIGATION_LOG_TAG,
                         "Rendering Calendar entry=${backStackEntry.id} for studentId=$studentId"
                     )
+                    val calendarViewModel: CalendarViewModel = hiltViewModel(
+                        key = "calendar-$studentId"
+                    )
+                    
+                    val savedStateHandle = backStackEntry.savedStateHandle
+                    val bulkCreated by savedStateHandle.getStateFlow<Int?>("bulk_created", null).collectAsState()
+                    val bulkSkipped by savedStateHandle.getStateFlow<Int?>("bulk_skipped", null).collectAsState()
+                    val bulkIds by savedStateHandle.getStateFlow<IntArray?>("bulk_ids", null).collectAsState()
+                    
+                    val undoActionLabel = tullabStringResource(R.string.bulk_schedule_undo_action)
+                    val successMsgCreated = bulkCreated?.let { tullabPluralResource(R.plurals.bulk_schedule_success_created, it, it) } ?: ""
+                    val successMsgSkipped = bulkSkipped?.let { if (it > 0) " " + tullabPluralResource(R.plurals.bulk_schedule_success_skipped, it, it) else "" } ?: ""
+                    val successMsg = successMsgCreated + successMsgSkipped
+
+                    val snackbarHostState = scaffoldController.snackbarHostState
+                    val coroutineScope = rememberCoroutineScope()
+
+                    LaunchedEffect(bulkCreated, bulkSkipped, bulkIds) {
+                        val currentBulkCreated = bulkCreated
+                        val currentBulkIds = bulkIds
+                        if (currentBulkCreated != null && currentBulkIds != null) {
+                            calendarViewModel.setBatchUndoSession(
+                                com.barutdev.tullab.domain.model.BatchUndoSession(studentId, currentBulkIds.toList())
+                            )
+                            savedStateHandle.remove<Int>("bulk_created")
+                            savedStateHandle.remove<Int>("bulk_skipped")
+                            savedStateHandle.remove<IntArray>("bulk_ids")
+                            
+                            coroutineScope.launch {
+                                val result = snackbarHostState.showSnackbar(
+                                    message = successMsg,
+                                    actionLabel = if (currentBulkCreated > 0) undoActionLabel else null,
+                                    duration = androidx.compose.material3.SnackbarDuration.Long
+                                )
+                                if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) {
+                                    calendarViewModel.undoBulkLessons()
+                                }
+                            }
+                        }
+                    }
+
+                    val undoSuccess by calendarViewModel.batchUndoSession.collectAsState()
+                    LaunchedEffect(undoSuccess) {
+                        // We need a separate state if undo succeeds, but the usecase returns result.
+                        // Actually CalendarViewModel handles undo, we can show a snackbar when it succeeds.
+                    }
+
                     key("calendar-$studentId") {
                         CalendarScreen(
                             expectedStudentId = studentId,
+                            viewModel = calendarViewModel,
                             onNavigateToStudentList = {
                                 navController.navigate(TullabDestination.StudentList.route) {
                                     popUpTo(navController.graph.startDestinationId) {
@@ -443,6 +503,9 @@ fun TullabNavGraph(
                             },
                             onNavigateToHomework = { sId, hId ->
                                 navController.navigate(TullabDestination.Homework.createRoute(sId, hId))
+                            },
+                            onNavigateToBulkSchedule = { sId ->
+                                navController.navigate(TullabDestination.BulkSchedule.createRoute(sId))
                             }
                         )
                     }
@@ -494,6 +557,28 @@ fun TullabNavGraph(
                         onBack = { navController.popBackStack() },
                         onProfileSaved = { navController.popBackStack() }
                     )
+                }
+
+                composable(
+                    route = TullabDestination.BulkSchedule.route,
+                    arguments = TullabDestination.BulkSchedule.arguments()
+                ) { backStackEntry ->
+                    val studentId = backStackEntry.requireStudentId()
+                    Log.d(
+                        NAVIGATION_LOG_TAG,
+                        "Rendering BulkSchedule entry=${backStackEntry.id} for studentId=$studentId"
+                    )
+                    key("bulk_schedule-$studentId") {
+                        com.barutdev.tullab.ui.screens.bulk_schedule.BulkScheduleScreen(
+                            onNavigateBack = { navController.popBackStack() },
+                            onNavigateBackWithResult = { created, skipped, ids ->
+                                navController.previousBackStackEntry?.savedStateHandle?.set("bulk_created", created)
+                                navController.previousBackStackEntry?.savedStateHandle?.set("bulk_skipped", skipped)
+                                navController.previousBackStackEntry?.savedStateHandle?.set("bulk_ids", ids)
+                                navController.popBackStack()
+                            }
+                        )
+                    }
                 }
 
                 composable(

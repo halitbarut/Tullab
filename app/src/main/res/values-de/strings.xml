@@ -222,6 +222,7 @@
     <string name="calendar_homework_action_mark_complete">Als erledigt markieren</string>
     <string name="calendar_homework_action_mark_pending">Als ausstehend markieren</string>
     <string name="calendar_homework_action_details">Details</string>
+    <string name="bulk_schedule_cap_reached_warning">Sie können maximal 30 Stunden auf einmal planen.</string>
     <!-- Allgemeine Dialogaktionen -->
     <string name="dialog_action_cancel">Abbrechen</string>
     <string name="dialog_action_ok">OK</string>
@@ -312,5 +313,47 @@
 
     <!-- Calendar: Save Changes action for future scheduled lessons (005-lesson-rate-fixes) -->
     <string name="calendar_lesson_action_save_changes">Änderungen speichern</string>
+    <!-- Bulk Lesson Scheduling -->
+    <string name="bulk_schedule_title">Mehrere Lektionen hinzufügen</string>
+    <string name="bulk_schedule_undo_action">Rückgängig</string>
+    <string name="bulk_schedule_max_limit_error">Du kannst maximal 30 Lektionen gleichzeitig planen.</string>
+    <string name="bulk_schedule_tab_calendar_grid">Kalender</string>
+    <string name="bulk_schedule_tab_weekly_routine">Wöchentliche Routine</string>
+    <string name="bulk_schedule_confirm_button_default">Lektionen planen</string>
+    <string name="bulk_schedule_confirm_button">%1$d Lektionen planen</string>
+    <string name="bulk_schedule_preview_count_with_skipped">%1$d Lektionen zu erstellen (%2$d aufgrund von Konflikten übersprungen) • %3$s/Std</string>
+    <string name="bulk_schedule_preview_count_valid">%1$d Lektionen • %2$s/Std</string>
+    <string name="bulk_schedule_routine_start_date">Startdatum</string>
+    <string name="bulk_schedule_routine_end_condition_date">Enddatum</string>
+    <string name="bulk_schedule_routine_end_condition_count">Anzahl der Lektionen</string>
+    <string name="bulk_schedule_custom_rate_checkbox">Individueller Stundensatz für alle</string>
+    <string name="bulk_schedule_past_date_warning_title">Vergangene Daten ausgewählt</string>
+    <string name="bulk_schedule_past_date_warning_message">Einige Lektionen sind für Daten in der Vergangenheit geplant. Sie werden im Status "Geplant" erstellt, damit du sie später als abgeschlossen markieren kannst.</string>
+    <string name="bulk_schedule_empty_selection_error">Bitte wähle mindestens ein Datum oder einen Wochentag aus.</string>
+    <string name="bulk_schedule_time_picker_title">Zeit auswählen</string>
+    <string name="bulk_schedule_undo_success_toast">Mehrere Lektionen hinzufügen rückgängig gemacht.</string>
+
+    <plurals name="bulk_schedule_success_skipped">
+        <item quantity="one">(%1$d wegen Konflikt übersprungen)</item>
+        <item quantity="other">(%1$d wegen Konflikten übersprungen)</item>
+    </plurals>
+
+    <plurals name="bulk_schedule_success_created">
+        <item quantity="one">%1$d Stunde geplant</item>
+        <item quantity="other">%1$d Stunden geplant</item>
+    </plurals>
+
+    <string name="bulk_schedule_customize_day_times">Tageszeiten anpassen</string>
+    <string name="bulk_schedule_default_start_time">Standard-Startzeit</string>
+    <string name="bulk_schedule_pricing_override">Preisüberschreibung</string>
+    <string name="bulk_schedule_set_custom_rate">Individuellen Stundensatz für diese Gruppe festlegen</string>
+    <string name="bulk_schedule_custom_hourly_rate">Individueller Stundensatz</string>
+    <string name="bulk_schedule_repeat_on">Wiederholen an</string>
+    <string name="bulk_schedule_ends">Endet</string>
+    <string name="bulk_schedule_ends_on">Am </string>
+    <string name="bulk_schedule_date">Datum</string>
+    <string name="bulk_schedule_after">Nach </string>
+    <string name="bulk_schedule_occurrences">Wiederholungen</string>
+    <string name="bulk_schedule_occurrences_suffix"> Wiederholungen</string>
 
 </resources>

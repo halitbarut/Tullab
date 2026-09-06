@@ -10,10 +10,10 @@
 
 **Purpose**: Establish base strings, plural resources, and domain value models required across all user stories.
 
-- [ ] T001 [P] Add English strings and plural resources for bulk scheduling in `app/src/main/res/values/strings.xml`
-- [ ] T002 [P] Add Turkish translations and plural resources for bulk scheduling in `app/src/main/res/values-tr/strings.xml`
-- [ ] T003 [P] Add German translations and plural resources for bulk scheduling in `app/src/main/res/values-de/strings.xml`
-- [ ] T004 [P] Create bulk schedule domain models (`BulkScheduleMode`, `WeeklyRoutineEndCondition`, `BulkLessonCandidate`, `BulkScheduleDraft`, `BulkScheduleResult`, `BatchUndoSession`) in `app/src/main/java/com/barutdev/tullab/domain/model/BulkScheduleModels.kt`
+- [x] T001 [P] Add English strings and plural resources for bulk scheduling in `app/src/main/res/values/strings.xml`
+- [x] T002 [P] Add Turkish translations and plural resources for bulk scheduling in `app/src/main/res/values-tr/strings.xml`
+- [x] T003 [P] Add German translations and plural resources for bulk scheduling in `app/src/main/res/values-de/strings.xml`
+- [x] T004 [P] Create bulk schedule domain models (`BulkScheduleMode`, `WeeklyRoutineEndCondition`, `BulkLessonCandidate`, `BulkScheduleDraft`, `BulkScheduleResult`, `BatchUndoSession`) in `app/src/main/java/com/barutdev/tullab/domain/model/BulkScheduleModels.kt`
 
 ---
 
@@ -23,16 +23,16 @@
 
 **⚠️ CRITICAL**: All user story tasks depend on this foundational phase.
 
-- [ ] T005 [P] Add batch database operations (`insertLessons`, `deleteLessons`, `getLessonDatesForStudent`) in `app/src/main/java/com/barutdev/tullab/data/local/LessonDao.kt`
-- [ ] T006 [P] Add batch methods to `LessonRepository` interface in `app/src/main/java/com/barutdev/tullab/domain/repository/LessonRepository.kt`
-- [ ] T007 Implement batch repository methods in `app/src/main/java/com/barutdev/tullab/data/repository/LessonRepositoryImpl.kt` (depends on T005, T006)
-- [ ] T008 [P] Register `BulkSchedule` student-scoped destination in `app/src/main/java/com/barutdev/tullab/navigation/TullabDestinations.kt`
-- [ ] T009 [P] Create `CalculateBulkLessonCandidatesUseCase` in `app/src/main/java/com/barutdev/tullab/domain/usecase/lesson/CalculateBulkLessonCandidatesUseCase.kt`
-- [ ] T010 [P] Create `CreateBulkLessonsUseCase` in `app/src/main/java/com/barutdev/tullab/domain/usecase/lesson/CreateBulkLessonsUseCase.kt`
-- [ ] T011 [P] Create `UndoBulkLessonsUseCase` in `app/src/main/java/com/barutdev/tullab/domain/usecase/lesson/UndoBulkLessonsUseCase.kt`
-- [ ] T012 [P] Create unit test suite `CalculateBulkLessonCandidatesUseCaseTest` in `app/src/test/java/com/barutdev/tullab/domain/usecase/lesson/CalculateBulkLessonCandidatesUseCaseTest.kt`
-- [ ] T013 [P] Create unit test suite `CreateBulkLessonsUseCaseTest` in `app/src/test/java/com/barutdev/tullab/domain/usecase/lesson/CreateBulkLessonsUseCaseTest.kt`
-- [ ] T014 [P] Create unit test suite `UndoBulkLessonsUseCaseTest` in `app/src/test/java/com/barutdev/tullab/domain/usecase/lesson/UndoBulkLessonsUseCaseTest.kt`
+- [x] T005 [P] Add batch database operations (`insertLessons`, `deleteLessons`, `getLessonDatesForStudent`) in `app/src/main/java/com/barutdev/tullab/data/local/LessonDao.kt`
+- [x] T006 [P] Add batch methods to `LessonRepository` interface in `app/src/main/java/com/barutdev/tullab/domain/repository/LessonRepository.kt`
+- [x] T007 [P] Implement batch repository methods in `app/src/main/java/com/barutdev/tullab/data/repository/LessonRepositoryImpl.kt` (depends on T005, T006)
+- [x] T008 [P] Register `BulkSchedule` student-scoped destination in `app/src/main/java/com/barutdev/tullab/navigation/TullabDestinations.kt`
+- [x] T009 [P] Create `CalculateBulkLessonCandidatesUseCase` in `app/src/main/java/com/barutdev/tullab/domain/usecase/lesson/CalculateBulkLessonCandidatesUseCase.kt`
+- [x] T010 [P] Create `CreateBulkLessonsUseCase` in `app/src/main/java/com/barutdev/tullab/domain/usecase/lesson/CreateBulkLessonsUseCase.kt`
+- [x] T011 [P] Create `UndoBulkLessonsUseCase` in `app/src/main/java/com/barutdev/tullab/domain/usecase/lesson/UndoBulkLessonsUseCase.kt`
+- [x] T012 [P] Create unit test suite `CalculateBulkLessonCandidatesUseCaseTest` in `app/src/test/java/com/barutdev/tullab/domain/usecase/lesson/CalculateBulkLessonCandidatesUseCaseTest.kt`
+- [x] T013 [P] Create unit test suite `CreateBulkLessonsUseCaseTest` in `app/src/test/java/com/barutdev/tullab/domain/usecase/lesson/CreateBulkLessonsUseCaseTest.kt`
+- [x] T014 [P] Create unit test suite `UndoBulkLessonsUseCaseTest` in `app/src/test/java/com/barutdev/tullab/domain/usecase/lesson/UndoBulkLessonsUseCaseTest.kt`
 
 **Checkpoint**: Foundation ready — domain use cases, repositories, and destinations verified by unit tests.
 
@@ -46,14 +46,14 @@
 
 ### Implementation for User Story 1
 
-- [ ] T015 [P] [US1] Create `CalendarGridSelector` composable with multi-date toggle and month navigation in `app/src/main/java/com/barutdev/tullab/ui/screens/bulk_schedule/components/CalendarGridSelector.kt`
-- [ ] T016 [P] [US1] Create `DayTimeChipList` composable displaying selected day chips with time picker triggers in `app/src/main/java/com/barutdev/tullab/ui/screens/bulk_schedule/components/DayTimeChipList.kt`
-- [ ] T017 [P] [US1] Create `PastDateWarningDialog` composable alerting tutors when dates prior to today are selected in `app/src/main/java/com/barutdev/tullab/ui/screens/bulk_schedule/components/PastDateWarningDialog.kt`
-- [ ] T018 [US1] Create `BulkScheduleUiState` and `BulkScheduleViewModel` managing draft state and date selection in `app/src/main/java/com/barutdev/tullab/ui/screens/bulk_schedule/BulkScheduleViewModel.kt`
-- [ ] T019 [US1] Create `BulkScheduleScreen` assembling TopBar, tab header, calendar grid, chip list, and confirm button in `app/src/main/java/com/barutdev/tullab/ui/screens/bulk_schedule/BulkScheduleScreen.kt` (depends on T015, T016, T017, T018)
-- [ ] T020 [US1] Register `BulkScheduleScreen` route in `app/src/main/java/com/barutdev/tullab/navigation/TullabNavGraph.kt` (depends on T008, T019)
-- [ ] T021 [US1] Add "Bulk Add Lessons" action icon to TopBar in `app/src/main/java/com/barutdev/tullab/ui/screens/calendar/CalendarScreen.kt` navigating to `BulkSchedule`
-- [ ] T022 [US1] Create unit tests for `BulkScheduleViewModel` covering date selection, default time assignment, and chip customizations in `app/src/test/java/com/barutdev/tullab/ui/screens/bulk_schedule/BulkScheduleViewModelTest.kt`
+- [x] T015 [P] [US1] Create `CalendarGridSelector` composable with multi-date toggle and month navigation in `app/src/main/java/com/barutdev/tullab/ui/screens/bulk_schedule/components/CalendarGridSelector.kt`
+- [x] T016 [P] [US1] Create `DayTimeChipList` composable displaying selected day chips with time picker triggers in `app/src/main/java/com/barutdev/tullab/ui/screens/bulk_schedule/components/DayTimeChipList.kt`
+- [x] T017 [P] [US1] Create `PastDateWarningDialog` composable alerting tutors when dates prior to today are selected in `app/src/main/java/com/barutdev/tullab/ui/screens/bulk_schedule/components/PastDateWarningDialog.kt`
+- [x] T018 [US1] Create `BulkScheduleUiState` and `BulkScheduleViewModel` managing draft state and date selection in `app/src/main/java/com/barutdev/tullab/ui/screens/bulk_schedule/BulkScheduleViewModel.kt`
+- [x] T019 [US1] Create `BulkScheduleScreen` assembling TopBar, tab header, calendar grid, chip list, and confirm button in `app/src/main/java/com/barutdev/tullab/ui/screens/bulk_schedule/BulkScheduleScreen.kt` (depends on T015, T016, T017, T018)
+- [x] T020 [US1] Register `BulkScheduleScreen` route in `app/src/main/java/com/barutdev/tullab/navigation/TullabNavGraph.kt` (depends on T008, T019)
+- [x] T021 [US1] Add "Bulk Add Lessons" action icon to TopBar in `app/src/main/java/com/barutdev/tullab/ui/screens/calendar/CalendarScreen.kt` navigating to `BulkSchedule`
+- [x] T022 [US1] Create unit tests for `BulkScheduleViewModel` covering date selection, default time assignment, and chip customizations in `app/src/test/java/com/barutdev/tullab/ui/screens/bulk_schedule/BulkScheduleViewModelTest.kt`
 
 **Checkpoint**: User Story 1 complete — tutors can select multiple calendar dates, customize day times, and create lessons in bulk (MVP viable).
 
@@ -67,11 +67,11 @@
 
 ### Implementation for User Story 2
 
-- [ ] T023 [P] [US2] Add unit test scenarios for weekly recurrence generation (by end date and by target count) in `app/src/test/java/com/barutdev/tullab/domain/usecase/lesson/CalculateBulkLessonCandidatesUseCaseTest.kt`
-- [ ] T024 [US2] Implement weekly routine candidate recurrence algorithm in `app/src/main/java/com/barutdev/tullab/domain/usecase/lesson/CalculateBulkLessonCandidatesUseCase.kt`
-- [ ] T025 [P] [US2] Create `WeeklyRoutineSelector` composable with weekday toggles, start date picker, and end condition radio options in `app/src/main/java/com/barutdev/tullab/ui/screens/bulk_schedule/components/WeeklyRoutineSelector.kt`
-- [ ] T026 [US2] Integrate `WeeklyRoutineSelector` into `BulkScheduleScreen.kt` and wire state transitions in `app/src/main/java/com/barutdev/tullab/ui/screens/bulk_schedule/BulkScheduleViewModel.kt`
-- [ ] T027 [US2] Add unit tests for Weekly Routine interactions and recurrence recalculation in `app/src/test/java/com/barutdev/tullab/ui/screens/bulk_schedule/BulkScheduleViewModelTest.kt`
+- [x] T023 [P] [US2] Add unit test scenarios for weekly recurrence generation (by end date and by target count) in `app/src/test/java/com/barutdev/tullab/domain/usecase/lesson/CalculateBulkLessonCandidatesUseCaseTest.kt`
+- [x] T024 [US2] Implement weekly routine candidate recurrence algorithm in `app/src/main/java/com/barutdev/tullab/domain/usecase/lesson/CalculateBulkLessonCandidatesUseCase.kt`
+- [x] T025 [P] [US2] Create `WeeklyRoutineSelector` composable with weekday toggles, start date picker, and end condition radio options in `app/src/main/java/com/barutdev/tullab/ui/screens/bulk_schedule/components/WeeklyRoutineSelector.kt`
+- [x] T026 [US2] Integrate `WeeklyRoutineSelector` into `BulkScheduleScreen.kt` and wire state transitions in `app/src/main/java/com/barutdev/tullab/ui/screens/bulk_schedule/BulkScheduleViewModel.kt`
+- [x] T027 [US2] Add unit tests for Weekly Routine interactions and recurrence recalculation in `app/src/test/java/com/barutdev/tullab/ui/screens/bulk_schedule/BulkScheduleViewModelTest.kt`
 
 **Checkpoint**: User Story 2 complete — recurring weekly routines can be generated by end date or lesson count.
 
@@ -85,11 +85,11 @@
 
 ### Implementation for User Story 3
 
-- [ ] T028 [P] [US3] Add unit tests verifying custom rate snapshot application versus student profile rate fallback in `app/src/test/java/com/barutdev/tullab/domain/usecase/lesson/CreateBulkLessonsUseCaseTest.kt`
-- [ ] T029 [P] [US3] Create `BulkSchedulePricingSection` composable with default rate display, optional checkbox toggle, and custom rate text field in `app/src/main/java/com/barutdev/tullab/ui/screens/bulk_schedule/components/BulkSchedulePricingSection.kt`
-- [ ] T030 [US3] Connect custom rate state handling and input validation in `app/src/main/java/com/barutdev/tullab/ui/screens/bulk_schedule/BulkScheduleViewModel.kt`
-- [ ] T031 [US3] Integrate `BulkSchedulePricingSection` into `app/src/main/java/com/barutdev/tullab/ui/screens/bulk_schedule/BulkScheduleScreen.kt`
-- [ ] T032 [US3] Add unit tests for pricing toggle and custom rate validation in `app/src/test/java/com/barutdev/tullab/ui/screens/bulk_schedule/BulkScheduleViewModelTest.kt`
+- [x] T028 [P] [US3] Add unit tests verifying custom rate snapshot application versus student profile rate fallback in `app/src/test/java/com/barutdev/tullab/domain/usecase/lesson/CreateBulkLessonsUseCaseTest.kt`
+- [x] T029 [P] [US3] Create `BulkSchedulePricingSection` composable with default rate display, optional checkbox toggle, and custom rate text field in `app/src/main/java/com/barutdev/tullab/ui/screens/bulk_schedule/components/BulkSchedulePricingSection.kt`
+- [x] T030 [US3] Connect custom rate state handling and input validation in `app/src/main/java/com/barutdev/tullab/ui/screens/bulk_schedule/BulkScheduleViewModel.kt`
+- [x] T031 [US3] Integrate `BulkSchedulePricingSection` into `app/src/main/java/com/barutdev/tullab/ui/screens/bulk_schedule/BulkScheduleScreen.kt`
+- [x] T032 [US3] Add unit tests for pricing toggle and custom rate validation in `app/src/test/java/com/barutdev/tullab/ui/screens/bulk_schedule/BulkScheduleViewModelTest.kt`
 
 **Checkpoint**: User Story 3 complete — tutors can schedule batches at special promotional or discounted hourly rates without altering profile defaults.
 
@@ -103,11 +103,11 @@
 
 ### Implementation for User Story 4
 
-- [ ] T033 [P] [US4] Add unit tests in `CalculateBulkLessonCandidatesUseCaseTest.kt` verifying exact student date-time conflict detection and fixed-window skipping
-- [ ] T034 [P] [US4] Add unit tests in `UndoBulkLessonsUseCaseTest.kt` verifying batch deletion by ID list
-- [ ] T035 [US4] Add in-memory `BatchUndoSession` state holder and `undoBulkLessons` method in `app/src/main/java/com/barutdev/tullab/ui/screens/calendar/CalendarViewModel.kt`
-- [ ] T036 [US4] Update `CalendarScreen.kt` to observe batch completion results and display a Snackbar with created/skipped plurals and an "Undo" action in `app/src/main/java/com/barutdev/tullab/ui/screens/calendar/CalendarScreen.kt`
-- [ ] T037 [US4] Create unit test in `app/src/test/java/com/barutdev/tullab/ui/screens/calendar/CalendarViewModelTest.kt` verifying the Undo flow and state clearing upon dismiss
+- [x] T033 [P] [US4] Add unit tests in `CalculateBulkLessonCandidatesUseCaseTest.kt` verifying exact student date-time conflict detection and fixed-window skipping
+- [x] T034 [P] [US4] Add unit tests in `UndoBulkLessonsUseCaseTest.kt` verifying batch deletion by ID list
+- [x] T035 [US4] Add in-memory `BatchUndoSession` state holder and `undoBulkLessons` method in `app/src/main/java/com/barutdev/tullab/ui/screens/calendar/CalendarViewModel.kt`
+- [x] T036 [US4] Update `CalendarScreen.kt` to observe batch completion results and display a Snackbar with created/skipped plurals and an "Undo" action in `app/src/main/java/com/barutdev/tullab/ui/screens/calendar/CalendarScreen.kt`
+- [x] T037 [US4] Create unit test in `app/src/test/java/com/barutdev/tullab/ui/screens/calendar/CalendarViewModelTest.kt` verifying the Undo flow and state clearing upon dismiss
 
 **Checkpoint**: User Story 4 complete — automatic conflict skipping and single-tap Undo rollback verified end-to-end.
 
@@ -121,11 +121,11 @@
 
 ### Implementation for User Story 5
 
-- [ ] T038 [P] [US5] Add unit test scenarios verifying candidate limit boundary conditions ($=30$ allowed, $>30$ rejected) in `CalculateBulkLessonCandidatesUseCaseTest.kt`
-- [ ] T039 [US5] Create `BulkSchedulePreviewBar` composable with dynamic counts, total rate, red validation text when $>30$, and confirm button in `app/src/main/java/com/barutdev/tullab/ui/screens/bulk_schedule/components/BulkSchedulePreviewBar.kt`
-- [ ] T040 [US5] Wire cap validation state (`isExceedingLimit`, `canConfirm`) in `app/src/main/java/com/barutdev/tullab/ui/screens/bulk_schedule/BulkScheduleViewModel.kt`
-- [ ] T041 [US5] Integrate `BulkSchedulePreviewBar` into `app/src/main/java/com/barutdev/tullab/ui/screens/bulk_schedule/BulkScheduleScreen.kt`
-- [ ] T042 [US5] Add unit test in `BulkScheduleViewModelTest.kt` asserting `canConfirm == false` when candidate count exceeds 30
+- [x] T038 [P] [US5] Add unit test scenarios verifying candidate limit boundary conditions ($=30$ allowed, $>30$ rejected) in `CalculateBulkLessonCandidatesUseCaseTest.kt`
+- [x] T039 [US5] Create `BulkSchedulePreviewBar` composable with dynamic counts, total rate, red validation text when $>30$, and confirm button in `app/src/main/java/com/barutdev/tullab/ui/screens/bulk_schedule/components/BulkSchedulePreviewBar.kt`
+- [x] T040 [US5] Wire cap validation state (`isExceedingLimit`, `canConfirm`) in `app/src/main/java/com/barutdev/tullab/ui/screens/bulk_schedule/BulkScheduleViewModel.kt`
+- [x] T041 [US5] Integrate `BulkSchedulePreviewBar` into `app/src/main/java/com/barutdev/tullab/ui/screens/bulk_schedule/BulkScheduleScreen.kt`
+- [x] T042 [US5] Add unit test in `BulkScheduleViewModelTest.kt` asserting `canConfirm == false` when candidate count exceeds 30
 
 **Checkpoint**: User Story 5 complete — 30-lesson limit strictly enforced with clear visual feedback.
 
@@ -133,13 +133,12 @@
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-**Purpose**: Multi-language verification, accessibility checks, and final build validation.
-
-- [ ] T043 [P] Verify string and plural parity across English, Turkish, and German in `app/src/main/res/`
-- [ ] T044 Verify touch target sizes ($\ge 48\times 48$ dp) on all calendar day cells, routine weekday toggles, and chip buttons in `BulkScheduleScreen`
-- [ ] T045 Execute all unit tests via `./gradlew testDebugUnitTest` and ensure zero failures
-- [ ] T046 Run assemble check via `./gradlew assembleDebug` to verify compilation and ProGuard hygiene
-- [ ] T047 Execute manual validation walkthrough according to `specs/008-bulk-lesson-scheduling/quickstart.md`
+### Phase 8: Polish & Cross-Cutting Concerns
+- `[x]` T043 [P] Verify string and plural parity across English, Turkish, and German in `app/src/main/res/`
+- `[x]` T044 Verify touch target sizes ($\ge 48\times 48$ dp) on all calendar day cells, routine weekday toggles, and chip buttons in `BulkScheduleScreen`
+- `[x]` T045 Execute all unit tests via `./gradlew testDebugUnitTest` and ensure zero failures
+- `[x]` T046 Run assemble check via `./gradlew assembleDebug` to verify compilation and ProGuard hygiene
+- `[x]` T047 Execute manual validation walkthrough according to `specs/008-bulk-lesson-scheduling/quickstart.md`
 
 ---
 

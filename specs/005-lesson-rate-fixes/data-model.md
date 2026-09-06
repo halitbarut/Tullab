@@ -6,7 +6,7 @@
 
 Represents an aggregated group of completed unpaid lessons sharing the identical pricing mode and unit rate within a single student payment cycle.
 
-- **Package**: `com.barutdev.kora.ui.screens.dashboard`
+- **Package**: `com.barutdev.tullab.ui.screens.dashboard`
 - **Fields**:
   - `pricingMode: PricingMode` — Pricing mode (`PER_HOUR` or `FLAT_FEE`).
   - `rateOrFee: Double` — Applicable hourly rate or flat fee amount for this tier.
@@ -24,7 +24,7 @@ Represents an aggregated group of completed unpaid lessons sharing the identical
 
 Classifies the temporal scope of uncompleted scheduled lessons when a tutor updates a student's profile rate.
 
-- **Package**: `com.barutdev.kora.ui.screens.student_profile`
+- **Package**: `com.barutdev.tullab.ui.screens.student_profile`
 - **Values**:
   - `PAST_ONLY` — All uncompleted scheduled lessons have dates strictly before today (`lessonDate < today`).
   - `FUTURE_ONLY` — All uncompleted scheduled lessons have dates on or after today (`lessonDate >= today`).

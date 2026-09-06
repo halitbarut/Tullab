@@ -31,7 +31,7 @@ This document consolidates architectural decisions, data models, and migration s
 ---
 
 ### 2. Room Schema Migration (v9 → v10)
-- **Decision**: Implement manual `MIGRATION_9_10` in `com.barutdev.kora.data.local.migrations` and increment `KoraDatabase.version` from 9 to 10.
+- **Decision**: Implement manual `MIGRATION_9_10` in `com.barutdev.kora.data.local.migrations` and increment `TullabDatabase.version` from 9 to 10.
 - **SQL Execution**:
   ```sql
   ALTER TABLE lessons ADD COLUMN pricingMode TEXT NOT NULL DEFAULT 'PER_HOUR';

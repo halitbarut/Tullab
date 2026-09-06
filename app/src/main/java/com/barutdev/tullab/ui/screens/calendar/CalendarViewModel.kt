@@ -14,6 +14,8 @@ import com.barutdev.tullab.domain.repository.StudentRepository
 import com.barutdev.tullab.domain.repository.UserPreferencesRepository
 import com.barutdev.tullab.domain.usecase.notification.CancelNotificationAlarmsUseCase
 import com.barutdev.tullab.domain.usecase.notification.ScheduleNotificationAlarmsUseCase
+import com.barutdev.tullab.domain.usecase.lesson.UndoBulkLessonsUseCase
+import com.barutdev.tullab.domain.model.BatchUndoSession
 import com.barutdev.tullab.navigation.STUDENT_ID_ARG
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Instant
@@ -42,7 +44,8 @@ class CalendarViewModel @Inject constructor(
     private val userPreferencesRepository: UserPreferencesRepository,
     private val paymentRepository: PaymentRepository,
     private val scheduleNotificationAlarmsUseCase: ScheduleNotificationAlarmsUseCase,
-    private val cancelNotificationAlarmsUseCase: CancelNotificationAlarmsUseCase
+    private val cancelNotificationAlarmsUseCase: CancelNotificationAlarmsUseCase,
+    private val undoBulkLessonsUseCase: UndoBulkLessonsUseCase
 ) : ViewModel() {
 
     val studentId: Int? = savedStateHandle[STUDENT_ID_ARG]
@@ -291,6 +294,23 @@ class CalendarViewModel @Inject constructor(
                 HomeworkStatus.CANCELLED -> HomeworkStatus.CANCELLED
             }
             homeworkRepository.updateHomework(homework.copy(status = newStatus))
+        }
+    }
+
+    private val batchUndoSessionState = MutableStateFlow<BatchUndoSession?>(null)
+    val batchUndoSession: StateFlow<BatchUndoSession?> = batchUndoSessionState.asStateFlow()
+
+    fun setBatchUndoSession(session: BatchUndoSession?) {
+        batchUndoSessionState.value = session
+    }
+
+    fun undoBulkLessons() {
+        val session = batchUndoSessionState.value ?: return
+        viewModelScope.launch {
+            val result = undoBulkLessonsUseCase(session)
+            if (result.isSuccess) {
+                batchUndoSessionState.value = null
+            }
         }
     }
 }
