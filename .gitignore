@@ -112,3 +112,6 @@ ehthumbs.db
 *.class
 *.jar
 .env*
+
+
+google-services.json

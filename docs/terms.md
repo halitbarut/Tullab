@@ -1,44 +1,118 @@
 # Terms and Conditions for Tullab
 
-**Last updated:** September 5, 2026
+**Last updated: September 6, 2026**
 
-Please read these terms and conditions carefully before using Our Service.
+Please read these Terms and Conditions carefully before using Tullab (the "Application", "Service", "Tullab", "we", "us", or "our").
 
-## Acknowledgment
+By downloading, accessing, or using Tullab, you agree to these Terms and Conditions. If you do not agree with these Terms, please do not use the Application.
 
-These are the Terms and Conditions governing the use of this Service and the agreement that operates between You and the Developer. These Terms and Conditions set out the rights and obligations of all users regarding the use of the Service.
+## 1. Description of the Service
 
-Your access to and use of the Service is conditioned on Your acceptance of and compliance with these Terms and Conditions. By accessing or using the Service, You agree to be bound by these Terms and Conditions.
+Tullab is a local-first application designed to help educators manage information such as students, lessons, schedules, notes, and homework.
 
-## Data Storage and Responsibility
+The core functionality of Tullab is designed to operate locally on your device. Tullab does not require an account, does not provide cloud synchronization, and does not operate a server that stores the core data you enter into the Application.
 
-All data entered into the Tullab application is stored locally on Your Device. You are solely responsible for:
+## 2. Your Data
 
-*   **Data Accuracy:** Ensuring the accuracy and integrity of the information you enter.
-*   **Data Backup and Security:** Regularly backing up your data using the "Export Backup" feature and securing your device against unauthorized access or data loss. The Developer is not responsible for any loss of data resulting from device loss, damage, or the deletion of the application.
+You retain responsibility for the information you enter into Tullab.
 
-## Intellectual Property
+Your core application data is stored locally on your device. You are responsible for:
 
-The Service and its original content (excluding content provided by You), features, and functionality are and will remain the exclusive property of the Developer. The Service is protected by copyright and other laws. Our name and logo may not be used in connection with any product or service without the prior written consent of the Developer.
+* The accuracy of the information you enter;
+* Maintaining appropriate backups of your data;
+* Protecting access to your device and locally stored data; and
+* Ensuring that your use of the Application complies with applicable laws and regulations.
 
-## "As Is" and "As Available" Disclaimer
+Tullab does not guarantee that locally stored data can be recovered if your device is lost, damaged, reset, replaced, or if the Application or its data is deleted.
 
-The Service is provided to You "AS IS" and "AS AVAILABLE" and with all faults and defects without warranty of any kind. To the maximum extent permitted under applicable law, the Developer expressly disclaims all warranties, whether express, implied, statutory, or otherwise, with respect to the Service.
+## 3. Backups and Data Loss
 
-## Limitation of Liability
+Tullab may provide functionality for exporting or backing up your application data.
 
-To the maximum extent permitted by applicable law, in no event shall the Developer be liable for any special, incidental, indirect, or consequential damages whatsoever (including, but not limited to, damages for loss of profits, loss of data, or other information) arising out of or in any way related to the use of or inability to use the Service.
+You are responsible for maintaining copies of any data that you consider important.
 
-## Governing Law
+The Developer is not responsible for loss of data resulting from device failure, device loss, unauthorized access to your device, operating system changes, application deletion, or other circumstances outside the Developer's reasonable control.
 
-The laws of the Country, excluding its conflicts of law rules, shall govern this Terms and Your use of the Application.
+## 4. Third-Party Services
 
-## Changes to These Terms and Conditions
+Tullab uses third-party services, including:
 
-We reserve the right, at Our sole discretion, to modify or replace these Terms at any time.
+* Google Analytics for Firebase
+* Firebase Crashlytics
 
-By continuing to access or use Our Service after those revisions become effective, You agree to be bound by the revised terms.
+These services may collect and process technical, diagnostic, crash, and usage information as described in our Privacy Policy.
 
-## Contact Us
+Your use of Tullab is also subject to the applicable terms and policies of these third-party service providers.
 
-If you have any questions about these Terms and Conditions, You can contact us by email: [mhbarut66@gmail.com]
+For more information about how information is handled, please review the Tullab Privacy Policy.
+
+## 5. Acceptable Use
+
+You agree to use Tullab only for lawful purposes and in a manner that does not violate applicable laws or the rights of others.
+
+You are responsible for ensuring that any personal or academic information you enter into Tullab is collected, stored, and used in accordance with any laws, regulations, institutional policies, or professional obligations applicable to you.
+
+You must not use the Application to:
+
+* Violate the rights or privacy of another person;
+* Engage in unlawful activities;
+* Attempt to gain unauthorized access to the Application or its underlying systems; or
+* Interfere with or disrupt the normal operation of the Application.
+
+## 6. Intellectual Property
+
+The Application, including its original software, design, interface, graphics, branding, features, and functionality, is owned by the Developer and is protected by applicable intellectual property laws.
+
+You may use the Application for its intended purposes in accordance with these Terms.
+
+Except as permitted by applicable law, you may not copy, modify, distribute, sell, sublicense, reverse engineer, or create derivative works of the Application without the Developer's prior written permission.
+
+Content that you enter into the Application remains your responsibility and is not claimed as intellectual property of the Developer.
+
+## 7. Availability and Updates
+
+We may modify, update, suspend, or discontinue parts of the Application at any time.
+
+We may release updates to improve functionality, security, compatibility, or performance. Some updates may be necessary for continued use of certain features.
+
+We do not guarantee that the Application will always be available, uninterrupted, error-free, or compatible with every device or operating system.
+
+## 8. Disclaimer of Warranties
+
+To the maximum extent permitted by applicable law, Tullab is provided on an "AS IS" and "AS AVAILABLE" basis, without warranties of any kind, whether express, implied, statutory, or otherwise.
+
+We do not warrant that:
+
+* The Application will meet all of your requirements;
+* The Application will operate without interruption or errors;
+* Any defect will be corrected;
+* The Application will be compatible with every device or future operating system version; or
+* Data stored locally on your device will never be lost or corrupted.
+
+## 9. Limitation of Liability
+
+To the maximum extent permitted by applicable law, the Developer shall not be liable for any indirect, incidental, special, consequential, or exemplary damages arising from or related to your use of, or inability to use, the Application.
+
+This includes, without limitation, loss of data, loss of business, loss of profits, or other losses resulting from the use of the Application.
+
+Nothing in these Terms is intended to exclude or limit liability that cannot legally be excluded or limited under applicable law.
+
+## 10. Governing Law
+
+These Terms and Conditions shall be governed by and interpreted in accordance with the laws applicable to the Developer's jurisdiction, without regard to its conflict-of-law provisions, except where applicable law requires otherwise.
+
+Any mandatory consumer protection rights or other rights that cannot legally be waived remain unaffected.
+
+## 11. Changes to These Terms
+
+We reserve the right to modify or replace these Terms and Conditions at any time.
+
+When we make changes, we will update the "Last updated" date at the top of these Terms.
+
+Your continued use of Tullab after the updated Terms become effective constitutes acceptance of the revised Terms, to the extent permitted by applicable law.
+
+## 12. Contact Us
+
+If you have any questions about these Terms and Conditions, you can contact us at:
+
+**Email:** [mhbarut66@gmail.com](mailto:mhbarut66@gmail.com)
