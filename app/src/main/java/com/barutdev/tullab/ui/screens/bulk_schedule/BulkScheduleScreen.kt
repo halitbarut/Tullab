@@ -47,8 +47,6 @@ import com.barutdev.tullab.ui.screens.bulk_schedule.components.PastDateWarningDi
 import com.barutdev.tullab.util.tullabStringResource
 import com.barutdev.tullab.util.tullabPluralResource
 import androidx.compose.foundation.layout.width
-import com.barutdev.tullab.ui.theme.StatusOrange
-import com.barutdev.tullab.ui.theme.StatusOrangeContainer
 import androidx.compose.ui.platform.LocalContext
 import java.time.LocalTime
 import java.time.YearMonth
@@ -76,7 +74,7 @@ fun BulkScheduleScreen(
     viewModel: BulkScheduleViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarHostState = com.barutdev.tullab.ui.navigation.LocalTullabScaffoldController.current.snackbarHostState
 
     val zoneId = remember { ZoneId.systemDefault() }
     val lessonsByDate = remember(state.existingLessons, zoneId) {
@@ -236,7 +234,7 @@ fun BulkScheduleScreen(
             Spacer(modifier = Modifier.height(24.dp))
             if (state.isCapReached) {
                 Surface(
-                    color = StatusOrangeContainer,
+                    color = MaterialTheme.colorScheme.errorContainer,
                     shape = MaterialTheme.shapes.medium,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -249,13 +247,13 @@ fun BulkScheduleScreen(
                         Icon(
                             imageVector = Icons.Outlined.Warning,
                             contentDescription = null,
-                            tint = StatusOrange
+                            tint = MaterialTheme.colorScheme.error
                         )
                         Spacer(modifier = Modifier.width(16.dp))
                         Text(
-                            text = tullabStringResource(R.string.bulk_schedule_cap_reached_warning),
+                            text = tullabStringResource(R.string.bulk_schedule_max_limit_error),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onErrorContainer
                         )
                     }
                 }
@@ -277,10 +275,31 @@ fun BulkScheduleScreen(
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
             } else {
                 val candidateCount = state.previewCandidates?.size ?: 0
+                val skippedCount = state.previewSkippedCount
+                val validCount = candidateCount - skippedCount
+                val allConflicts = candidateCount > 0 && validCount == 0
+                
+                if (candidateCount > 0) {
+                    val formatter = remember { java.text.NumberFormat.getCurrencyInstance() }
+                    val hourlyRateStr = state.draft.customRate?.let { formatter.format(it) } ?: "Default"
+                    
+                    val previewText = if (skippedCount > 0) {
+                        tullabStringResource(R.string.bulk_schedule_preview_count_with_skipped, candidateCount, skippedCount, hourlyRateStr)
+                    } else {
+                        tullabStringResource(R.string.bulk_schedule_preview_count_valid, candidateCount, hourlyRateStr)
+                    }
+                    Text(
+                        text = previewText, 
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (state.isCapReached) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
+                
                 Button(
                     onClick = { viewModel.onEvent(BulkScheduleEvent.ConfirmSchedule) },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = candidateCount > 0
+                    enabled = candidateCount > 0 && !state.isCapReached && !allConflicts
                 ) {
                     val buttonText = if (candidateCount > 0) {
                         tullabStringResource(R.string.bulk_schedule_confirm_button, candidateCount)

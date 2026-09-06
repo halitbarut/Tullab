@@ -25,6 +25,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Test
 import java.time.LocalDate
+import java.time.DayOfWeek
 import com.barutdev.tullab.domain.model.WeeklyRoutineEndCondition
 import com.barutdev.tullab.domain.repository.HomeworkRepository
 import com.barutdev.tullab.domain.repository.LessonRepository
@@ -157,17 +158,49 @@ class BulkScheduleViewModelTest {
     }
 
     @Test
-    fun `OnRoutineTargetCountChanged updates count if valid`() = runTest {
+    fun `OnRoutineTargetCountChanged updates targetCountInput and draft count even when exceeding 30`() = runTest {
+        viewModel.onEvent(BulkScheduleEvent.OnModeChanged(BulkScheduleMode.WEEKLY_ROUTINE))
+        viewModel.onEvent(BulkScheduleEvent.OnDayOfWeekToggled(DayOfWeek.MONDAY))
+        coEvery { calculateCandidatesUseCase(any(), any()) } returns (1..40).map { mockk(relaxed = true) }
+
         viewModel.onEvent(BulkScheduleEvent.OnRoutineTargetCountChanged("15"))
         advanceUntilIdle()
         assertEquals("15", viewModel.state.value.targetCountInput)
         val condition = viewModel.state.value.draft.endCondition as WeeklyRoutineEndCondition.ByTargetCount
         assertEquals(15, condition.targetCount)
 
-        viewModel.onEvent(BulkScheduleEvent.OnRoutineTargetCountChanged("40")) // Max is 30 in ViewModel
+        viewModel.onEvent(BulkScheduleEvent.OnRoutineTargetCountChanged("40"))
         advanceUntilIdle()
         val currentCondition = viewModel.state.value.draft.endCondition as WeeklyRoutineEndCondition.ByTargetCount
-        assertEquals(15, currentCondition.targetCount) // Remained 15
+        assertEquals(40, currentCondition.targetCount)
+        assertEquals("40", viewModel.state.value.targetCountInput)
+        assertTrue(viewModel.state.value.isCapReached)
+    }
+
+    @Test
+    fun `OnRoutineEndConditionChanged toggling retains targetCountInput instead of hardcoding 4`() = runTest {
+        viewModel.onEvent(BulkScheduleEvent.OnModeChanged(BulkScheduleMode.WEEKLY_ROUTINE))
+        viewModel.onEvent(BulkScheduleEvent.OnDayOfWeekToggled(DayOfWeek.MONDAY))
+        coEvery { calculateCandidatesUseCase(any(), any()) } returns (1..50).map { mockk(relaxed = true) }
+
+        viewModel.onEvent(BulkScheduleEvent.OnRoutineTargetCountChanged("50"))
+        advanceUntilIdle()
+        assertEquals("50", viewModel.state.value.targetCountInput)
+        assertEquals(50, (viewModel.state.value.draft.endCondition as WeeklyRoutineEndCondition.ByTargetCount).targetCount)
+
+        // Switch to ByEndDate
+        viewModel.onEvent(BulkScheduleEvent.OnRoutineEndConditionChanged(isByEndDate = true))
+        advanceUntilIdle()
+        assertTrue(viewModel.state.value.draft.endCondition is WeeklyRoutineEndCondition.ByEndDate)
+        assertEquals("50", viewModel.state.value.targetCountInput)
+
+        // Switch back to ByTargetCount
+        viewModel.onEvent(BulkScheduleEvent.OnRoutineEndConditionChanged(isByEndDate = false))
+        advanceUntilIdle()
+        val condition = viewModel.state.value.draft.endCondition as WeeklyRoutineEndCondition.ByTargetCount
+        assertEquals(50, condition.targetCount)
+        assertEquals("50", viewModel.state.value.targetCountInput)
+        assertTrue(viewModel.state.value.isCapReached)
     }
 
     @Test
@@ -191,7 +224,7 @@ class BulkScheduleViewModelTest {
         viewModel.onEvent(BulkScheduleEvent.OnCustomRateChanged("invalid"))
         advanceUntilIdle()
         assertEquals("invalid", viewModel.state.value.customRateInput)
-        assertEquals(50.5, viewModel.state.value.draft.customRate) // remains previous valid value
+        assertEquals(null, viewModel.state.value.draft.customRate) // clears value if invalid
     }
 
     @Test

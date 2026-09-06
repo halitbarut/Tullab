@@ -25,7 +25,7 @@ class CalculateBulkLessonCandidatesUseCase @Inject constructor(
         when (draft.mode) {
             BulkScheduleMode.CALENDAR_GRID -> {
                 for (date in draft.selectedDates.sorted()) {
-                    if (candidates.size >= 31) break
+                    if (candidates.size >= 100) break
                     val time = draft.customDayTimes[date] ?: draft.defaultStartTime
                     candidates.add(createCandidate(date, time, zoneId, existingTimestamps, today))
                 }
@@ -34,7 +34,7 @@ class CalculateBulkLessonCandidatesUseCase @Inject constructor(
                 if (draft.selectedDaysOfWeek.isEmpty()) return emptyList()
 
                 var currentDate = draft.routineStartDate
-                val maxLimit = 31
+                val maxLimit = 100
                 
                 val limitCount = when (val condition = draft.endCondition) {
                     is WeeklyRoutineEndCondition.ByTargetCount -> minOf(condition.targetCount, maxLimit)

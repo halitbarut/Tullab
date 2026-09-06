@@ -15,8 +15,9 @@ import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.ZoneOffset
 import java.time.format.TextStyle
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.time.temporal.WeekFields
 import com.barutdev.tullab.ui.theme.LocalLocale
 
@@ -67,8 +68,9 @@ fun WeeklyRoutineSelector(
         
         Text(tullabStringResource(R.string.bulk_schedule_routine_start_date), style = MaterialTheme.typography.titleMedium)
         Spacer(modifier = Modifier.height(8.dp))
+        val formatter = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
         OutlinedButton(onClick = { showStartDatePicker = true }) {
-            Text(routineStartDate.toString())
+            Text(routineStartDate.format(formatter))
         }
         
         Spacer(modifier = Modifier.height(16.dp))
@@ -91,8 +93,9 @@ fun WeeklyRoutineSelector(
             )
             Text(tullabStringResource(R.string.bulk_schedule_ends_on))
             if (endCondition is WeeklyRoutineEndCondition.ByEndDate) {
+                val formatter = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
                 OutlinedButton(onClick = { showEndDatePicker = true }, modifier = Modifier.padding(start = 8.dp)) {
-                    Text(endCondition.endDate.toString())
+                    Text(endCondition.endDate.format(formatter))
                 }
             } else {
                 Text(tullabStringResource(R.string.bulk_schedule_date), modifier = Modifier.padding(start = 8.dp))
@@ -110,9 +113,13 @@ fun WeeklyRoutineSelector(
             )
             Text(tullabStringResource(R.string.bulk_schedule_after))
             if (endCondition is WeeklyRoutineEndCondition.ByTargetCount) {
+                val isCountError = targetCountInput.isNotEmpty() &&
+                    (targetCountInput.trim().toIntOrNull()?.let { it <= 0 || it > 30 } ?: true)
                 OutlinedTextField(
                     value = targetCountInput,
                     onValueChange = onTargetCountChanged,
+                    isError = isCountError,
+                    singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.width(100.dp).padding(start = 8.dp)
                 )

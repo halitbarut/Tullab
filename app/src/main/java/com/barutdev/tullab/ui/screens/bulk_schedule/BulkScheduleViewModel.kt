@@ -81,23 +81,32 @@ class BulkScheduleViewModel @Inject constructor(
                 copy(selectedDaysOfWeek = newDays)
             }
             is BulkScheduleEvent.OnRoutineStartDateChanged -> updateDraft { copy(routineStartDate = event.date) }
-            is BulkScheduleEvent.OnRoutineEndConditionChanged -> updateDraft {
-                val newCondition = if (event.isByEndDate) {
-                    WeeklyRoutineEndCondition.ByEndDate(routineStartDate.plusMonths(1))
-                } else {
-                    WeeklyRoutineEndCondition.ByTargetCount(4)
+            is BulkScheduleEvent.OnRoutineEndConditionChanged -> {
+                val trimmed = _state.value.targetCountInput.trim()
+                val targetCount = trimmed.toIntOrNull() ?: if (trimmed.isNotEmpty()) 100 else 4
+                if (trimmed.isEmpty()) {
+                    _state.update { it.copy(targetCountInput = "4") }
                 }
-                copy(endCondition = newCondition)
+                updateDraft {
+                    val newCondition = if (event.isByEndDate) {
+                        WeeklyRoutineEndCondition.ByEndDate(routineStartDate.plusMonths(1))
+                    } else {
+                        WeeklyRoutineEndCondition.ByTargetCount(targetCount)
+                    }
+                    copy(endCondition = newCondition)
+                }
             }
             is BulkScheduleEvent.OnRoutineEndDateChanged -> updateDraft {
                 copy(endCondition = WeeklyRoutineEndCondition.ByEndDate(event.date))
             }
             is BulkScheduleEvent.OnRoutineTargetCountChanged -> {
-                _state.update { it.copy(targetCountInput = event.count) }
-                event.count.trim().toIntOrNull()?.let { count ->
-                    if (count in 1..30) {
-                        updateDraft { copy(endCondition = WeeklyRoutineEndCondition.ByTargetCount(count)) }
-                    }
+                val digitsOnly = event.count.filter { it.isDigit() }
+                _state.update { it.copy(targetCountInput = digitsOnly) }
+                val count = digitsOnly.toIntOrNull() ?: if (digitsOnly.isNotEmpty()) 100 else null
+                if (count != null && count > 0) {
+                    updateDraft { copy(endCondition = WeeklyRoutineEndCondition.ByTargetCount(count)) }
+                } else {
+                    updateDraft { copy(endCondition = WeeklyRoutineEndCondition.ByTargetCount(0)) }
                 }
             }
             is BulkScheduleEvent.OnDefaultStartTimeChanged -> updateDraft { copy(defaultStartTime = event.time) }
@@ -113,9 +122,8 @@ class BulkScheduleViewModel @Inject constructor(
             is BulkScheduleEvent.OnUseCustomRateToggled -> updateDraft { copy(useCustomRate = event.useCustomRate) }
             is BulkScheduleEvent.OnCustomRateChanged -> {
                 _state.update { it.copy(customRateInput = event.rate) }
-                event.rate.toDoubleOrNull()?.let { rate ->
-                    updateDraft { copy(customRate = rate) }
-                }
+                val parsedRate = event.rate.toDoubleOrNull()
+                updateDraft { copy(customRate = parsedRate) }
             }
             is BulkScheduleEvent.GeneratePreview -> generatePreview()
             is BulkScheduleEvent.ConfirmSchedule -> confirmSchedule()
@@ -157,12 +165,15 @@ class BulkScheduleViewModel @Inject constructor(
         viewModelScope.launch {
             val candidates = calculateCandidatesUseCase(draft)
             val validCandidates = candidates.filter { !it.isConflict }
+            val exceedsTarget = draft.mode == BulkScheduleMode.WEEKLY_ROUTINE &&
+                draft.endCondition is WeeklyRoutineEndCondition.ByTargetCount &&
+                draft.endCondition.targetCount > 30
             _state.update { 
                 it.copy(
                     previewCandidates = candidates,
                     previewSkippedCount = candidates.size - validCandidates.size,
                     hasPastLessonsInPreview = validCandidates.any { candidate -> candidate.isPast },
-                    isCapReached = candidates.size > 30
+                    isCapReached = candidates.size > 30 || exceedsTarget
                 ) 
             }
         }
@@ -174,7 +185,7 @@ class BulkScheduleViewModel @Inject constructor(
         val candidateCount = currentState.previewCandidates?.size ?: 0
         val validCandidatesCount = currentState.previewCandidates?.count { !it.isConflict } ?: 0
 
-        if (candidateCount > 30) {
+        if (candidateCount > 30 || currentState.isCapReached) {
             _state.update { it.copy(snackbarMessage = SnackbarState.Error(R.string.bulk_schedule_max_limit_error)) }
             return
         }
