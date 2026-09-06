@@ -95,7 +95,7 @@ class BulkScheduleViewModel @Inject constructor(
             is BulkScheduleEvent.OnRoutineTargetCountChanged -> {
                 _state.update { it.copy(targetCountInput = event.count) }
                 event.count.trim().toIntOrNull()?.let { count ->
-                    if (count in 1..365) {
+                    if (count in 1..30) {
                         updateDraft { copy(endCondition = WeeklyRoutineEndCondition.ByTargetCount(count)) }
                     }
                 }
@@ -113,7 +113,9 @@ class BulkScheduleViewModel @Inject constructor(
             is BulkScheduleEvent.OnUseCustomRateToggled -> updateDraft { copy(useCustomRate = event.useCustomRate) }
             is BulkScheduleEvent.OnCustomRateChanged -> {
                 _state.update { it.copy(customRateInput = event.rate) }
-                updateDraft { copy(customRate = event.rate.toDoubleOrNull()) }
+                event.rate.toDoubleOrNull()?.let { rate ->
+                    updateDraft { copy(customRate = rate) }
+                }
             }
             is BulkScheduleEvent.GeneratePreview -> generatePreview()
             is BulkScheduleEvent.ConfirmSchedule -> confirmSchedule()
@@ -160,7 +162,7 @@ class BulkScheduleViewModel @Inject constructor(
                     previewCandidates = candidates,
                     previewSkippedCount = candidates.size - validCandidates.size,
                     hasPastLessonsInPreview = validCandidates.any { candidate -> candidate.isPast },
-                    isCapReached = candidates.size >= 30
+                    isCapReached = candidates.size > 30
                 ) 
             }
         }
@@ -169,7 +171,13 @@ class BulkScheduleViewModel @Inject constructor(
     private fun confirmSchedule() {
         val currentState = _state.value
         val draft = currentState.draft
+        val candidateCount = currentState.previewCandidates?.size ?: 0
         val validCandidatesCount = currentState.previewCandidates?.count { !it.isConflict } ?: 0
+
+        if (candidateCount > 30) {
+            _state.update { it.copy(snackbarMessage = SnackbarState.Error(R.string.bulk_schedule_max_limit_error)) }
+            return
+        }
 
         if (validCandidatesCount == 0) {
             _state.update { it.copy(snackbarMessage = SnackbarState.Error(R.string.bulk_schedule_empty_selection_error)) }

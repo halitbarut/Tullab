@@ -222,7 +222,8 @@
     <string name="calendar_homework_action_mark_complete">Als erledigt markieren</string>
     <string name="calendar_homework_action_mark_pending">Als ausstehend markieren</string>
     <string name="calendar_homework_action_details">Details</string>
-    <string name="bulk_schedule_cap_reached_warning">Sie können maximal 30 Stunden auf einmal planen.</string>
+    
+    <string name="bulk_schedule_cap_reached_warning">Du kannst maximal 30 Lektionen auf einmal planen.</string>
     <!-- Allgemeine Dialogaktionen -->
     <string name="dialog_action_cancel">Abbrechen</string>
     <string name="dialog_action_ok">OK</string>
@@ -339,8 +340,8 @@
     </plurals>
 
     <plurals name="bulk_schedule_success_created">
-        <item quantity="one">%1$d Stunde geplant</item>
-        <item quantity="other">%1$d Stunden geplant</item>
+        <item quantity="one">%1$d Lektion geplant</item>
+        <item quantity="other">%1$d Lektionen geplant</item>
     </plurals>
 
     <string name="bulk_schedule_customize_day_times">Tageszeiten anpassen</string>

@@ -21,9 +21,13 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Test
 import java.time.LocalDate
+import com.barutdev.tullab.domain.model.WeeklyRoutineEndCondition
+import com.barutdev.tullab.domain.repository.HomeworkRepository
+import com.barutdev.tullab.domain.repository.LessonRepository
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class BulkScheduleViewModelTest {
@@ -36,6 +40,9 @@ class BulkScheduleViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
 
+    private lateinit var lessonRepository: LessonRepository
+    private lateinit var homeworkRepository: HomeworkRepository
+
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
@@ -43,13 +50,17 @@ class BulkScheduleViewModelTest {
         calculateCandidatesUseCase = mockk(relaxed = true)
         createLessonsUseCase = mockk(relaxed = true)
         undoUseCase = mockk(relaxed = true)
+        lessonRepository = mockk(relaxed = true)
+        homeworkRepository = mockk(relaxed = true)
         savedStateHandle = SavedStateHandle(mapOf(STUDENT_ID_ARG to 1))
         
         viewModel = BulkScheduleViewModel(
             savedStateHandle,
             calculateCandidatesUseCase,
             createLessonsUseCase,
-            undoUseCase
+            undoUseCase,
+            lessonRepository,
+            homeworkRepository
         )
     }
 
@@ -236,9 +247,9 @@ class BulkScheduleViewModelTest {
     }
 
     @Test
-    fun `isCapReached is set to true when 30 candidates are generated`() = runTest {
+    fun `isCapReached is set to true when 31 candidates are generated`() = runTest {
         val today = LocalDate.now()
-        val candidates = (1..30).map { 
+        val candidates = (1..31).map { 
             BulkLessonCandidate(today.plusDays(it.toLong()), java.time.LocalTime.of(10, 0), it.toLong(), isConflict = false, isPast = false)
         }
         

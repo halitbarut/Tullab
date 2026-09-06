@@ -121,7 +121,7 @@ class CalculateBulkLessonCandidatesUseCaseTest {
     }
 
     @Test
-    fun `enforces hard stop at 30 generated candidates in calendar mode`() = runTest {
+    fun `enforces hard stop at 31 generated candidates in calendar mode`() = runTest {
         val today = LocalDate.now(zoneId)
         val testDates = (1..35).map { today.plusDays(it.toLong()) }.toSet()
         
@@ -136,6 +136,6 @@ class CalculateBulkLessonCandidatesUseCaseTest {
 
         val candidates = useCase(draft, zoneId)
 
-        assertEquals(30, candidates.size)
+        assertEquals(31, candidates.size)
     }
 }

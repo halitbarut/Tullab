@@ -72,6 +72,10 @@ private class RecordingLessonRepository : LessonRepository {
     override fun getLessonsForStudent(studentId: Int): Flow<List<Lesson>> =
         flowOf(emptyList<Lesson>()).also { lessonCallCount += 1 }
     override suspend fun insertLesson(lesson: Lesson): Int = error("unused")
+    
+    override suspend fun insertLessons(lessons: List<Lesson>): List<Int> = emptyList()
+    override suspend fun deleteLessons(lessonIds: List<Int>) {}
+    override suspend fun getLessonDatesForStudent(studentId: Int): List<Long> = emptyList()
     override suspend fun updateLesson(lesson: Lesson) = error("unused")
     override suspend fun markCompletedLessonsAsPaid(studentId: Int) = error("unused")
     override suspend fun deleteLesson(lessonId: Int) = error("unused")

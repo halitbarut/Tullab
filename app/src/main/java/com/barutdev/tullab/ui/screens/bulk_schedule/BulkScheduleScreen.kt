@@ -306,7 +306,7 @@ private fun DefaultStartTimePickerBlock(
         val timePickerState = rememberTimePickerState(
             initialHour = defaultStartTime.hour,
             initialMinute = defaultStartTime.minute,
-            is24Hour = false
+            is24Hour = android.text.format.DateFormat.is24HourFormat(androidx.compose.ui.platform.LocalContext.current)
         )
         
         AlertDialog(

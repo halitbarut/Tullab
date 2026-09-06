@@ -16,6 +16,9 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset
+import java.time.format.TextStyle
+import java.time.temporal.WeekFields
+import com.barutdev.tullab.ui.theme.LocalLocale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,6 +37,7 @@ fun WeeklyRoutineSelector(
 ) {
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
+    val locale = LocalLocale.current
 
     Column(modifier = modifier.fillMaxWidth()) {
         Text(tullabStringResource(R.string.bulk_schedule_repeat_on), style = MaterialTheme.typography.titleMedium)
@@ -42,16 +46,18 @@ fun WeeklyRoutineSelector(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            val days = listOf(
-                DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, 
-                DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY, DayOfWeek.SUNDAY
-            )
+            val days = remember(locale) {
+                val weekFields = WeekFields.of(locale)
+                val firstDay = weekFields.firstDayOfWeek
+                (0..6).map { firstDay.plus(it.toLong()) }
+            }
             days.forEach { dayOfWeek ->
                 val isSelected = selectedDaysOfWeek.contains(dayOfWeek)
+                val dayName = dayOfWeek.getDisplayName(TextStyle.SHORT, locale).take(1).uppercase(locale)
                 FilterChip(
                     selected = isSelected,
                     onClick = { onDayOfWeekToggled(dayOfWeek) },
-                    label = { Text(dayOfWeek.name.take(1)) }, // M T W T F S S
+                    label = { Text(dayName) },
                     modifier = Modifier.padding(end = 4.dp)
                 )
             }

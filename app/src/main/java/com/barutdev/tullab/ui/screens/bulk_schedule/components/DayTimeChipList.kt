@@ -58,7 +58,7 @@ fun DayTimeChipList(
         val timePickerState = rememberTimePickerState(
             initialHour = initialTime.hour,
             initialMinute = initialTime.minute,
-            is24Hour = false
+            is24Hour = android.text.format.DateFormat.is24HourFormat(androidx.compose.ui.platform.LocalContext.current)
         )
         
         AlertDialog(
