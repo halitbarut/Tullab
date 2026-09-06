@@ -112,4 +112,13 @@ interface LessonDao {
         studentId: Int,
         scheduledStatus: LessonStatus = LessonStatus.SCHEDULED
     ): List<LessonEntity>
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertLessons(lessons: List<LessonEntity>): List<Long>
+
+    @Query("DELETE FROM lessons WHERE id IN (:lessonIds)")
+    suspend fun deleteLessons(lessonIds: List<Int>)
+
+    @Query("SELECT date FROM lessons WHERE studentId = :studentId")
+    suspend fun getLessonDatesForStudent(studentId: Int): List<Long>
 }

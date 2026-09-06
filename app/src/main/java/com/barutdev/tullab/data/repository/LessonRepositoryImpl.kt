@@ -111,4 +111,17 @@ class LessonRepositoryImpl @Inject constructor(
         val endOfDay = date.atTime(LocalTime.MAX).atZone(zoneId).toInstant().toEpochMilli()
         return Pair(startOfDay, endOfDay)
     }
+
+    override suspend fun insertLessons(lessons: List<Lesson>): List<Int> {
+        val insertedIds = lessonDao.insertLessons(lessons.map { it.toEntity() })
+        return insertedIds.map { it.toInt() }
+    }
+
+    override suspend fun deleteLessons(lessonIds: List<Int>) {
+        lessonDao.deleteLessons(lessonIds)
+    }
+
+    override suspend fun getLessonDatesForStudent(studentId: Int): List<Long> {
+        return lessonDao.getLessonDatesForStudent(studentId)
+    }
 }

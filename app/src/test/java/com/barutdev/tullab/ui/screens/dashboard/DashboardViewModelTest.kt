@@ -179,8 +179,11 @@ class DashboardViewModelTest {
             override fun getAllLessons(): Flow<List<Lesson>> = MutableStateFlow(lessons)
             override fun getLessonsForStudent(studentId: Int): Flow<List<Lesson>> = MutableStateFlow(lessons)
             override suspend fun insertLesson(lesson: Lesson): Int = 0
+            override suspend fun insertLessons(lessons: List<Lesson>): List<Int> = emptyList()
             override suspend fun updateLesson(lesson: Lesson) {}
             override suspend fun deleteLesson(lessonId: Int) {}
+            override suspend fun deleteLessons(lessonIds: List<Int>) {}
+            override suspend fun getLessonDatesForStudent(studentId: Int): List<Long> = emptyList()
             override suspend fun markCompletedLessonsAsPaid(studentId: Int) {}
             override suspend fun getScheduledLessonCount(studentId: Int): Int = 0
             override suspend fun getScheduledLessonsForStudent(studentId: Int): List<Lesson> = emptyList()

@@ -3,7 +3,7 @@
 ## 1. Breakdown Tier Computation Contract
 
 ### Package
-`com.barutdev.kora.ui.screens.dashboard`
+`com.barutdev.tullab.ui.screens.dashboard`
 
 ### Logic
 Given `completedLessons: List<Lesson>` awaiting payment:
@@ -48,7 +48,7 @@ assertEquals(
 ## 2. PaymentTrackingCard UI Contract
 
 ### Component
-`com.barutdev.kora.ui.screens.dashboard.PaymentTrackingCard`
+`com.barutdev.tullab.ui.screens.dashboard.PaymentTrackingCard`
 
 ### Parameters
 ```kotlin

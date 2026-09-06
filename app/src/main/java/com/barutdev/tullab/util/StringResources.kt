@@ -19,3 +19,18 @@ inline fun tullabStringResource(
     val localizedContext = context.createConfigurationContext(newConfiguration)
     return localizedContext.resources.getString(id, *formatArgs)
 }
+
+@Composable
+inline fun tullabPluralResource(
+    id: Int,
+    quantity: Int,
+    vararg formatArgs: Any
+): String {
+    val context = LocalContext.current
+    val locale = LocalLocale.current
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val newConfiguration = Configuration(configuration)
+    newConfiguration.setLocale(locale)
+    val localizedContext = context.createConfigurationContext(newConfiguration)
+    return localizedContext.resources.getQuantityString(id, quantity, *formatArgs)
+}

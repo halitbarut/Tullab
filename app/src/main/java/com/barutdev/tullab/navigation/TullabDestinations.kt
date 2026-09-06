@@ -76,6 +76,11 @@ internal sealed class TullabDestination(
         labelRes = R.string.student_profile_title
     )
 
+    object BulkSchedule : StudentScoped(
+        baseRoute = "bulk_schedule",
+        labelRes = R.string.bulk_schedule_title
+    )
+
     object AddStudentProfile : TullabDestination(
         labelRes = R.string.add_student_profile_title
     ) {
@@ -106,6 +111,7 @@ internal sealed class TullabDestination(
             Homework.route -> Homework
             Reports.route -> Reports
             EditStudentProfile.route -> EditStudentProfile
+            BulkSchedule.route -> BulkSchedule
             AddStudentProfile.route -> AddStudentProfile
             Settings.route -> Settings
             Onboarding.route -> Onboarding
@@ -122,6 +128,7 @@ internal sealed class TullabDestination(
                 route == Calendar.route || route.startsWith("${Calendar.baseRoute}/") -> Calendar
                 route == Homework.route || route.startsWith("${Homework.baseRoute}/") -> Homework
                 route == EditStudentProfile.route || route.startsWith("${EditStudentProfile.baseRoute}/") -> EditStudentProfile
+                route == BulkSchedule.route || route.startsWith("${BulkSchedule.baseRoute}/") -> BulkSchedule
                 else -> null
             }
         }

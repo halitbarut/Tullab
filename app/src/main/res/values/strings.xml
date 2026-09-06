@@ -228,6 +228,8 @@
     <string name="calendar_homework_action_mark_pending">Mark Pending</string>
     <string name="calendar_homework_action_details">Details</string>
 
+    <string name="bulk_schedule_cap_reached_warning">Maximum of 30 lessons per batch reached.</string>
+
     <!-- Reports Screen -->
     <string name="reports_title">Reports</string>
     <string name="reports_tab_label">Reports</string>
@@ -317,5 +319,47 @@
 
     <!-- Calendar: Save Changes action for future scheduled lessons (005-lesson-rate-fixes) -->
     <string name="calendar_lesson_action_save_changes">Save Changes</string>
+    <!-- Bulk Lesson Scheduling -->
+    <string name="bulk_schedule_title">Bulk Add Lessons</string>
+    <string name="bulk_schedule_undo_action">Undo</string>
+    <string name="bulk_schedule_max_limit_error">You can schedule a maximum of 30 lessons at once.</string>
+    <string name="bulk_schedule_tab_calendar_grid">Calendar Grid</string>
+    <string name="bulk_schedule_tab_weekly_routine">Weekly Routine</string>
+    <string name="bulk_schedule_confirm_button_default">Schedule Lessons</string>
+    <string name="bulk_schedule_confirm_button">Schedule %1$d Lessons</string>
+    <string name="bulk_schedule_preview_count_with_skipped">%1$d lessons to create (%2$d skipped due to conflict) • %3$s/hr</string>
+    <string name="bulk_schedule_preview_count_valid">%1$d lessons • %2$s/hr</string>
+    <string name="bulk_schedule_routine_start_date">Start Date</string>
+    <string name="bulk_schedule_routine_end_condition_date">End Date</string>
+    <string name="bulk_schedule_routine_end_condition_count">Number of Lessons</string>
+    <string name="bulk_schedule_custom_rate_checkbox">Custom batch hourly rate</string>
+    <string name="bulk_schedule_past_date_warning_title">Past Dates Selected</string>
+    <string name="bulk_schedule_past_date_warning_message">Some lessons are scheduled for dates in the past. They will be created in Scheduled status so you can log their completion later.</string>
+    <string name="bulk_schedule_empty_selection_error">Please select at least one date or weekday.</string>
+    <string name="bulk_schedule_time_picker_title">Select Time</string>
+    <string name="bulk_schedule_undo_success_toast">Batch scheduling undone.</string>
+
+    <plurals name="bulk_schedule_success_skipped">
+        <item quantity="one">(%1$d skipped due to conflict)</item>
+        <item quantity="other">(%1$d skipped due to conflicts)</item>
+    </plurals>
+
+    <plurals name="bulk_schedule_success_created">
+        <item quantity="one">%1$d lesson scheduled</item>
+        <item quantity="other">%1$d lessons scheduled</item>
+    </plurals>
+
+    <string name="bulk_schedule_customize_day_times">Customize Day Times</string>
+    <string name="bulk_schedule_default_start_time">Default Start Time</string>
+    <string name="bulk_schedule_pricing_override">Pricing Override</string>
+    <string name="bulk_schedule_set_custom_rate">Set custom hourly rate for this batch</string>
+    <string name="bulk_schedule_custom_hourly_rate">Custom Hourly Rate</string>
+    <string name="bulk_schedule_repeat_on">Repeat on</string>
+    <string name="bulk_schedule_ends">Ends</string>
+    <string name="bulk_schedule_ends_on">On </string>
+    <string name="bulk_schedule_date">Date</string>
+    <string name="bulk_schedule_after">After </string>
+    <string name="bulk_schedule_occurrences">Occurrences</string>
+    <string name="bulk_schedule_occurrences_suffix"> occurrences</string>
 
 </resources>

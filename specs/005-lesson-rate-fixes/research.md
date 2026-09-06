@@ -15,8 +15,8 @@ When a tutor changes a student's profile hourly rate on September 4 while having
      - `PAST_ONLY`: References existing past/uncompleted lessons awaiting logging.
      - `FUTURE_ONLY`: References upcoming scheduled lessons.
      - `MIXED`: References all existing uncompleted lessons.
-2. **Localization Resolution**: Replace all `androidx.compose.ui.res.stringResource` calls in `ScheduledLessonsRatePromptDialog.kt` with `com.barutdev.kora.util.koraStringResource`.
-   - `koraStringResource` explicitly builds a localized configuration context based on `LocalLocale.current`, ensuring the dialog respects the in-app language preference (`en`, `tr`, `de`).
+2. **Localization Resolution**: Replace all `androidx.compose.ui.res.stringResource` calls in `ScheduledLessonsRatePromptDialog.kt` with `com.barutdev.tullab.util.tullabStringResource`.
+   - `tullabStringResource` explicitly builds a localized configuration context based on `LocalLocale.current`, ensuring the dialog respects the in-app language preference (`en`, `tr`, `de`).
 
 ### Rationale
 - Standard `stringResource` in Android Jetpack Compose reads the top-level Android system configuration. When the system language is Turkish, standard Compose dialogs fall back to Turkish unless wrapped with `koraStringResource`.

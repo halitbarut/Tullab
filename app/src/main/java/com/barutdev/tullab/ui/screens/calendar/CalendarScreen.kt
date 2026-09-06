@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
@@ -97,12 +98,15 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.outlined.Assignment
+import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material.icons.outlined.PlaylistAdd
 
 
 @Composable
 fun CalendarScreen(
     onNavigateToStudentList: () -> Unit,
     onNavigateToHomework: (Int, Int) -> Unit,
+    onNavigateToBulkSchedule: (Int) -> Unit,
     expectedStudentId: Int? = null,
     modifier: Modifier = Modifier,
     viewModel: CalendarViewModel = hiltViewModel(
@@ -228,7 +232,8 @@ fun CalendarScreen(
                 icon = Icons.Outlined.Groups,
                 contentDescription = navigateToListDescription,
                 onClick = onNavigateToStudentList
-            )
+            ),
+            actions = emptyList()
         )
     }
     val fabConfig = remember(
@@ -282,6 +287,11 @@ fun CalendarScreen(
             viewModel.studentId?.let { studentId ->
                 onNavigateToHomework(studentId, homework.id)
             }
+        },
+        onNavigateToBulkSchedule = {
+            viewModel.studentId?.let { studentId ->
+                onNavigateToBulkSchedule(studentId)
+            }
         }
     )
 }
@@ -301,7 +311,8 @@ private fun CalendarScreenContent(
     onLessonMarkAsPaidClick: (Lesson) -> Unit,
     onRevertPaymentClick: (Lesson) -> Unit,
     onToggleHomeworkStatus: (Homework) -> Unit,
-    onHomeworkDetailsClick: (Homework) -> Unit
+    onHomeworkDetailsClick: (Homework) -> Unit,
+    onNavigateToBulkSchedule: () -> Unit
 ) {
     val currentLocale = LocalLocale.current
     val zoneId = remember { ZoneId.systemDefault() }
@@ -348,6 +359,16 @@ private fun CalendarScreenContent(
             )
         }
         AnimatedListItem(index = 1) {
+            androidx.compose.material3.FilledTonalButton(
+                onClick = onNavigateToBulkSchedule,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            ) {
+                Icon(androidx.compose.material.icons.Icons.Outlined.DateRange, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text(tullabStringResource(R.string.bulk_schedule_title))
+            }
+        }
+        AnimatedListItem(index = 2) {
             DayDetailsSection(
                 selectedDate = selectedDate,
                 lessons = selectedDateLessons,
@@ -1093,7 +1114,8 @@ private fun CalendarScreenPreview() {
             onLessonMarkAsPaidClick = {},
             onRevertPaymentClick = {},
             onToggleHomeworkStatus = {},
-            onHomeworkDetailsClick = {}
+            onHomeworkDetailsClick = {},
+            onNavigateToBulkSchedule = {}
         )
     }
 }

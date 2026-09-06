@@ -16,7 +16,7 @@ This guide describes end-to-end manual and automated validation scenarios to ver
 Verify that updating a student's profile rate on a date after an uncompleted scheduled lesson (e.g. September 4 vs September 1) displays a prompt referencing past/uncompleted lessons in the active in-app language (English, Turkish, or German).
 
 ### Steps
-1. Launch Kora and set app language to **English** (`Settings → Language → English`).
+1. Launch Tullab and set app language to **English** (`Settings → Language → English`).
 2. Create a Student (e.g., "Alice") with an hourly rate of 200 TL.
 3. In Calendar, schedule a lesson for Alice on a past date (e.g., 3 days before today) or use test seed data.
 4. Navigate to Alice's profile and tap **Edit**.
@@ -75,7 +75,7 @@ Verify that a tutor can edit the rate or pricing mode of an upcoming planned les
 
 Run all unit tests verifying the domain logic, ViewModels, and state transformations:
 ```bash
-./gradlew testDebugUnitTest --tests "com.barutdev.kora.ui.screens.dashboard.*"
-./gradlew testDebugUnitTest --tests "com.barutdev.kora.ui.screens.student_profile.*"
-./gradlew testDebugUnitTest --tests "com.barutdev.kora.ui.screens.calendar.*"
+./gradlew testDebugUnitTest --tests "com.barutdev.tullab.ui.screens.dashboard.*"
+./gradlew testDebugUnitTest --tests "com.barutdev.tullab.ui.screens.student_profile.*"
+./gradlew testDebugUnitTest --tests "com.barutdev.tullab.ui.screens.calendar.*"
 ```

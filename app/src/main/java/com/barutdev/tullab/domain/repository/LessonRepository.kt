@@ -61,4 +61,29 @@ interface LessonRepository {
      * @return Flow<List<Lesson>> Active future lessons
      */
     fun getActiveLessons(): Flow<List<Lesson>>
+
+    /**
+     * Inserts a collection of lessons in a single transaction.
+     *
+     * @param lessons List of domain lessons to insert.
+     * @return List of generated database primary keys (IDs) in insertion order.
+     */
+    suspend fun insertLessons(lessons: List<Lesson>): List<Int>
+
+    /**
+     * Deletes a collection of lessons by their IDs in a single transaction.
+     * Used for atomic rollback when the tutor taps "Undo".
+     *
+     * @param lessonIds IDs of lessons to remove.
+     */
+    suspend fun deleteLessons(lessonIds: List<Int>)
+
+    /**
+     * Returns all lesson start timestamps (epoch millis) for a specific student.
+     * Used for rapid collision checking during bulk scheduling candidate generation.
+     *
+     * @param studentId Target student ID.
+     * @return List of epoch millis timestamps for all existing lessons of this student.
+     */
+    suspend fun getLessonDatesForStudent(studentId: Int): List<Long>
 }
