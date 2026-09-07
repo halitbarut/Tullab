@@ -59,7 +59,7 @@ fun LogLessonDialog(
     onDismiss: () -> Unit,
     onSave: ((duration: String, notes: String, pricingMode: PricingMode, rateOrFee: String, isCompleted: Boolean) -> Unit)? = null,
     onComplete: ((duration: String, notes: String, pricingMode: PricingMode, rateOrFee: String) -> Unit)? = null,
-    onMarkNotDone: (notes: String) -> Unit,
+    onMarkNotDone: ((notes: String) -> Unit)? = null,
     isMarkAsPaidMode: Boolean = false,
     requiresFeePrompt: Boolean = false,
     onMarkAsPaid: ((duration: String, customFee: String) -> Unit)? = null,
@@ -129,17 +129,15 @@ fun LogLessonDialog(
 
     var showPastWarning by remember { mutableStateOf(false) }
 
-    val isDurationEntered = duration.trim().isNotEmpty()
-    val parsedDuration = duration.trim().replace(',', '.').toDoubleOrNull()
-    val isDurationValid = parsedDuration != null && parsedDuration > 0.0
-    val isFeeValid = !requiresFeePrompt || customFee.trim().replace(',', '.').toDoubleOrNull()?.let { it > 0.0 } == true
-    val isRateOrFeeValid = rateOrFeeInput.trim().replace(',', '.').toDoubleOrNull() != null
-
-    val isSaveEnabled = when {
-        isMarkAsPaidMode -> isDurationValid && isFeeValid
-        pricingMode == PricingMode.PER_HOUR -> isDurationValid && isRateOrFeeValid && isDataChanged
-        else -> (!isDurationEntered || isDurationValid) && isRateOrFeeValid && isDataChanged
-    }
+    val isSaveEnabled = isDialogSaveEnabled(
+        durationStr = duration,
+        rateOrFeeInput = rateOrFeeInput,
+        pricingMode = pricingMode,
+        isMarkAsPaidMode = isMarkAsPaidMode,
+        requiresFeePrompt = requiresFeePrompt,
+        customFeeStr = customFee,
+        isDataChanged = isDataChanged
+    )
 
     fun resetInputs() {
         duration = lesson.durationInHours?.let { if (it % 1.0 == 0.0) it.toInt().toString() else it.toString() } ?: ""
@@ -453,16 +451,13 @@ fun LogLessonDialog(
 
             // Total fee calculation (for Mark as Paid)
             if (isMarkAsPaidMode) {
-                val parsedDuration = duration.trim().replace(',', '.').toDoubleOrNull() ?: 0.0
-                val rate = lesson.rateOrFee
-
-                val calculatedFee = if (requiresFeePrompt) {
-                    customFee.trim().replace(',', '.').toDoubleOrNull() ?: 0.0
-                } else if (pricingMode == PricingMode.PER_HOUR) {
-                    parsedDuration * rate
-                } else {
-                    rate
-                }
+                val calculatedFee = calculateDialogTotalFee(
+                    durationStr = duration,
+                    rate = lesson.rateOrFee,
+                    pricingMode = pricingMode,
+                    requiresFeePrompt = requiresFeePrompt,
+                    customFeeStr = customFee
+                )
 
                 Text(
                     text = tullabStringResource(
@@ -475,7 +470,8 @@ fun LogLessonDialog(
             }
 
             // Spacious single row: subtle Cancel (left), discreet red Not Done (center), solid primary Save button (right)
-            val showNotDone = !isMarkAsPaidMode && (isPastLesson || onSaveScheduled == null)
+            // Any unpaid lesson (past, present, or scheduled future) can be legitimately cancelled via "Not Done"
+            val showNotDone = !isMarkAsPaidMode && lesson.status != LessonStatus.PAID
 
             Row(
                 modifier = Modifier
@@ -494,7 +490,12 @@ fun LogLessonDialog(
                 if (showNotDone) {
                     TextButton(
                         onClick = {
-                            onMarkNotDone(notes)
+                            showPastWarning = false
+                            if (onMarkNotDone != null) {
+                                onMarkNotDone(notes)
+                            } else {
+                                onDismiss()
+                            }
                             resetInputs()
                         },
                         colors = ButtonDefaults.textButtonColors(
@@ -529,5 +530,47 @@ fun LogLessonDialog(
                 }
             }
         }
+    }
+}
+
+fun parseDurationDecimal(duration: String): Double? =
+    duration.trim().replace(',', '.').toDoubleOrNull()
+
+fun calculateDialogTotalFee(
+    durationStr: String,
+    rate: Double,
+    pricingMode: PricingMode,
+    requiresFeePrompt: Boolean = false,
+    customFeeStr: String = ""
+): Double {
+    val parsedDuration = parseDurationDecimal(durationStr) ?: 0.0
+    return if (requiresFeePrompt) {
+        parseDurationDecimal(customFeeStr) ?: 0.0
+    } else if (pricingMode == PricingMode.PER_HOUR) {
+        parsedDuration * rate
+    } else {
+        rate
+    }
+}
+
+fun isDialogSaveEnabled(
+    durationStr: String,
+    rateOrFeeInput: String,
+    pricingMode: PricingMode,
+    isMarkAsPaidMode: Boolean = false,
+    requiresFeePrompt: Boolean = false,
+    customFeeStr: String = "",
+    isDataChanged: Boolean = true
+): Boolean {
+    val parsedDuration = parseDurationDecimal(durationStr)
+    val isDurationEntered = durationStr.trim().isNotEmpty()
+    val isDurationValid = parsedDuration != null && parsedDuration > 0.0
+    val isFeeValid = !requiresFeePrompt || parseDurationDecimal(customFeeStr)?.let { it > 0.0 } == true
+    val isRateOrFeeValid = parseDurationDecimal(rateOrFeeInput) != null
+
+    return when {
+        isMarkAsPaidMode -> isDurationValid && isFeeValid
+        pricingMode == PricingMode.PER_HOUR -> isDurationValid && isRateOrFeeValid && isDataChanged
+        else -> (!isDurationEntered || isDurationValid) && isRateOrFeeValid && isDataChanged
     }
 }

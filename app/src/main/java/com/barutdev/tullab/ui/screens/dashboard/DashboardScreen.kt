@@ -411,13 +411,14 @@ fun PaymentTrackingCard(
     locale: Locale,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val amountText = remember(totalAmountDue, currencyCode) {
         formatCurrency(totalAmountDue, currencyCode)
     }
     val hourlyRateText = remember(hourlyRate, currencyCode) {
         formatCurrency(hourlyRate, currencyCode)
     }
-    val hoursText = formatDurationHours(totalHours)
+    val hoursText = formatDurationHours(context, totalHours)
     val formattedLastPaymentDate = remember(lastPaymentDate, locale) {
         lastPaymentDate?.let { timestamp ->
             DateTimeFormatter
@@ -488,7 +489,7 @@ fun PaymentTrackingCard(
                     rateBreakdownTiers.forEach { tier ->
                         val tierText = when (tier.pricingMode) {
                             com.barutdev.tullab.domain.model.PricingMode.PER_HOUR -> {
-                                val formattedHours = formatDurationHours(tier.totalHours)
+                                val formattedHours = formatDurationHours(context, tier.totalHours)
                                 val formattedRate = formatCurrency(tier.rateOrFee, currencyCode)
                                 tullabStringResource(
                                     id = R.string.dashboard_payment_rate_info,

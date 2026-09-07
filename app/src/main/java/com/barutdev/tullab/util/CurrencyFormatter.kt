@@ -29,33 +29,22 @@ fun getCurrencySymbol(currencyCode: String, locale: Locale = Locale.getDefault()
     return runCatching { Currency.getInstance(currencyCode).getSymbol(locale) }.getOrDefault(currencyCode)
 }
 
-// Comprehensive list of active, circulating ISO 4217 currency codes
-private val activeIso4217Currencies = setOf(
-    "AED", "AFN", "ALL", "AMD", "ANG", "AOA", "ARS", "AUD", "AWG", "AZN", 
-    "BAM", "BBD", "BDT", "BGN", "BHD", "BIF", "BMD", "BND", "BOB", "BRL", 
-    "BSD", "BTN", "BWP", "BYN", "BZD", "CAD", "CDF", "CHF", "CLP", "CNY", 
-    "COP", "CRC", "CUP", "CVE", "CZK", "DJF", "DKK", "DOP", "DZD", "EGP", 
-    "ERN", "ETB", "EUR", "FJD", "FKP", "GBP", "GEL", "GHS", "GIP", "GMD", 
-    "GNF", "GTQ", "GYD", "HKD", "HNL", "HTG", "HUF", "IDR", "ILS", "INR", 
-    "IQD", "IRR", "ISK", "JMD", "JOD", "JPY", "KES", "KGS", "KHR", "KMF", 
-    "KPW", "KRW", "KWD", "KYD", "KZT", "LAK", "LBP", "LKR", "LRD", "LSL", 
-    "LYD", "MAD", "MDL", "MGA", "MKD", "MMK", "MNT", "MOP", "MRU", "MUR", 
-    "MVR", "MWK", "MXN", "MYR", "MZN", "NAD", "NGN", "NIO", "NOK", "NPR", 
-    "NZD", "OMR", "PAB", "PEN", "PGK", "PHP", "PKR", "PLN", "PYG", "QAR", 
-    "RON", "RSD", "RUB", "RWF", "SAR", "SBD", "SCR", "SDG", "SEK", "SGD", 
-    "SHP", "SLL", "SOS", "SRD", "SSP", "STN", "SYP", "SZL", "THB", "TJS", 
-    "TMT", "TND", "TOP", "TRY", "TTD", "TWD", "TZS", "UAH", "UGX", "USD", 
-    "UYU", "UZS", "VES", "VND", "VUV", "WST", "XAF", "XCD", "XOF", "XPF", 
-    "YER", "ZAR", "ZMW", "ZWL"
-)
-
 fun getSanitizedCurrencyOptions(locale: Locale = Locale.getDefault()): List<CurrencyOption> {
     val pinnedCodes = listOf("TRY", "USD", "EUR", "GBP", "CHF")
     
+    val activeCountryCurrencies = Locale.getISOCountries().mapNotNull { country ->
+        runCatching { Currency.getInstance(Locale.Builder().setRegion(country).build()) }.getOrNull()
+    }.toSet()
+
     val allCurrencies = Currency.getAvailableCurrencies()
-        .filter { it.currencyCode in activeIso4217Currencies }
+        .filter { currency ->
+            val code = currency.currencyCode
+            val isStandardCirculating = currency in activeCountryCurrencies || code == "BGN"
+            val isPseudoOrTestCode = code.startsWith("X") && code !in setOf("XAF", "XCD", "XOF", "XPF")
+            isStandardCirculating && !isPseudoOrTestCode && currency.numericCode > 0 && currency.numericCode != 999
+        }
         .map { currency ->
-            val symbol = if (currency.currencyCode == "TRY") "₺" else currency.symbol
+            val symbol = if (currency.currencyCode == "TRY") "₺" else currency.getSymbol(locale)
             val localizedName = currency.getDisplayName(locale)
             val displayName = "$localizedName (${currency.currencyCode})"
             CurrencyOption(currency.currencyCode, displayName, symbol)
@@ -65,9 +54,10 @@ fun getSanitizedCurrencyOptions(locale: Locale = Locale.getDefault()): List<Curr
         allCurrencies.find { it.code == code }
     }
     
+    val collator = java.text.Collator.getInstance(locale)
     val remainingOptions = allCurrencies
         .filter { it.code !in pinnedCodes }
-        .sortedBy { it.displayName }
+        .sortedWith { a, b -> collator.compare(a.displayName, b.displayName) }
         
     return pinnedOptions + remainingOptions
 }

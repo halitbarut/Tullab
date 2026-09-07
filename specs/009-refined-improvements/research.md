@@ -45,15 +45,16 @@
 
 ---
 
-## Decision 4: Dynamic ISO 4217 Currency List with Search Filtering
+## Decision 4: Dynamic ISO 4217 Currency List with Search Filtering & Localized Sorting
 
 - **Decision**:
-  1. Expand currency support from hardcoded `["USD", "EUR", "TRY"]` to all standard active currencies obtained from `Currency.getAvailableCurrencies()`.
-  2. Filter out pseudo/funds codes without valid 3-letter uppercase codes, sort by currency code, and extract localized display names and symbols.
-  3. Update `CurrencySelectionDialog` in `SettingsScreen.kt` to include a search text field at the top and a scrollable `LazyColumn` of selectable currency options.
-  4. In `CurrencyFormatter.kt`, dynamically look up or construct formatters for any ISO 4217 code using `NumberFormat.getCurrencyInstance` with currency-specific symbol and fraction digit support.
+  1. Expand currency support from hardcoded lists to dynamically filtered active ISO 4217 currencies obtained from `Currency.getAvailableCurrencies()`.
+  2. Dynamically filter the available currencies against active ISO 3166 country mappings (`Locale.getISOCountries()`), excluding obsolete/historical currencies (such as ALK or DEM), test codes (`XXX`, `XTS`), and precious metals/pseudo-currencies (`XAU`, `XAG`, etc.).
+  3. Resolve currency symbols and display names using the active runtime `locale` (`currency.getSymbol(locale)` and `currency.getDisplayName(locale)`) rather than relying on JVM default process locales.
+  4. Pin top currencies (`TRY`, `USD`, `EUR`, `GBP`, `CHF`) to the head of the list, followed by the remaining currencies sorted using locale-aware collation (`java.text.Collator.getInstance(locale)`) to ensure correct alphabetical ordering for Turkish (e.g. dotted/dotless I) and German (umlauts).
+  5. Update `CurrencySelectionDialog` in `SettingsScreen.kt` with a live search text field and `LazyColumn` for fast, responsive currency selection.
 - **Rationale**: Fulfills Constitution Principle VII ("Dynamic Preference: Formatting systems MUST be extensible and dynamically respect user preferences and device locale. Architectural rules MUST NOT hardcode supported currencies").
-- **Alternatives Considered**: A fixed static list of 25 currencies was rejected because tutors operate in diverse countries globally and Java's `Currency.getAvailableCurrencies()` provides the authoritative standard ISO list out of the box.
+- **Alternatives Considered**: A hardcoded set of ISO codes was rejected because it violated Constitution Principle VII and could become outdated or misaligned with Android/JVM locale databases. Standard String comparison was rejected in favor of `Collator` to honor regional alphabetical rules.
 
 ---
 

@@ -2,8 +2,8 @@
 
 **Feature**: Refined Improvements & Bug Fixes  
 **Branch**: `009-refined-improvements`  
-**Specification**: [spec.md](file:///home/halit/AndroidStudioProjects/Tullab/specs/009-refined-improvements/spec.md)  
-**Implementation Plan**: [plan.md](file:///home/halit/AndroidStudioProjects/Tullab/specs/009-refined-improvements/plan.md)  
+**Specification**: [spec.md](spec.md)  
+**Implementation Plan**: [plan.md](plan.md)  
 
 ---
 

@@ -1,18 +1,23 @@
 # Implementation Plan: Refined Improvements & Bug Fixes
 
-**Branch**: `009-refined-improvements` | **Date**: 2026-09-07 | **Spec**: [spec.md](file:///home/halit/AndroidStudioProjects/Tullab/specs/009-refined-improvements/spec.md)
+**Branch**: `009-refined-improvements` | **Date**: 2026-09-07 | **Spec**: [spec.md](spec.md)
 
 **Input**: Feature specification from `/specs/009-refined-improvements/spec.md`
 
 ## Summary
 
-Deliver 6 focused refinements and bug fixes across the Calendar, Dashboard, Reports, Settings, and Localization subsystems:
-1. Enable lesson duration editing in the "Mark as Paid" dialog flow before payment confirmation.
-2. Standardize button alignment, ordering, and styling between past lesson "Log Details" and future lesson dialogs.
-3. Replace hardcoded duration string concatenations with Android `<plurals>` resources across English, German, and Turkish.
-4. Expand currency options in Settings from 3 hardcoded values to standard active ISO 4217 currencies with interactive search filtering.
-5. Remove the duplicate in-body "Reports" title from the Reports screen content.
-6. Ensure Turkish Lira currency formatting renders the standard symbol (`₺`) consistently across all app languages.
+Delivered PR objectives across Calendar, Dashboard, Reports, Settings, Navigation, and Localization subsystems:
+1. **Editable Lesson Duration in "Mark as Paid" Flow**: Enabled duration editing in `LogLessonDialog` before payment confirmation for non-paid lessons with reactive fee recalculation.
+2. **Unified Dialog Action Button Hierarchy**: Standardized button ordering to `Cancel` (left), `Mark as Not Done` (center, supporting cancellation of past, present, and scheduled future unpaid lessons), and `Save` / `Complete` / `Mark as Paid` (right).
+3. **Ergonomic Modal Bottom Sheet & Segmented Buttons**: Modernized `LogLessonDialog` into a thumb-friendly `ModalBottomSheet` with Material 3 `SingleChoiceSegmentedButtonRow`, side-by-side duration and rate fields, and soft `secondaryContainer` styling.
+4. **Independent Lesson Completion Switch**: Introduced dedicated "Mark as completed" Material 3 `Switch` defaulting strictly to `lesson.isCompleted`, plus confirmation warning when modifying past uncompleted lessons.
+5. **Notification Re-arming on Uncomplete**: Automatically re-arm lesson reminder notifications via `ScheduleNotificationAlarmsUseCase` whenever an uncompleted lesson transitions back to `SCHEDULED` status in Calendar and Dashboard.
+6. **Conditional Duration Persistence**: Ensured `durationInHours` is persisted only for `PER_HOUR` pricing mode and explicitly cleared (`null`) for `FLAT_FEE` pricing mode across ViewModels.
+7. **Comprehensive Locale-Aware Duration Pluralization**: Replaced hardcoded string concatenations with Android `<plurals>` and locale-aware `DecimalFormat` across English, German, and Turkish, with explicit `Context`-derived plural resolution.
+8. **Dynamic ISO 4217 Currency Support & Localized Sorting**: Dynamically filtered active circulating currencies via `Currency.getAvailableCurrencies()`, resolved display names and symbols using runtime `Locale.getDefault()`, and sorted results using `java.text.Collator`.
+9. **Remove Redundant Reports Body Title**: Cleaned up `ReportsScreen` vertical layout by eliminating duplicate in-body title in favor of standard Scaffold top app bar title.
+10. **Consistent Turkish Lira (₺) Symbol Guarantee**: Ensured TRY formatting consistently renders `"₺"` regardless of device display locale.
+11. **Snackbar Centering & FAB Coordination**: Horizontally centered snackbars across all screens and coordinated FAB clearance with bottom navigation inner padding.
 
 ## Technical Context
 

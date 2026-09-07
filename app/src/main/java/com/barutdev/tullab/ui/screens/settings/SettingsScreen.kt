@@ -374,7 +374,7 @@ fun SettingsScreen(
                     icon = Icons.Outlined.Sell,
                     iconContentDescription = tullabStringResource(id = R.string.settings_currency_content_description),
                     title = tullabStringResource(id = R.string.settings_currency_label),
-                    value = "${java.util.Currency.getInstance(userPreferences.currencyCode).displayName} (${userPreferences.currencyCode})",
+                    value = "${java.util.Currency.getInstance(userPreferences.currencyCode).getDisplayName(Locale.getDefault())} (${userPreferences.currencyCode})",
                     onClick = viewModel::showCurrencyDialog
                 )
             }
@@ -974,7 +974,7 @@ private fun SettingsPreviewContent(preferences: UserPreferences) {
                         icon = Icons.Outlined.Sell,
                         iconContentDescription = tullabStringResource(id = R.string.settings_currency_content_description),
                         title = tullabStringResource(id = R.string.settings_currency_label),
-                        value = "${java.util.Currency.getInstance(preferences.currencyCode).displayName} (${preferences.currencyCode})",
+                        value = "${java.util.Currency.getInstance(preferences.currencyCode).getDisplayName(Locale.getDefault())} (${preferences.currencyCode})",
                         onClick = {}
                     )
                 }

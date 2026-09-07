@@ -32,20 +32,28 @@ fun formatCurrency(amount: Double, currencyCode: String, locale: Locale = Locale
 ```kotlin
 package com.barutdev.tullab.util
 
+import android.content.Context
 import androidx.compose.runtime.Composable
 
 /**
- * Resolves a pluralized localized duration string for a given hour amount.
- * Example outputs:
- * - English: "1 hour", "1.5 hours", "2 hours"
- * - German: "1 Stunde", "1,5 Stunden", "2 Stunden"
- * - Turkish: "1 saat", "1,5 saat", "2 saat"
+ * Resolves a pluralized localized duration string for a given hour amount in Compose UI.
+ * Uses locale-aware DecimalFormat with the runtime Locale.getDefault().
  *
- * @param hours Lesson duration in decimal hours (e.g. 1.0, 1.5, 2.0)
+ * @param durationInHours Lesson duration in decimal hours (e.g. 1.0, 1.5, 2.0)
  * @return Localized duration text with proper singular/plural inflection
  */
 @Composable
-fun formatDurationHours(hours: Double): String
+fun formatDurationHours(durationInHours: Double): String
+
+/**
+ * Resolves a pluralized localized duration string for a given hour amount using an explicit Context.
+ * Ensures formatting and plural selection are strictly synchronized with the context's configuration locale.
+ *
+ * @param context Android Context with active configuration locale
+ * @param durationInHours Lesson duration in decimal hours (e.g. 1.0, 1.5, 2.0)
+ * @return Localized duration text with proper singular/plural inflection
+ */
+fun formatDurationHours(context: Context, durationInHours: Double): String
 ```
 
 ---
@@ -58,12 +66,15 @@ fun LogLessonDialog(
     showDialog: Boolean,
     lesson: Lesson?,
     onDismiss: () -> Unit,
-    onComplete: (duration: String, notes: String, pricingMode: PricingMode, rateOrFeeInput: String) -> Unit,
-    onMarkNotDone: (notes: String) -> Unit,
-    onSaveScheduled: ((duration: String, notes: String, pricingMode: PricingMode, rateOrFeeInput: String) -> Unit)? = null,
+    onSave: ((duration: String, notes: String, pricingMode: PricingMode, rateOrFee: String, isCompleted: Boolean) -> Unit)? = null,
+    onComplete: ((duration: String, notes: String, pricingMode: PricingMode, rateOrFee: String) -> Unit)? = null,
+    onMarkNotDone: ((notes: String) -> Unit)? = null,
     isMarkAsPaidMode: Boolean = false,
     requiresFeePrompt: Boolean = false,
-    onMarkAsPaid: ((duration: String, fee: String) -> Unit)? = null
+    onMarkAsPaid: ((duration: String, customFee: String) -> Unit)? = null,
+    onSaveScheduled: ((duration: String, notes: String, pricingMode: PricingMode, rateOrFee: String) -> Unit)? = null,
+    isPastScheduled: Boolean = false,
+    currencyCode: String = "USD"
 )
 ```
 
@@ -71,6 +82,8 @@ fun LogLessonDialog(
 - When `isMarkAsPaidMode == true`, the duration field MUST be enabled and allow user input unless `lesson.status == LessonStatus.PAID`.
 - When confirming "Mark as Paid", the button is enabled ONLY if duration is a valid positive number (and custom fee is valid if `requiresFeePrompt == true`).
 - Button row ordering MUST be:
-  - Left: `Cancel`
-  - Center: `Mark as Not Done` (only in past lesson log mode)
-  - Right: `Complete` / `Save Changes` / `Mark as Paid` (primary action)
+  - Left: `Cancel` (subtle text button)
+  - Center: `Mark as Not Done` (unobtrusive red text button, visible for all unpaid lessons including past, present, and scheduled/future lessons; legitimately cancels scheduled lessons, transitions status to `CANCELLED`, cancels alarms, safely routes null callbacks to dismissal, and resets dialog inputs)
+  - Right: `Save` / `Complete` / `Mark as Paid` (solid primary action button)
+- Dedicated "Mark as completed" `Switch` defaults strictly to `lesson.isCompleted` (not inferred based on date).
+- Editing a past uncompleted lesson presents a warning confirmation dialog before persisting changes.

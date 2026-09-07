@@ -17,6 +17,7 @@ import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
@@ -601,7 +602,10 @@ fun TullabNavGraph(
             
             SnackbarHost(
                 hostState = scaffoldController.snackbarHostState,
-                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp)
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
             )
         }
     }

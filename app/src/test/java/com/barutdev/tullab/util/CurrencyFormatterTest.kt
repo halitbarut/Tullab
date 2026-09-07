@@ -1,17 +1,30 @@
 package com.barutdev.tullab.util
 
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import java.text.NumberFormat
 import java.util.Locale
 
 class CurrencyFormatterTest {
 
+    private lateinit var originalLocale: Locale
+
+    @Before
+    fun saveLocale() {
+        originalLocale = Locale.getDefault()
+    }
+
+    @After
+    fun restoreLocale() {
+        Locale.setDefault(originalLocale)
+    }
+
     @Test
     fun `test TRY currency symbol is enforced`() {
-        // Enforce a specific locale to ensure consistent testing environments
         Locale.setDefault(Locale.US)
         
         val formatted = formatCurrency(1250.0, "TRY")
@@ -51,15 +64,8 @@ class CurrencyFormatterTest {
         val options = getSanitizedCurrencyOptions()
         val pinnedCodes = listOf("TRY", "USD", "EUR", "GBP", "CHF")
         
-        // At least the first few should be the pinned ones in the same order
-        // (assuming they exist in the available currencies)
-        var matchCount = 0
-        for (i in pinnedCodes.indices) {
-            if (options[i].code == pinnedCodes[i]) {
-                matchCount++
-            }
-        }
-        
-        assertTrue("Pinned currencies should appear at the top", matchCount == pinnedCodes.size)
+        // The first N entries must exactly match the pinned codes in order
+        val actualPinnedCodes = options.take(pinnedCodes.size).map { it.code }
+        assertEquals("Pinned currencies should appear at the top in order", pinnedCodes, actualPinnedCodes)
     }
 }

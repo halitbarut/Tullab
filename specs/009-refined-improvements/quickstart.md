@@ -45,12 +45,43 @@
    - There is NO secondary "Reports" title in the scrollable body content.
    - The Total Earnings card displays the amount formatted with the Turkish Lira symbol (`₺`), e.g., `₺1.250,00` or `1.250,00 ₺`.
 
+### Scenario 6: Scheduled & Future Lesson Cancellation via "Mark as Not Done"
+1. Navigate to **Calendar**.
+2. Select any upcoming or scheduled lesson (future or past scheduled).
+3. Tap **Log Details** / **Edit** to open the bottom sheet dialog.
+4. **Verify**:
+   - The "Mark as Not Done" red button is displayed in the center between "Cancel" and "Save".
+   - Tap **Mark as Not Done**.
+   - Verify the lesson transitions to `CANCELLED` status.
+   - Verify notification alarms for this lesson are safely cancelled.
+   - Verify the dialog dismisses smoothly without unhandled errors or null pointer exceptions.
+
+### Scenario 7: Post-Reload Persistence Verification
+1. On **Calendar** or **Dashboard**, select an unpaid lesson.
+2. Modify the duration (e.g., change from `1.0` to `2.5` hours).
+3. Toggle the "Mark as completed" switch off or on.
+4. Tap **Save** (confirm any past lesson warning if applicable).
+5. Verify the UI updates immediately to reflect the new duration and status.
+6. Terminate the app completely (force close from recent apps or via `adb shell am force-stop com.barutdev.tullab`).
+7. Relaunch Tullab.
+8. Revisit the lesson in **Calendar** and **Dashboard**:
+   - **Verify**: The updated duration (`2.5 hrs`), completion status, and recalculated totals remain persisted in Room SQLite storage.
+   - **Verify**: Rate breakdown cards in Dashboard accurately reflect the persisted values.
+
 ---
 
 ## Automated Test Execution
 
+### 1. Unit Tests
 Run the full unit test suite from repository root:
 ```bash
 ./gradlew testDebugUnitTest
 ```
-Ensure all tests for `CurrencyFormatter`, `SettingsViewModel`, `CalendarViewModel`, and `ReportsScreen` pass cleanly.
+Ensure all tests for `CurrencyFormatter`, `DurationPluralizationTest`, `LogLessonDialogValidationTest`, `SettingsViewModel`, `CalendarViewModel`, and `ReportsScreen` pass cleanly.
+
+### 2. Instrumented UI Tests
+Ensure a target device or emulator is running, then execute:
+```bash
+./gradlew connectedDebugAndroidTest
+```
+This runs the on-device instrumented test suite, verifying Compose UI component behavior, lifecycle state restoration, and Room database transactions in an active Android runtime environment.

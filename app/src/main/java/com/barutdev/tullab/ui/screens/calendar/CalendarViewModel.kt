@@ -182,14 +182,16 @@ class CalendarViewModel @Inject constructor(
 
             val updatedLesson = lesson.copy(
                 status = newStatus,
-                durationInHours = durationValue,
+                durationInHours = if (pricingMode == com.barutdev.tullab.domain.model.PricingMode.PER_HOUR) durationValue else null,
                 notes = notes.trim().ifEmpty { null },
                 pricingMode = pricingMode,
                 rateOrFee = rateValue
             )
             lessonRepository.updateLesson(updatedLesson)
-            if (newStatus == LessonStatus.COMPLETED) {
-                cancelNotificationAlarmsUseCase(lesson.id)
+            when (newStatus) {
+                LessonStatus.COMPLETED -> cancelNotificationAlarmsUseCase(lesson.id)
+                LessonStatus.SCHEDULED -> scheduleNotificationAlarmsUseCase(lesson.id)
+                else -> Unit
             }
             clearLogLessonSelection()
         }
@@ -204,7 +206,7 @@ class CalendarViewModel @Inject constructor(
             val rateValue = normalizedRate.toDoubleOrNull() ?: lesson.rateOrFee
 
             val updatedLesson = lesson.copy(
-                durationInHours = durationValue,
+                durationInHours = if (pricingMode == com.barutdev.tullab.domain.model.PricingMode.PER_HOUR) durationValue else null,
                 notes = notes.trim().ifEmpty { null },
                 pricingMode = pricingMode,
                 rateOrFee = rateValue

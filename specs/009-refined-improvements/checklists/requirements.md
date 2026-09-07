@@ -2,7 +2,7 @@
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-09-07
-**Feature**: [spec.md](file:///home/halit/AndroidStudioProjects/Tullab/specs/009-refined-improvements/spec.md)
+**Feature**: [spec.md](../spec.md)
 
 ## Content Quality
 

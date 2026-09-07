@@ -16,6 +16,7 @@ import com.barutdev.tullab.domain.repository.StudentRepository
 import com.barutdev.tullab.domain.repository.PaymentRepository
 import com.barutdev.tullab.domain.repository.UserPreferencesRepository
 import com.barutdev.tullab.domain.usecase.notification.CancelNotificationAlarmsUseCase
+import com.barutdev.tullab.domain.usecase.notification.ScheduleNotificationAlarmsUseCase
 import com.barutdev.tullab.navigation.STUDENT_ID_ARG
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Instant
@@ -83,6 +84,7 @@ class DashboardViewModel @Inject constructor(
     private val lessonRepository: LessonRepository,
     private val homeworkRepository: HomeworkRepository,
     private val cancelNotificationAlarmsUseCase: CancelNotificationAlarmsUseCase,
+    private val scheduleNotificationAlarmsUseCase: ScheduleNotificationAlarmsUseCase,
     private val paymentRepository: PaymentRepository,
     private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
@@ -319,14 +321,16 @@ class DashboardViewModel @Inject constructor(
 
             val updatedLesson = lesson.copy(
                 status = newStatus,
-                durationInHours = durationValue,
+                durationInHours = if (pricingMode == com.barutdev.tullab.domain.model.PricingMode.PER_HOUR) durationValue else null,
                 notes = notes.trim().ifEmpty { null },
                 pricingMode = pricingMode,
                 rateOrFee = rateValue
             )
             lessonRepository.updateLesson(updatedLesson)
-            if (newStatus == LessonStatus.COMPLETED) {
-                cancelNotificationAlarmsUseCase(lesson.id)
+            when (newStatus) {
+                LessonStatus.COMPLETED -> cancelNotificationAlarmsUseCase(lesson.id)
+                LessonStatus.SCHEDULED -> scheduleNotificationAlarmsUseCase(lesson.id)
+                else -> Unit
             }
             clearLogLessonSelection()
         }
@@ -341,7 +345,7 @@ class DashboardViewModel @Inject constructor(
             val rateValue = normalizedRate.toDoubleOrNull() ?: lesson.rateOrFee
 
             val updatedLesson = lesson.copy(
-                durationInHours = durationValue,
+                durationInHours = if (pricingMode == com.barutdev.tullab.domain.model.PricingMode.PER_HOUR) durationValue else null,
                 notes = notes.trim().ifEmpty { null },
                 pricingMode = pricingMode,
                 rateOrFee = rateValue

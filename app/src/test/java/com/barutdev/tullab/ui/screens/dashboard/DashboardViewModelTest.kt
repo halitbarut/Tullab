@@ -233,6 +233,7 @@ class DashboardViewModelTest {
             lessonRepository = lessonRepository,
             homeworkRepository = homeworkRepository,
             cancelNotificationAlarmsUseCase = mockk(relaxed = true),
+            scheduleNotificationAlarmsUseCase = mockk(relaxed = true),
             paymentRepository = paymentRepository,
             userPreferencesRepository = userPreferencesRepository
         )

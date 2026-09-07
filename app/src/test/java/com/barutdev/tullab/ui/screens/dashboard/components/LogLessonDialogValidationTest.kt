@@ -8,64 +8,43 @@ import org.junit.Test
 
 class LogLessonDialogValidationTest {
 
-    // Helper functions representing the logic inside LogLessonDialog
-    private fun parseDuration(duration: String): Double? = duration.trim().replace(',', '.').toDoubleOrNull()
-    
-    private fun calculateTotalFee(durationStr: String, rate: Double, pricingMode: PricingMode, requiresFeePrompt: Boolean, customFeeStr: String): Double {
-        val parsedDuration = parseDuration(durationStr) ?: 0.0
-        return if (requiresFeePrompt) {
-            parseDuration(customFeeStr) ?: 0.0
-        } else if (pricingMode == PricingMode.PER_HOUR) {
-            parsedDuration * rate
-        } else {
-            rate
-        }
-    }
-    
-    private fun isCompleteEnabled(durationStr: String, customFeeStr: String, rateOrFeeInput: String, pricingMode: PricingMode, isMarkAsPaidMode: Boolean, requiresFeePrompt: Boolean): Boolean {
-        val isDurationValid = parseDuration(durationStr)?.let { it > 0.0 } == true
-        val isFeeValid = !requiresFeePrompt || parseDuration(customFeeStr)?.let { it > 0.0 } == true
-        val isRateOrFeeValid = parseDuration(rateOrFeeInput) != null
-        return if (pricingMode == PricingMode.PER_HOUR || isMarkAsPaidMode) {
-            isDurationValid && isFeeValid && isRateOrFeeValid
-        } else {
-            isFeeValid && isRateOrFeeValid
-        }
-    }
-
     @Test
     fun testDurationDecimalParsing() {
-        assertEquals(1.5, parseDuration("1.5"))
-        assertEquals(1.5, parseDuration("1,5"))
-        assertEquals(2.0, parseDuration("2"))
-        assertEquals(null, parseDuration("invalid"))
+        assertEquals(1.5, parseDurationDecimal("1.5"))
+        assertEquals(1.5, parseDurationDecimal("1,5"))
+        assertEquals(2.0, parseDurationDecimal("2"))
+        assertEquals(null, parseDurationDecimal("invalid"))
     }
     
     @Test
     fun testReactiveFeeCalculation() {
         // Hourly rate logic
-        assertEquals(75.0, calculateTotalFee("1.5", 50.0, PricingMode.PER_HOUR, false, ""), 0.0)
-        assertEquals(75.0, calculateTotalFee("1,5", 50.0, PricingMode.PER_HOUR, false, ""), 0.0)
+        assertEquals(75.0, calculateDialogTotalFee("1.5", 50.0, PricingMode.PER_HOUR, false, ""), 0.0)
+        assertEquals(75.0, calculateDialogTotalFee("1,5", 50.0, PricingMode.PER_HOUR, false, ""), 0.0)
         
         // Flat fee logic
-        assertEquals(50.0, calculateTotalFee("1.5", 50.0, PricingMode.FLAT_FEE, false, ""), 0.0)
+        assertEquals(50.0, calculateDialogTotalFee("1.5", 50.0, PricingMode.FLAT_FEE, false, ""), 0.0)
         
         // Custom fee prompt
-        assertEquals(100.0, calculateTotalFee("1.5", 0.0, PricingMode.PER_HOUR, true, "100"), 0.0)
+        assertEquals(100.0, calculateDialogTotalFee("1.5", 0.0, PricingMode.PER_HOUR, true, "100"), 0.0)
     }
 
     @Test
     fun testPositiveValidationLogic() {
         // Valid mark as paid
-        assertTrue(isCompleteEnabled("1.5", "", "50.0", PricingMode.PER_HOUR, true, false))
+        assertTrue(isDialogSaveEnabled(durationStr = "1.5", customFeeStr = "", rateOrFeeInput = "50.0", pricingMode = PricingMode.PER_HOUR, isMarkAsPaidMode = true, requiresFeePrompt = false))
         
         // Invalid duration
-        assertFalse(isCompleteEnabled("-1.0", "", "50.0", PricingMode.PER_HOUR, true, false))
-        assertFalse(isCompleteEnabled("0", "", "50.0", PricingMode.PER_HOUR, true, false))
-        assertFalse(isCompleteEnabled("", "", "50.0", PricingMode.PER_HOUR, true, false))
+        assertFalse(isDialogSaveEnabled(durationStr = "-1.0", customFeeStr = "", rateOrFeeInput = "50.0", pricingMode = PricingMode.PER_HOUR, isMarkAsPaidMode = true, requiresFeePrompt = false))
+        assertFalse(isDialogSaveEnabled(durationStr = "0", customFeeStr = "", rateOrFeeInput = "50.0", pricingMode = PricingMode.PER_HOUR, isMarkAsPaidMode = true, requiresFeePrompt = false))
+        assertFalse(isDialogSaveEnabled(durationStr = "", customFeeStr = "", rateOrFeeInput = "50.0", pricingMode = PricingMode.PER_HOUR, isMarkAsPaidMode = true, requiresFeePrompt = false))
         
-        // Custom fee invalid
-        assertFalse(isCompleteEnabled("1.5", "-10", "0", PricingMode.PER_HOUR, true, true))
-        assertTrue(isCompleteEnabled("1.5", "100", "0", PricingMode.PER_HOUR, true, true))
+        // Custom fee invalid vs valid
+        assertFalse(isDialogSaveEnabled(durationStr = "1.5", customFeeStr = "-10", rateOrFeeInput = "0", pricingMode = PricingMode.PER_HOUR, isMarkAsPaidMode = true, requiresFeePrompt = true))
+        assertTrue(isDialogSaveEnabled(durationStr = "1.5", customFeeStr = "100", rateOrFeeInput = "0", pricingMode = PricingMode.PER_HOUR, isMarkAsPaidMode = true, requiresFeePrompt = true))
+
+        // Standard save mode with data changed
+        assertTrue(isDialogSaveEnabled(durationStr = "2.0", rateOrFeeInput = "60.0", pricingMode = PricingMode.PER_HOUR, isDataChanged = true))
+        assertFalse(isDialogSaveEnabled(durationStr = "2.0", rateOrFeeInput = "60.0", pricingMode = PricingMode.PER_HOUR, isDataChanged = false))
     }
 }
