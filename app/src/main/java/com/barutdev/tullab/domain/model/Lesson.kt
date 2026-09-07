@@ -11,6 +11,9 @@ data class Lesson(
     val rateOrFee: Double,
     val paymentTimestamp: Long? = null
 ) {
+    val isCompleted: Boolean
+        get() = status == LessonStatus.COMPLETED || status == LessonStatus.PAID
+
     val calculatedValue: Double
         get() = when (pricingMode) {
             PricingMode.PER_HOUR -> (durationInHours ?: 0.0) * rateOrFee

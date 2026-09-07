@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.first
 
 @HiltViewModel
@@ -72,7 +73,29 @@ class SettingsViewModel @Inject constructor(
     val isHourlyRateDialogVisible: StateFlow<Boolean> = _isHourlyRateDialogVisible
 
     val availableLanguages: List<String> = listOf("en", "tr", "de")
-    val availableCurrencies: List<String> = listOf("USD", "EUR", "TRY")
+    
+    private val _currencySearchQuery = MutableStateFlow("")
+    val currencySearchQuery: StateFlow<String> = _currencySearchQuery
+
+    val filteredCurrencies = kotlinx.coroutines.flow.combine(
+        userPreferences,
+        _currencySearchQuery
+    ) { prefs, query ->
+        val locale = Locale(prefs.languageCode)
+        val allCurrencies = com.barutdev.tullab.util.getSanitizedCurrencyOptions(locale)
+        if (query.isBlank()) {
+            allCurrencies
+        } else {
+            allCurrencies.filter { 
+                it.code.contains(query, ignoreCase = true) || 
+                it.displayName.contains(query, ignoreCase = true) 
+            }
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), com.barutdev.tullab.util.getSanitizedCurrencyOptions())
+
+    fun updateCurrencySearchQuery(query: String) {
+        _currencySearchQuery.value = query
+    }
 
     fun showLanguageDialog() {
         _isLanguageDialogVisible.value = true

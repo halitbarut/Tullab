@@ -61,6 +61,7 @@ import com.barutdev.tullab.ui.navigation.ScreenScaffoldConfig
 import com.barutdev.tullab.ui.navigation.TopBarAction
 import com.barutdev.tullab.ui.navigation.TopBarConfig
 import com.barutdev.tullab.ui.screens.dashboard.components.LogLessonDialog
+import com.barutdev.tullab.util.formatDurationHours
 import com.barutdev.tullab.ui.screens.common.StudentNameUiStatus
 import com.barutdev.tullab.ui.screens.common.deriveStudentNameUiStatus
 import com.barutdev.tullab.ui.theme.TullabTheme
@@ -167,25 +168,26 @@ fun CalendarScreen(
 
     val today = LocalDate.now(ZoneId.systemDefault())
     val currentLessonToLog = lessonToLog
-    val isFutureScheduled = currentLessonToLog != null &&
-        currentLessonToLog.status == LessonStatus.SCHEDULED &&
-        !Instant.ofEpochMilli(currentLessonToLog.date).atZone(ZoneId.systemDefault()).toLocalDate().isBefore(today)
+    val isScheduled = currentLessonToLog != null && currentLessonToLog.status == LessonStatus.SCHEDULED
+    val isPastScheduled = isScheduled && Instant.ofEpochMilli(currentLessonToLog!!.date).atZone(ZoneId.systemDefault()).toLocalDate().isBefore(today)
+    val isFutureScheduled = isScheduled && !isPastScheduled
 
     LogLessonDialog(
         showDialog = isLogLessonDialogVisible,
         lesson = lessonToLog,
         onDismiss = viewModel::dismissLogLessonDialog,
+        onSave = { duration, notes, pricingMode, rateOrFeeInput, isCompleted ->
+            currentLessonToLog?.let {
+                viewModel.onSaveLessonDetails(it, duration, notes, pricingMode, rateOrFeeInput, isCompleted)
+            }
+        },
         onComplete = { duration, notes, pricingMode, rateOrFeeInput ->
             viewModel.onLogLessonComplete(duration, notes, pricingMode, rateOrFeeInput)
         },
         onMarkNotDone = { notes ->
             viewModel.onLogLessonMarkNotDone(notes)
         },
-        onSaveScheduled = if (isFutureScheduled && currentLessonToLog != null) {
-            { duration, notes, pricingMode, rateOrFeeInput ->
-                viewModel.onSaveScheduledLesson(currentLessonToLog, duration, notes, pricingMode, rateOrFeeInput)
-            }
-        } else null
+        currencyCode = currencyCode
     )
 
     LogLessonDialog(
@@ -200,7 +202,8 @@ fun CalendarScreen(
             val duration = durationStr.trim().replace(',', '.').toDoubleOrNull()
             val fee = feeStr.trim().replace(',', '.').toDoubleOrNull()
             viewModel.onConfirmMarkLessonAsPaid(duration, fee)
-        }
+        },
+        currencyCode = currencyCode
     )
 
     if (lessonToRevert != null) {
@@ -877,13 +880,8 @@ private fun LessonDetailCard(
         lessonDate.format(dateFormatter)
     }
     val statusDisplay = lessonStatusDisplay(lesson, lessonDate, today)
-    val durationText = remember(lesson.durationInHours, locale) {
-        lesson.durationInHours?.let { duration ->
-            NumberFormat.getNumberInstance(locale).apply {
-                maximumFractionDigits = 2
-                minimumFractionDigits = 0
-            }.format(duration)
-        }
+    val durationText = lesson.durationInHours?.let { duration ->
+        formatDurationHours(duration)
     }
     val actionTextRes = if (
         lesson.status == LessonStatus.SCHEDULED && lessonDate.isBefore(today)

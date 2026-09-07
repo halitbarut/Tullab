@@ -160,6 +160,43 @@ class CalendarViewModel @Inject constructor(
         }
     }
 
+    fun onSaveLessonDetails(
+        lesson: Lesson,
+        duration: String,
+        notes: String,
+        pricingMode: com.barutdev.tullab.domain.model.PricingMode,
+        rateOrFee: String,
+        isCompleted: Boolean
+    ) {
+        viewModelScope.launch {
+            val normalizedDuration = duration.trim().replace(',', '.')
+            val durationValue = normalizedDuration.toDoubleOrNull()
+            val normalizedRate = rateOrFee.trim().replace(',', '.')
+            val rateValue = normalizedRate.toDoubleOrNull() ?: lesson.rateOrFee
+
+            val newStatus = when {
+                lesson.status == LessonStatus.PAID -> LessonStatus.PAID
+                isCompleted -> LessonStatus.COMPLETED
+                else -> LessonStatus.SCHEDULED
+            }
+
+            val updatedLesson = lesson.copy(
+                status = newStatus,
+                durationInHours = if (pricingMode == com.barutdev.tullab.domain.model.PricingMode.PER_HOUR) durationValue else null,
+                notes = notes.trim().ifEmpty { null },
+                pricingMode = pricingMode,
+                rateOrFee = rateValue
+            )
+            lessonRepository.updateLesson(updatedLesson)
+            when (newStatus) {
+                LessonStatus.COMPLETED -> cancelNotificationAlarmsUseCase(lesson.id)
+                LessonStatus.SCHEDULED -> scheduleNotificationAlarmsUseCase(lesson.id)
+                else -> Unit
+            }
+            clearLogLessonSelection()
+        }
+    }
+
     fun onSaveScheduledLesson(lesson: Lesson, duration: String, notes: String, pricingMode: com.barutdev.tullab.domain.model.PricingMode, rateOrFee: String) {
         viewModelScope.launch {
             val normalizedDuration = duration.trim().replace(',', '.')
@@ -169,7 +206,7 @@ class CalendarViewModel @Inject constructor(
             val rateValue = normalizedRate.toDoubleOrNull() ?: lesson.rateOrFee
 
             val updatedLesson = lesson.copy(
-                durationInHours = durationValue,
+                durationInHours = if (pricingMode == com.barutdev.tullab.domain.model.PricingMode.PER_HOUR) durationValue else null,
                 notes = notes.trim().ifEmpty { null },
                 pricingMode = pricingMode,
                 rateOrFee = rateValue

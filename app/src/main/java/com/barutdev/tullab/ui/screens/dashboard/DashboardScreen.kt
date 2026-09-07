@@ -66,6 +66,7 @@ import com.barutdev.tullab.ui.theme.LocalLocale
 import com.barutdev.tullab.ui.components.AnimatedListItem
 import com.barutdev.tullab.util.formatCurrency
 import java.text.NumberFormat
+import com.barutdev.tullab.util.formatDurationHours
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -211,16 +212,27 @@ PaymentHistoryDialog(
         onDismiss = viewModel::dismissMarkAsPaidDialog
     )
 
+    val today = java.time.LocalDate.now(java.time.ZoneId.systemDefault())
+    val currentLessonToLog = uiState.lessonToLog
+    val isScheduled = currentLessonToLog != null && currentLessonToLog.status == com.barutdev.tullab.domain.model.LessonStatus.SCHEDULED
+    val isPastScheduled = isScheduled && currentLessonToLog != null && java.time.Instant.ofEpochMilli(currentLessonToLog.date).atZone(java.time.ZoneId.systemDefault()).toLocalDate().isBefore(today)
+
     LogLessonDialog(
         showDialog = uiState.isLogLessonDialogVisible,
         lesson = uiState.lessonToLog,
         onDismiss = viewModel::dismissLogLessonDialog,
+        onSave = { duration, notes, pricingMode, rateOrFeeInput, isCompleted ->
+            currentLessonToLog?.let {
+                viewModel.onSaveLessonDetails(it, duration, notes, pricingMode, rateOrFeeInput, isCompleted)
+            }
+        },
         onComplete = { duration, notes, pricingMode, rateOrFeeInput ->
             viewModel.onLogLessonComplete(duration, notes, pricingMode, rateOrFeeInput)
         },
         onMarkNotDone = { notes ->
             viewModel.onLogLessonMarkNotDone(notes)
-        }
+        },
+        currencyCode = userPreferences.currencyCode
     )
 
     DashboardBody(
@@ -399,18 +411,14 @@ fun PaymentTrackingCard(
     locale: Locale,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val amountText = remember(totalAmountDue, currencyCode) {
         formatCurrency(totalAmountDue, currencyCode)
     }
     val hourlyRateText = remember(hourlyRate, currencyCode) {
         formatCurrency(hourlyRate, currencyCode)
     }
-    val hoursText = remember(totalHours, locale) {
-        NumberFormat.getNumberInstance(locale).apply {
-            maximumFractionDigits = 2
-            minimumFractionDigits = 0
-        }.format(totalHours)
-    }
+    val hoursText = formatDurationHours(context, totalHours)
     val formattedLastPaymentDate = remember(lastPaymentDate, locale) {
         lastPaymentDate?.let { timestamp ->
             DateTimeFormatter
@@ -481,10 +489,7 @@ fun PaymentTrackingCard(
                     rateBreakdownTiers.forEach { tier ->
                         val tierText = when (tier.pricingMode) {
                             com.barutdev.tullab.domain.model.PricingMode.PER_HOUR -> {
-                                val formattedHours = NumberFormat.getNumberInstance(locale).apply {
-                                    maximumFractionDigits = 2
-                                    minimumFractionDigits = 0
-                                }.format(tier.totalHours)
+                                val formattedHours = formatDurationHours(context, tier.totalHours)
                                 val formattedRate = formatCurrency(tier.rateOrFee, currencyCode)
                                 tullabStringResource(
                                     id = R.string.dashboard_payment_rate_info,
@@ -602,6 +607,7 @@ private fun CompletedLessonsCard(
     currencyCode: String,
     modifier: Modifier = Modifier
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val items = remember(lessons, locale, currencyCode) {
         if (lessons.isEmpty()) {
             emptyList()
@@ -609,17 +615,13 @@ private fun CompletedLessonsCard(
             val dateFormatter = DateTimeFormatter
                 .ofLocalizedDate(FormatStyle.LONG)
                 .withLocale(locale)
-            val durationFormatter = NumberFormat.getNumberInstance(locale).apply {
-                maximumFractionDigits = 2
-                minimumFractionDigits = 0
-            }
             lessons.map { lesson ->
                 val dateText = Instant.ofEpochMilli(lesson.date)
                     .atZone(ZoneId.systemDefault())
                     .toLocalDate()
                     .format(dateFormatter)
                 val durationText = lesson.durationInHours?.let { duration ->
-                    durationFormatter.format(duration)
+                    formatDurationHours(context, duration)
                 }
                 CompletedLessonUiModel(
                     dateText = dateText,

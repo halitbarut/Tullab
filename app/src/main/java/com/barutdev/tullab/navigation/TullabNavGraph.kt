@@ -17,6 +17,7 @@ import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
@@ -33,6 +34,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -248,9 +250,16 @@ fun TullabNavGraph(
             },
             floatingActionButton = {
                 val fabConfig = scaffoldController.fabConfig.value
+                val snackbarVisible = scaffoldController.snackbarHostState.currentSnackbarData != null
+                
                 if (fabConfig != null) {
+                    val fabOffset by androidx.compose.animation.core.animateDpAsState(
+                        targetValue = if (snackbarVisible) 72.dp else 0.dp,
+                        label = "fab_offset"
+                    )
                     FloatingActionButton(
                         onClick = fabConfig.onClick,
+                        modifier = Modifier.padding(bottom = fabOffset),
                         containerColor = fabConfig.containerColor
                             ?: MaterialTheme.colorScheme.primary,
                         contentColor = fabConfig.contentColor
@@ -263,20 +272,21 @@ fun TullabNavGraph(
                     }
                 }
             },
-            snackbarHost = { SnackbarHost(hostState = scaffoldController.snackbarHostState) }
+            snackbarHost = {}
         ) { innerPadding ->
-            if (startRoute == null) {
-                Box(
-                    modifier = Modifier.padding(innerPadding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            } else {
-                NavHost(
-                    navController = navController,
-                    startDestination = startRoute!!,
-                    modifier = Modifier.padding(innerPadding),
+            Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+                if (startRoute == null) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                } else {
+                    NavHost(
+                        navController = navController,
+                        startDestination = startRoute!!,
+                        modifier = Modifier.fillMaxSize(),
                 enterTransition = {
                     if (bottomNavTransitionState.shouldAnimate(
                             initialState.destination,
@@ -589,8 +599,17 @@ fun TullabNavGraph(
                     )
                 }
             }
+            
+            SnackbarHost(
+                hostState = scaffoldController.snackbarHostState,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+            )
         }
     }
+}
 }
 }
 

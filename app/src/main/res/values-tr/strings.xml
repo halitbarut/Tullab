@@ -87,6 +87,7 @@
     <string name="settings_currency_label">Para Birimi</string>
     <string name="settings_currency_content_description">Para birimini değiştir</string>
     <string name="settings_currency_dialog_title">Para Birimi Seçin</string>
+    <string name="settings_currency_search_hint">Para birimi ara</string>
     <string name="settings_currency_option_usd">Amerikan Doları (USD)</string>
     <string name="settings_currency_option_eur">Euro (EUR)</string>
     <string name="settings_currency_option_try">Türk Lirası (TRY)</string>
@@ -139,7 +140,7 @@
     <string name="dashboard_student_label">Öğrenci: %1$s</string>
     <string name="dashboard_payment_cycle_title">Mevcut Ödeme Dönemi</string>
     <string name="dashboard_payment_amount_value">%1$s</string>
-    <string name="dashboard_payment_rate_info">%1$s saat x %2$s/saat</string>
+    <string name="dashboard_payment_rate_info">%1$s x %2$s/saat</string>
     <string name="dashboard_payment_since_last_with_date">%1$s tarihindeki son ödemeden beri</string>
     <string name="dashboard_payment_since_last_unknown">Henüz ödeme kaydı yok.</string>
     <string name="dashboard_payment_mark_paid">Ödendi olarak işaretle</string>
@@ -153,14 +154,17 @@
     <string name="dashboard_log_past_lessons_hint">Detaylarını girmek için bir derse dokunun.</string>
     <string name="dashboard_completed_lessons_title">Ödeme Bekleyen Tamamlanan Dersler</string>
     <string name="dashboard_completed_lessons_empty">Ödeme bekleyen tamamlanan ders yok.</string>
-    <string name="dashboard_completed_lessons_duration">Süre: %1$s saat</string>
+    <string name="dashboard_completed_lessons_duration">Süre: %1$s</string>
     <string name="dashboard_completed_lessons_notes">Notlar: %1$s</string>
     <string name="dashboard_log_lesson_dialog_title">Dersi Kaydet</string>
     <string name="dashboard_log_lesson_dialog_date">%1$s tarihli ders</string>
     <string name="dashboard_log_lesson_duration_label">Süre (saat olarak)</string>
-    <string name="dashboard_log_lesson_notes_label">Notlar</string>
     <string name="dashboard_log_lesson_complete_button">Dersi Tamamla</string>
-    <string name="dashboard_log_lesson_mark_not_done_button">Yapılmadı olarak işaretle</string>
+    <string name="dashboard_log_lesson_save_button">Kaydet</string>
+    <string name="dashboard_log_lesson_mark_not_done_button">Yapılmadı Olarak İşaretle</string>
+    <string name="dashboard_log_lesson_save_past_warning_title">Geçmiş Dersi Düzenle</string>
+    <string name="dashboard_log_lesson_save_past_warning_message">Geçmiş bir dersi tamamlandı olarak işaretlemeden değişiklikleri kaydediyorsunuz. Devam etmek istiyor musunuz?</string>
+    <string name="dashboard_log_lesson_save_past_warning_confirm">Değişiklikleri Kaydet</string>
     <string name="dashboard_settings_icon_description">Ayarları aç</string>
     <string name="dashboard_edit_student_content_description">Öğrenci profilini düzenle</string>
     <string name="top_bar_navigate_to_student_list_content_description">Öğrenci listesine git</string>
@@ -187,7 +191,7 @@
     <string name="calendar_lesson_details_title">%1$s tarihli ders</string>
     <string name="calendar_lesson_details_status">Durum: %1$s</string>
     <string name="calendar_lesson_details_paid_on">%1$s tarihinde ödendi</string>
-    <string name="calendar_lesson_details_duration">Süre: %1$s saat</string>
+    <string name="calendar_lesson_details_duration">Süre: %1$s</string>
     <string name="calendar_lesson_details_notes">Notlar: %1$s</string>
     <string name="calendar_lesson_action_edit">Düzenle</string>
     <string name="calendar_lesson_action_log_details">Detayları kaydet</string>
@@ -343,6 +347,11 @@
         <item quantity="other">%1$d ders planlandı</item>
     </plurals>
 
+    <plurals name="duration_hours">
+        <item quantity="one">%1$s saat</item>
+        <item quantity="other">%1$s saat</item>
+    </plurals>
+
     <string name="bulk_schedule_customize_day_times">Gün Saatlerini Özelleştir</string>
     <string name="bulk_schedule_default_start_time">Varsayılan Başlangıç Saati</string>
     <string name="bulk_schedule_pricing_override">Özel Fiyatlandırma</string>
@@ -355,5 +364,11 @@
     <string name="bulk_schedule_after">Şundan sonra: </string>
     <string name="bulk_schedule_occurrences">Tekrar</string>
     <string name="bulk_schedule_occurrences_suffix"> tekrar</string>
+
+    <string name="dashboard_log_lesson_duration_short_label">Süre</string>
+    <string name="dashboard_log_lesson_duration_hrs_suffix">sa</string>
+    <string name="dashboard_log_lesson_hourly_rate_short_label">Saatlik Ücret</string>
+    <string name="dashboard_log_lesson_mark_completed_switch">Tamamlandı olarak işaretle</string>
+    <string name="dashboard_log_lesson_not_done_button">Yapılmadı</string>
 
 </resources>
