@@ -91,7 +91,7 @@ fun AddLessonDialog(
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 if (pricingMode == PricingMode.PER_HOUR) {
-                    TextField(
+                    androidx.compose.material3.OutlinedTextField(
                         value = duration,
                         onValueChange = { newValue ->
                             val normalized = newValue.replace(',', '.')
@@ -109,6 +109,7 @@ fun AddLessonDialog(
                             duration = sanitized.toString()
                         },
                         modifier = Modifier.fillMaxWidth(),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
                         label = { Text(text = tullabStringResource(id = R.string.dashboard_add_lesson_duration_label)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true
@@ -122,10 +123,11 @@ fun AddLessonDialog(
                     tullabStringResource(id = R.string.log_lesson_fee_label)
                 }
 
-                TextField(
+                androidx.compose.material3.OutlinedTextField(
                     value = rateOrFeeInput,
                     onValueChange = { rateOrFeeInput = it },
                     modifier = Modifier.fillMaxWidth(),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
                     label = { Text(text = rateLabel) },
                     placeholder = { Text(text = tullabStringResource(id = R.string.student_profile_optional_label)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -133,10 +135,11 @@ fun AddLessonDialog(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
-                TextField(
+                androidx.compose.material3.OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
                     modifier = Modifier.fillMaxWidth(),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
                     label = { Text(text = tullabStringResource(id = R.string.dashboard_add_lesson_notes_label)) },
                     singleLine = false,
                     minLines = 2,

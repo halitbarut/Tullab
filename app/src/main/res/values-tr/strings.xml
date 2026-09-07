@@ -68,7 +68,7 @@
     <string name="homework_dialog_due_date_error">Geçerli bir teslim tarihi girin.</string>
     <string name="homework_dialog_status_label">Durum</string>
     <string name="homework_dialog_performance_notes_label">Performans Notları</string>
-    <string name="homework_dialog_cancel">İptal</string>
+    <string name="homework_dialog_cancel">Vazgeç</string>
     <string name="homework_dialog_save">Kaydet</string>
     <string name="homework_dialog_update">Güncelle</string>
     <string name="settings_title">Ayarlar</string>
@@ -212,7 +212,7 @@
     <string name="calendar_homework_action_details">Detaylar</string>
     <string name="bulk_schedule_cap_reached_warning">Bir seferde maksimum 30 ders planlayabilirsiniz.</string>
     <!-- Genel Dialog Eylemleri -->
-    <string name="dialog_action_cancel">İptal</string>
+    <string name="dialog_action_cancel">Vazgeç</string>
     <string name="dialog_action_ok">Tamam</string>
     <string name="dialog_action_save">Kaydet</string>
 
@@ -243,7 +243,7 @@
     <string name="dashboard_mark_paid_confirm_title">Ödemeyi Onayla</string>
     <string name="dashboard_mark_paid_confirm_message">Mevcut dönem için bir ödeme kaydı oluşturulacak ve tamamlanan dersler temizlenecek. Devam edilsin mi?</string>
     <string name="dashboard_mark_paid_confirm">Onayla</string>
-    <string name="dashboard_mark_paid_cancel">İptal</string>
+    <string name="dashboard_mark_paid_cancel">Vazgeç</string>
 
     <!-- Onboarding -->
     <string name="onboarding_title">Hoş Geldiniz</string>
@@ -370,5 +370,57 @@
     <string name="dashboard_log_lesson_hourly_rate_short_label">Saatlik Ücret</string>
     <string name="dashboard_log_lesson_mark_completed_switch">Tamamlandı olarak işaretle</string>
     <string name="dashboard_log_lesson_not_done_button">Yapılmadı</string>
+
+    <!-- 010-m3-ux-refinement: Speed Dial, Legend, Status Segmented Button, Filter Chips, Notes -->
+    <string name="dashboard_log_lesson_notes_label">Notlar</string>
+
+    <string name="calendar_speed_dial_content_description">Ders planlama seçenekleri</string>
+    <string name="calendar_speed_dial_schedule_for_date">Seçili Güne Planla</string>
+    <string name="calendar_speed_dial_edit_lesson">Dersi Düzenle</string>
+    <string name="calendar_speed_dial_bulk_schedule">Toplu Ders Ekle</string>
+
+    <string name="calendar_legend_paid">Ödendi</string>
+    <string name="calendar_legend_completed">Yapıldı</string>
+    <string name="calendar_legend_scheduled">Planlandı</string>
+    <string name="calendar_legend_attention">Yapılmadı / Dikkat</string>
+    <string name="calendar_legend_homework">Ödev</string>
+    <string name="calendar_legend_cancelled">İptal</string>
+
+    <string name="calendar_legend_title">Takvim Renk Rehberi</string>
+    <string name="calendar_legend_shape_hint">Yuvarlak işaretler (●) dersleri, kare işaretler (■) ödevleri belirtir.</string>
+    <string name="calendar_legend_section_lessons">Dersler</string>
+    <string name="calendar_legend_section_homework">Ödevler</string>
+    <string name="calendar_legend_lesson_scheduled_title">Planlandı</string>
+    <string name="calendar_legend_lesson_scheduled_desc">Gelecek tarihteki planlanmış ders</string>
+    <string name="calendar_legend_lesson_action_required_title">Eylem Gerekli</string>
+    <string name="calendar_legend_lesson_action_required_desc">İşlenmemiş geçmiş ders</string>
+    <string name="calendar_legend_lesson_completed_title">Tamamlandı</string>
+    <string name="calendar_legend_lesson_completed_desc">Ders yapıldı, ödeme bekliyor</string>
+    <string name="calendar_legend_lesson_paid_title">Ödendi</string>
+    <string name="calendar_legend_lesson_paid_desc">Ders yapıldı ve ücreti tahsil edildi</string>
+    <string name="calendar_legend_lesson_cancelled_title">İptal</string>
+    <string name="calendar_legend_lesson_cancelled_desc">İptal edilen ders seansı</string>
+    <string name="calendar_legend_homework_scheduled_title">Planlandı</string>
+    <string name="calendar_legend_homework_scheduled_desc">Teslim tarihi bekleyen ödev</string>
+    <string name="calendar_legend_homework_action_required_title">Eylem Gerekli</string>
+    <string name="calendar_legend_homework_action_required_desc">Teslim tarihi geçmiş ödev</string>
+    <string name="calendar_legend_homework_completed_title">Tamamlandı</string>
+    <string name="calendar_legend_homework_completed_desc">Tamamlanmış ödev</string>
+    <string name="calendar_legend_homework_cancelled_title">İptal</string>
+    <string name="calendar_legend_homework_cancelled_desc">İptal edilen ödev</string>
+
+    <string name="lesson_status_choice_scheduled">Planlandı</string>
+    <string name="lesson_status_choice_completed">Yapıldı</string>
+    <string name="lesson_status_choice_not_done">İptal</string>
+
+    <string name="homework_filter_all">Tümü</string>
+    <string name="homework_filter_pending">Bekleyenler</string>
+    <string name="homework_filter_completed">Tamamlananlar</string>
+
+    <string name="reports_chart_tooltip_label">%1$s: %2$s</string>
+
+    <string name="student_card_more_actions">Daha fazla seçenek</string>
+    <string name="student_action_edit">Düzenle</string>
+    <string name="student_action_delete">Sil</string>
 
 </resources>

@@ -344,6 +344,8 @@ fun SettingsScreen(
         )
     }
 
+    val currentLocale = LocalLocale.current
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -374,7 +376,7 @@ fun SettingsScreen(
                     icon = Icons.Outlined.Sell,
                     iconContentDescription = tullabStringResource(id = R.string.settings_currency_content_description),
                     title = tullabStringResource(id = R.string.settings_currency_label),
-                    value = "${java.util.Currency.getInstance(userPreferences.currencyCode).getDisplayName(Locale.getDefault())} (${userPreferences.currencyCode})",
+                    value = "${java.util.Currency.getInstance(userPreferences.currencyCode).getDisplayName(currentLocale)} (${userPreferences.currencyCode})",
                     onClick = viewModel::showCurrencyDialog
                 )
             }
@@ -836,12 +838,13 @@ private fun HourlyRateDialog(
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                TextField(
+                androidx.compose.material3.OutlinedTextField(
                     value = rateInput,
                     onValueChange = { newValue ->
                         rateInput = newValue
                         isError = false
                     },
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
                     label = {
                         Text(text = tullabStringResource(id = R.string.settings_hourly_rate_dialog_label))
                     },
@@ -889,8 +892,9 @@ private fun formatHourlyRate(amount: Double, currencyCode: String): String {
     if (amount <= 0.0) {
         return tullabStringResource(id = R.string.settings_hourly_rate_empty_value, currencyCode)
     }
-    return remember(amount, currencyCode) {
-        formatCurrency(amount, currencyCode)
+    val locale = LocalLocale.current
+    return remember(amount, currencyCode, locale) {
+        formatCurrency(amount, currencyCode, locale)
     }
 }
 
@@ -974,7 +978,7 @@ private fun SettingsPreviewContent(preferences: UserPreferences) {
                         icon = Icons.Outlined.Sell,
                         iconContentDescription = tullabStringResource(id = R.string.settings_currency_content_description),
                         title = tullabStringResource(id = R.string.settings_currency_label),
-                        value = "${java.util.Currency.getInstance(preferences.currencyCode).getDisplayName(Locale.getDefault())} (${preferences.currencyCode})",
+                        value = "${java.util.Currency.getInstance(preferences.currencyCode).getDisplayName(LocalLocale.current)} (${preferences.currencyCode})",
                         onClick = {}
                     )
                 }

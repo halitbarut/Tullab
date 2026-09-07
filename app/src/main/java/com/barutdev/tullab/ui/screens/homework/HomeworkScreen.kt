@@ -53,9 +53,13 @@ import com.barutdev.tullab.ui.navigation.FabConfig
 import com.barutdev.tullab.ui.navigation.ScreenScaffoldConfig
 import com.barutdev.tullab.ui.navigation.TopBarAction
 import com.barutdev.tullab.ui.navigation.TopBarConfig
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import com.barutdev.tullab.ui.screens.common.StudentNameUiStatus
 import com.barutdev.tullab.ui.screens.common.deriveStudentNameUiStatus
-import com.barutdev.tullab.ui.screens.homework.components.HomeworkDialog
+import com.barutdev.tullab.ui.screens.homework.components.HomeworkBottomSheet
+import com.barutdev.tullab.ui.screens.homework.components.HomeworkFilterChips
 import com.barutdev.tullab.ui.theme.TullabAnimationSpecs
 import com.barutdev.tullab.ui.theme.TullabTheme
 import com.barutdev.tullab.ui.theme.LocalLocale
@@ -93,8 +97,8 @@ fun HomeworkScreen(
         Log.d("HomeworkScreen", "Rendering homework for studentId=${viewModel.studentId}")
     }
 
-    HomeworkDialog(
-        showDialog = isDialogVisible,
+    HomeworkBottomSheet(
+        showSheet = isDialogVisible,
         editingHomework = editingHomework,
         onDismiss = viewModel::dismissHomeworkDialog,
         onConfirm = { title, description, dueDate, status, performanceNotes ->
@@ -181,6 +185,19 @@ private fun HomeworkScreenContent(
     onHomeworkClick: (Homework) -> Unit
 ) {
     val locale = LocalLocale.current
+    var selectedFilter by rememberSaveable { mutableStateOf(HomeworkFilter.ALL) }
+
+    val filteredHomeworkList = remember(homeworkList, selectedFilter) {
+        when (selectedFilter) {
+            HomeworkFilter.ALL -> homeworkList
+            HomeworkFilter.PENDING -> homeworkList.filter {
+                it.status == HomeworkStatus.PENDING || it.status == HomeworkStatus.OVERDUE
+            }
+            HomeworkFilter.COMPLETED -> homeworkList.filter {
+                it.status == HomeworkStatus.COMPLETED
+            }
+        }
+    }
 
     Column(
         modifier = modifier
@@ -190,14 +207,22 @@ private fun HomeworkScreenContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Card 1: Section Title
-        AnimatedListItem(index = 1) {
+        AnimatedListItem(index = 0) {
             Text(
                 text = tullabStringResource(id = R.string.homework_assignments_section_title),
                 style = MaterialTheme.typography.titleMedium
             )
         }
-        
-        if (homeworkList.isEmpty()) {
+
+        // Card 2: Filter Chips
+        AnimatedListItem(index = 1) {
+            HomeworkFilterChips(
+                selectedFilter = selectedFilter,
+                onFilterSelected = { selectedFilter = it }
+            )
+        }
+
+        if (filteredHomeworkList.isEmpty()) {
             AnimatedListItem(index = 2) {
                 Text(
                     text = tullabStringResource(id = R.string.homework_empty_state_message),
@@ -206,8 +231,8 @@ private fun HomeworkScreenContent(
                 )
             }
         } else {
-            homeworkList.forEachIndexed { listIndex, homework ->
-                AnimatedListItem(index = listIndex + 2) {
+            filteredHomeworkList.forEachIndexed { listIndex, homework ->
+                AnimatedListItem(index = listIndex + 3) {
                     HomeworkListItem(
                         homework = homework,
                         locale = locale,
@@ -227,11 +252,10 @@ private fun HomeworkListItem(
     onClick: (Homework) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val zoneId = remember { ZoneId.systemDefault() }
     val dueDateText = remember(homework.dueDate, locale) {
         val formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale)
         Instant.ofEpochMilli(homework.dueDate)
-            .atZone(zoneId)
+            .atZone(java.time.ZoneOffset.UTC)
             .toLocalDate()
             .format(formatter)
     }

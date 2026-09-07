@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
@@ -23,9 +24,9 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.History
-import androidx.compose.material.icons.outlined.History
 
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -46,6 +47,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.barutdev.tullab.R
@@ -142,20 +144,15 @@ LaunchedEffect(viewModel) {
     val resolvedStudentName = uiState.studentName.takeIf {
         studentNameStatus == StudentNameUiStatus.Ready && it.isNotBlank()
     }
-    val topBarTitle = resolvedStudentName?.let {
-        tullabStringResource(id = R.string.dashboard_student_label, it)
-    } ?: fallbackTitle
+    val topBarTitle = resolvedStudentName ?: fallbackTitle
     val navigateToListDescription = tullabStringResource(
         id = R.string.top_bar_navigate_to_student_list_content_description
     )
-    val settingsDescription = tullabStringResource(id = R.string.dashboard_settings_icon_description)
     val editDescription = tullabStringResource(id = R.string.dashboard_edit_student_content_description)
 
     val topBarActions = remember(
         uiState.studentId,
         editDescription,
-        settingsDescription,
-        onNavigateToSettings,
         onEditStudentProfile
     ) {
         val editAction = uiState.studentId?.let { id ->
@@ -165,11 +162,7 @@ LaunchedEffect(viewModel) {
                 onClick = { onEditStudentProfile(id) }
             )
         }
-        listOfNotNull(editAction) + TopBarAction(
-            icon = Icons.Filled.Settings,
-            contentDescription = settingsDescription,
-            onClick = onNavigateToSettings
-        )
+        listOfNotNull(editAction)
     }
 
     val topBarConfig = remember(
@@ -199,11 +192,12 @@ LaunchedEffect(viewModel) {
     )
 
     val paymentHistory by viewModel.paymentHistory.collectAsStateWithLifecycle()
-PaymentHistoryDialog(
+    PaymentHistoryDialog(
         showDialog = uiState.isPaymentHistoryDialogVisible,
         records = paymentHistory,
         currencyCode = userPreferences.currencyCode,
-        onDismiss = viewModel::dismissPaymentHistoryDialog
+        onDismiss = viewModel::dismissPaymentHistoryDialog,
+        locale = locale
     )
 
     MarkAsPaidConfirmDialog(
@@ -412,13 +406,13 @@ fun PaymentTrackingCard(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val amountText = remember(totalAmountDue, currencyCode) {
-        formatCurrency(totalAmountDue, currencyCode)
+    val amountText = remember(totalAmountDue, currencyCode, locale) {
+        formatCurrency(totalAmountDue, currencyCode, locale)
     }
-    val hourlyRateText = remember(hourlyRate, currencyCode) {
-        formatCurrency(hourlyRate, currencyCode)
+    val hourlyRateText = remember(hourlyRate, currencyCode, locale) {
+        formatCurrency(hourlyRate, currencyCode, locale)
     }
-    val hoursText = formatDurationHours(context, totalHours)
+    val hoursText = formatDurationHours(context, totalHours, locale)
     val formattedLastPaymentDate = remember(lastPaymentDate, locale) {
         lastPaymentDate?.let { timestamp ->
             DateTimeFormatter
@@ -489,8 +483,8 @@ fun PaymentTrackingCard(
                     rateBreakdownTiers.forEach { tier ->
                         val tierText = when (tier.pricingMode) {
                             com.barutdev.tullab.domain.model.PricingMode.PER_HOUR -> {
-                                val formattedHours = formatDurationHours(context, tier.totalHours)
-                                val formattedRate = formatCurrency(tier.rateOrFee, currencyCode)
+                                val formattedHours = formatDurationHours(context, tier.totalHours, locale)
+                                val formattedRate = formatCurrency(tier.rateOrFee, currencyCode, locale)
                                 tullabStringResource(
                                     id = R.string.dashboard_payment_rate_info,
                                     formattedHours,
@@ -498,7 +492,7 @@ fun PaymentTrackingCard(
                                 )
                             }
                             com.barutdev.tullab.domain.model.PricingMode.FLAT_FEE -> {
-                                val formattedFee = formatCurrency(tier.rateOrFee, currencyCode)
+                                val formattedFee = formatCurrency(tier.rateOrFee, currencyCode, locale)
                                 tullabStringResource(
                                     id = R.string.dashboard_payment_flat_fee_tier,
                                     tier.lessonCount,
@@ -523,9 +517,23 @@ fun PaymentTrackingCard(
                 onClick = onMarkPaidClick,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .testTag("MarkAsPaidButton")
+                    .height(48.dp)
+                    .testTag("MarkAsPaidButton"),
+                shape = MaterialTheme.shapes.medium,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ),
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = 2.dp,
+                    pressedElevation = 4.dp
+                )
             ) {
-                Text(text = tullabStringResource(id = R.string.dashboard_payment_mark_paid))
+                Text(
+                    text = tullabStringResource(id = R.string.dashboard_payment_mark_paid),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }
@@ -536,10 +544,11 @@ fun PaymentHistoryDialog(
     showDialog: Boolean,
     records: List<PaymentRecord>,
     currencyCode: String,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    locale: Locale = LocalLocale.current
 ) {
     if (!showDialog) return
-val title = tullabStringResource(id = R.string.payment_history_title)
+    val title = tullabStringResource(id = R.string.payment_history_title)
     val empty = tullabStringResource(id = R.string.no_payment_history_toast)
     val close = tullabStringResource(id = R.string.close_button)
     AlertDialog(
@@ -552,9 +561,10 @@ val title = tullabStringResource(id = R.string.payment_history_title)
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     records.forEach { rec ->
-                        val amountText = formatCurrency(rec.amountMinor / 100.0, currencyCode)
+                        val amountText = formatCurrency(rec.amountMinor / 100.0, currencyCode, locale)
                         val dateText = DateTimeFormatter
                             .ofLocalizedDate(FormatStyle.LONG)
+                            .withLocale(locale)
                             .format(Instant.ofEpochMilli(rec.paidAtEpochMs).atZone(ZoneId.systemDefault()).toLocalDate())
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -621,13 +631,13 @@ private fun CompletedLessonsCard(
                     .toLocalDate()
                     .format(dateFormatter)
                 val durationText = lesson.durationInHours?.let { duration ->
-                    formatDurationHours(context, duration)
+                    formatDurationHours(context, duration, locale)
                 }
                 CompletedLessonUiModel(
                     dateText = dateText,
                     durationText = durationText,
                     notes = lesson.notes,
-                    totalText = formatCurrency(lesson.calculatedValue, currencyCode),
+                    totalText = formatCurrency(lesson.calculatedValue, currencyCode, locale),
                     isFlatFee = lesson.pricingMode == com.barutdev.tullab.domain.model.PricingMode.FLAT_FEE
                 )
             }

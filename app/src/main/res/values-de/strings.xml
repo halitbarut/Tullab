@@ -373,4 +373,54 @@
     <string name="dashboard_log_lesson_mark_completed_switch">Als abgeschlossen markieren</string>
     <string name="dashboard_log_lesson_not_done_button">Nicht erledigt</string>
 
+    <!-- 010-m3-ux-refinement: Speed Dial, Legend, Status Segmented Button, Filter Chips -->
+    <string name="calendar_speed_dial_content_description">Optionen zur Unterrichtsplanung</string>
+    <string name="calendar_speed_dial_schedule_for_date">Für ausgewählten Tag planen</string>
+    <string name="calendar_speed_dial_edit_lesson">Unterricht bearbeiten</string>
+    <string name="calendar_speed_dial_bulk_schedule">Mehrere Stunden hinzufügen</string>
+
+    <string name="calendar_legend_paid">Bezahlt</string>
+    <string name="calendar_legend_completed">Abgeschlossen</string>
+    <string name="calendar_legend_scheduled">Geplant</string>
+    <string name="calendar_legend_attention">Nicht abgehalten / Achtung</string>
+    <string name="calendar_legend_homework">Hausaufgabe</string>
+    <string name="calendar_legend_cancelled">Abgesagt</string>
+
+    <string name="calendar_legend_title">Kalender-Farbleitfaden</string>
+    <string name="calendar_legend_shape_hint">Runde Punkte (●) kennzeichnen Unterricht, quadratische Markierungen (■) Hausaufgaben.</string>
+    <string name="calendar_legend_section_lessons">Unterricht</string>
+    <string name="calendar_legend_section_homework">Hausaufgaben</string>
+    <string name="calendar_legend_lesson_scheduled_title">Geplant</string>
+    <string name="calendar_legend_lesson_scheduled_desc">Zukünftiger geplanter Unterricht</string>
+    <string name="calendar_legend_lesson_action_required_title">Handlungsbedarf</string>
+    <string name="calendar_legend_lesson_action_required_desc">Nicht erfasster vergangener Unterricht</string>
+    <string name="calendar_legend_lesson_completed_title">Abgeschlossen</string>
+    <string name="calendar_legend_lesson_completed_desc">Unterricht gehalten, Zahlung ausstehend</string>
+    <string name="calendar_legend_lesson_paid_title">Bezahlt</string>
+    <string name="calendar_legend_lesson_paid_desc">Unterricht gehalten und Gebühr erhalten</string>
+    <string name="calendar_legend_lesson_cancelled_title">Abgesagt</string>
+    <string name="calendar_legend_lesson_cancelled_desc">Abgesagte Unterrichtsstunde</string>
+    <string name="calendar_legend_homework_scheduled_title">Geplant</string>
+    <string name="calendar_legend_homework_scheduled_desc">Ausstehende Hausaufgabe</string>
+    <string name="calendar_legend_homework_action_required_title">Handlungsbedarf</string>
+    <string name="calendar_legend_homework_action_required_desc">Überfällige Hausaufgabe</string>
+    <string name="calendar_legend_homework_completed_title">Abgeschlossen</string>
+    <string name="calendar_legend_homework_completed_desc">Erledigte Hausaufgabe</string>
+    <string name="calendar_legend_homework_cancelled_title">Abgesagt</string>
+    <string name="calendar_legend_homework_cancelled_desc">Abgesagte Hausaufgabe</string>
+
+    <string name="lesson_status_choice_scheduled">Geplant</string>
+    <string name="lesson_status_choice_completed">Abgeschlossen</string>
+    <string name="lesson_status_choice_not_done">Abgesagt</string>
+
+    <string name="homework_filter_all">Alle</string>
+    <string name="homework_filter_pending">Ausstehend</string>
+    <string name="homework_filter_completed">Abgeschlossen</string>
+
+    <string name="reports_chart_tooltip_label">%1$s: %2$s</string>
+
+    <string name="student_card_more_actions">Weitere Optionen</string>
+    <string name="student_action_edit">Bearbeiten</string>
+    <string name="student_action_delete">Löschen</string>
+
 </resources>

@@ -187,26 +187,13 @@ fun TullabNavGraph(
             null
         }
     }
-    val defaultSettingsAction = remember(
-        settingsContentDescription,
-        onNavigateToSettings
-    ) {
-        TopBarAction(
-            icon = Icons.Filled.Settings,
-            contentDescription = settingsContentDescription,
-            onClick = onNavigateToSettings
-        )
-    }
     val topBarState by remember(
         topBarConfig,
         fallbackTitle,
-        defaultNavigationAction,
-        defaultSettingsAction
+        defaultNavigationAction
     ) {
         derivedStateOf {
-            val actions = topBarConfig?.actions
-                ?.takeIf { it.isNotEmpty() }
-                ?: listOf(defaultSettingsAction)
+            val actions = topBarConfig?.actions ?: emptyList()
             TullabTopBarState(
                 title = topBarConfig?.title ?: fallbackTitle,
                 navigationIcon = topBarConfig?.navigationIcon ?: defaultNavigationAction,

@@ -378,4 +378,53 @@
     <string name="dashboard_log_lesson_mark_completed_switch">Mark as completed</string>
     <string name="dashboard_log_lesson_not_done_button">Not Done</string>
 
+    <string name="calendar_speed_dial_content_description">Schedule lesson options</string>
+    <string name="calendar_speed_dial_schedule_for_date">Schedule for Selected Day</string>
+    <string name="calendar_speed_dial_edit_lesson">Edit Lesson</string>
+    <string name="calendar_speed_dial_bulk_schedule">Bulk Add Lessons</string>
+
+    <string name="calendar_legend_paid">Paid</string>
+    <string name="calendar_legend_completed">Completed</string>
+    <string name="calendar_legend_scheduled">Scheduled</string>
+    <string name="calendar_legend_attention">Not Held / Attention</string>
+    <string name="calendar_legend_homework">Homework</string>
+    <string name="calendar_legend_cancelled">Cancelled</string>
+
+    <string name="calendar_legend_title">Calendar Color Guide</string>
+    <string name="calendar_legend_shape_hint">Round dots (●) indicate lessons, square marks (■) indicate homework.</string>
+    <string name="calendar_legend_section_lessons">Lessons</string>
+    <string name="calendar_legend_section_homework">Homework</string>
+    <string name="calendar_legend_lesson_scheduled_title">Scheduled</string>
+    <string name="calendar_legend_lesson_scheduled_desc">Upcoming scheduled lesson</string>
+    <string name="calendar_legend_lesson_action_required_title">Action Required</string>
+    <string name="calendar_legend_lesson_action_required_desc">Past unlogged lesson</string>
+    <string name="calendar_legend_lesson_completed_title">Completed</string>
+    <string name="calendar_legend_lesson_completed_desc">Lesson conducted, pending payment</string>
+    <string name="calendar_legend_lesson_paid_title">Paid</string>
+    <string name="calendar_legend_lesson_paid_desc">Lesson conducted and fee collected</string>
+    <string name="calendar_legend_lesson_cancelled_title">Cancelled</string>
+    <string name="calendar_legend_lesson_cancelled_desc">Cancelled lesson session</string>
+    <string name="calendar_legend_homework_scheduled_title">Scheduled</string>
+    <string name="calendar_legend_homework_scheduled_desc">Pending homework</string>
+    <string name="calendar_legend_homework_action_required_title">Action Required</string>
+    <string name="calendar_legend_homework_action_required_desc">Overdue homework</string>
+    <string name="calendar_legend_homework_completed_title">Completed</string>
+    <string name="calendar_legend_homework_completed_desc">Completed homework assignment</string>
+    <string name="calendar_legend_homework_cancelled_title">Cancelled</string>
+    <string name="calendar_legend_homework_cancelled_desc">Cancelled homework assignment</string>
+
+    <string name="lesson_status_choice_scheduled">Scheduled</string>
+    <string name="lesson_status_choice_completed">Completed</string>
+    <string name="lesson_status_choice_not_done">Cancelled</string>
+
+    <string name="homework_filter_all">All</string>
+    <string name="homework_filter_pending">Pending</string>
+    <string name="homework_filter_completed">Completed</string>
+
+    <string name="reports_chart_tooltip_label">%1$s: %2$s</string>
+
+    <string name="student_card_more_actions">More options</string>
+    <string name="student_action_edit">Edit</string>
+    <string name="student_action_delete">Delete</string>
+
 </resources>

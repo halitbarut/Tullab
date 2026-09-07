@@ -2,15 +2,15 @@ package com.barutdev.tullab.util
 
 import com.barutdev.tullab.domain.model.CurrencyOption
 import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
 import java.text.NumberFormat
 import java.util.Currency
 import java.util.Locale
 
-fun formatCurrency(amount: Double, currencyCode: String): String {
+fun formatCurrency(amount: Double, currencyCode: String, locale: Locale = Locale.getDefault()): String {
     val currency = runCatching { Currency.getInstance(currencyCode) }.getOrNull()
         ?: return amount.toString()
         
-    val locale = Locale.getDefault()
     val formatter = NumberFormat.getCurrencyInstance(locale)
     formatter.currency = currency
     
@@ -22,6 +22,41 @@ fun formatCurrency(amount: Double, currencyCode: String): String {
     }
     
     return formatter.format(amount)
+}
+
+fun formatCompactCurrency(
+    amount: Double,
+    currencyCode: String,
+    locale: Locale = Locale.getDefault()
+): String {
+    val symbol = getCurrencySymbol(currencyCode, locale)
+    if (amount <= 0.0) return "${symbol}0"
+
+    val symbols = DecimalFormatSymbols(locale)
+
+    fun formatWithPattern(value: Double): String {
+        val pattern = if (value % 1.0 == 0.0 || value >= 100) "#,##0" else "#,##0.#"
+        return DecimalFormat(pattern, symbols).format(value)
+    }
+
+    val thousands = amount / 1_000.0
+    val isPromotedToMillions = amount >= 1_000_000.0 || (amount >= 1_000.0 && Math.round(thousands) >= 1_000)
+
+    return when {
+        isPromotedToMillions -> {
+            val millions = amount / 1_000_000.0
+            val formatted = formatWithPattern(millions)
+            "$symbol${formatted}M"
+        }
+        amount >= 1_000.0 || (amount >= 999.5) -> {
+            val formatted = formatWithPattern(thousands)
+            "$symbol${formatted}K"
+        }
+        else -> {
+            val formatted = formatWithPattern(amount)
+            "$symbol$formatted"
+        }
+    }
 }
 
 fun getCurrencySymbol(currencyCode: String, locale: Locale = Locale.getDefault()): String {

@@ -120,6 +120,7 @@ fun WeeklyRoutineSelector(
                     onValueChange = onTargetCountChanged,
                     isError = isCountError,
                     singleLine = true,
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.width(100.dp).padding(start = 8.dp)
                 )

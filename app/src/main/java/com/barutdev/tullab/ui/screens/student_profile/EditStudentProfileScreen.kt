@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -139,8 +140,9 @@ fun StudentProfileContent(
             )
         } else {
             val scrollState = rememberScrollState()
-            val defaultRateText = remember(state.defaultHourlyRate, state.currencyCode) {
-                formatCurrency(state.defaultHourlyRate, state.currencyCode)
+            val locale = com.barutdev.tullab.ui.theme.LocalLocale.current
+            val defaultRateText = remember(state.defaultHourlyRate, state.currencyCode, locale) {
+                formatCurrency(state.defaultHourlyRate, state.currencyCode, locale)
             }
             val fullNameLabel = tullabStringResource(id = R.string.student_profile_full_name_label)
             val parentNameLabel = tullabStringResource(id = R.string.student_profile_parent_name_label)
@@ -154,10 +156,10 @@ fun StudentProfileContent(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(scrollState)
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = 24.dp)
                     .padding(top = 24.dp, bottom = 32.dp)
                     .navigationBarsPadding(),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 if (state.isSaving) {
                     LinearProgressIndicator(
@@ -171,6 +173,7 @@ fun StudentProfileContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("StudentProfileFullName"),
+                    shape = RoundedCornerShape(12.dp),
                     label = {
                         FieldLabel(
                             text = fullNameLabel,
@@ -195,6 +198,7 @@ fun StudentProfileContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("StudentProfileParentName"),
+                    shape = RoundedCornerShape(12.dp),
                     label = {
                         FieldLabel(
                             text = parentNameLabel,
@@ -215,6 +219,7 @@ fun StudentProfileContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("StudentProfileParentContact"),
+                    shape = RoundedCornerShape(12.dp),
                     label = {
                         FieldLabel(
                             text = parentContactLabel,
@@ -232,6 +237,7 @@ fun StudentProfileContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("StudentProfileHourlyRate"),
+                    shape = RoundedCornerShape(12.dp),
                     label = {
                         FieldLabel(
                             text = hourlyRateLabel,
@@ -265,6 +271,7 @@ fun StudentProfileContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("StudentProfileNotes"),
+                    shape = RoundedCornerShape(12.dp),
                     label = {
                         FieldLabel(
                             text = notesLabel,

@@ -23,23 +23,31 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.BarChart
-import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -148,6 +156,7 @@ fun StudentListScreen(
         onClearSearch = viewModel::onClearSearchQuery,
         onStudentClick = onStudentClick,
         onEditStudent = { student -> onEditStudentProfile(student.id) },
+        onDeleteStudent = { student -> viewModel.deleteStudent(student.id) },
         currencyCode = userPreferences.currencyCode,
         isSearchActive = uiState.isSearchActive,
         hasAnyStudents = uiState.hasAnyStudents,
@@ -165,6 +174,7 @@ private fun StudentListScreenContent(
     onClearSearch: () -> Unit,
     onStudentClick: (String) -> Unit,
     onEditStudent: (Student) -> Unit,
+    onDeleteStudent: (Student) -> Unit = {},
     currencyCode: String,
     isSearchActive: Boolean,
     hasAnyStudents: Boolean,
@@ -186,6 +196,44 @@ private fun StudentListScreenContent(
     }
 
     val showNoResults = isSearchActive && students.isEmpty()
+    var studentToDelete by remember { mutableStateOf<Student?>(null) }
+
+    if (studentToDelete != null) {
+        val targetStudent = studentToDelete!!
+        AlertDialog(
+            onDismissRequest = { studentToDelete = null },
+            title = {
+                Text(text = tullabStringResource(id = R.string.delete_student_confirmation_title))
+            },
+            text = {
+                Text(
+                    text = tullabStringResource(
+                        id = R.string.delete_student_confirmation_message,
+                        targetStudent.fullName
+                    )
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val toDelete = targetStudent
+                        studentToDelete = null
+                        onDeleteStudent(toDelete)
+                    }
+                ) {
+                    Text(
+                        text = tullabStringResource(id = R.string.dialog_action_delete),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { studentToDelete = null }) {
+                    Text(text = tullabStringResource(id = R.string.dialog_action_cancel))
+                }
+            }
+        )
+    }
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -219,6 +267,7 @@ private fun StudentListScreenContent(
                         currencyCode = currencyCode,
                         onStudentClick = onStudentClick,
                         onEditClick = onEditStudent,
+                        onDeleteClick = { student -> studentToDelete = student },
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -240,10 +289,22 @@ private fun StudentListSearchField(
     OutlinedTextField(
         value = query,
         onValueChange = onQueryChange,
-        modifier = modifier.testTag("StudentListSearchField"),
-        placeholder = { Text(text = placeholder) },
+        modifier = modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .testTag("StudentListSearchField"),
+        placeholder = {
+            Text(
+                text = placeholder,
+                style = MaterialTheme.typography.bodyLarge
+            )
+        },
         leadingIcon = {
-            Icon(imageVector = Icons.Outlined.Search, contentDescription = null)
+            Icon(
+                imageVector = Icons.Outlined.Search,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         },
         trailingIcon = {
             if (query.isNotEmpty()) {
@@ -256,6 +317,13 @@ private fun StudentListSearchField(
             }
         },
         singleLine = true,
+        shape = RoundedCornerShape(28.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = androidx.compose.ui.graphics.Color.Transparent
+        ),
         keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Search)
     )
 }
@@ -341,21 +409,23 @@ fun StudentListItem(
     student: StudentWithDebt,
     currencyCode: String,
     onStudentClick: (String) -> Unit,
-    onEditClick: (Student) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onEditClick: ((Student) -> Unit)? = null,
+    onDeleteClick: ((Student) -> Unit)? = null
 ) {
     val studentDetails = student.student
-    val formattedDebt by remember(student.currentDebt, currencyCode) {
-        derivedStateOf { formatCurrency(student.currentDebt, currencyCode) }
+    val locale = com.barutdev.tullab.ui.theme.LocalLocale.current
+    val formattedDebt by remember(student.currentDebt, currencyCode, locale) {
+        derivedStateOf { formatCurrency(student.currentDebt, currencyCode, locale) }
     }
     val studentInitials by remember(studentDetails.fullName) {
         derivedStateOf { studentDetails.initials() }
     }
+    var menuExpanded by remember { mutableStateOf(false) }
 
     Card(
-        modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
-            .clickable { onStudentClick(studentDetails.id.toString()) },
+        onClick = { onStudentClick(studentDetails.id.toString()) },
+        modifier = modifier,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface,
@@ -405,23 +475,56 @@ fun StudentListItem(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            IconButton(onClick = { onEditClick(studentDetails) }) {
-                Icon(
-                    imageVector = Icons.Outlined.Edit,
-                    contentDescription = tullabStringResource(
-                        id = R.string.student_list_edit_student_content_description
-                    ),
-                    tint = MaterialTheme.colorScheme.outline
-                )
+
+            Box {
+                IconButton(
+                    onClick = { menuExpanded = true }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = tullabStringResource(id = R.string.student_card_more_actions),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(text = tullabStringResource(id = R.string.student_action_edit)) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Outlined.Edit,
+                                contentDescription = null
+                            )
+                        },
+                        onClick = {
+                            menuExpanded = false
+                            onEditClick?.invoke(studentDetails)
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = tullabStringResource(id = R.string.student_action_delete),
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Outlined.Delete,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        },
+                        onClick = {
+                            menuExpanded = false
+                            onDeleteClick?.invoke(studentDetails)
+                        }
+                    )
+                }
             }
-            Spacer(modifier = Modifier.width(4.dp))
-            Icon(
-                imageVector = Icons.Outlined.ChevronRight,
-                contentDescription = tullabStringResource(
-                    id = R.string.student_list_list_item_trailing_icon_content_description
-                ),
-                tint = MaterialTheme.colorScheme.outline
-            )
         }
     }
 }

@@ -1,41 +1,51 @@
 package com.barutdev.tullab.ui.screens.homework.components
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.barutdev.tullab.util.tullabStringResource
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import com.barutdev.tullab.R
 import com.barutdev.tullab.domain.model.Homework
 import com.barutdev.tullab.domain.model.HomeworkStatus
 import com.barutdev.tullab.ui.theme.LocalLocale
+import com.barutdev.tullab.util.tullabStringResource
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -43,17 +53,26 @@ import java.time.format.FormatStyle
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeworkDialog(
-    showDialog: Boolean,
+fun HomeworkBottomSheet(
+    showSheet: Boolean,
     editingHomework: Homework?,
     onDismiss: () -> Unit,
-    onConfirm: (title: String, description: String, dueDate: Long, status: HomeworkStatus, performanceNotes: String?) -> Unit
+    onConfirm: (
+        title: String,
+        description: String,
+        dueDate: Long,
+        status: HomeworkStatus,
+        performanceNotes: String?
+    ) -> Unit
 ) {
-    if (!showDialog) return
+    if (!showSheet) return
 
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val locale = LocalLocale.current
     val zoneId = remember { ZoneId.systemDefault() }
-    val previewFormatter = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
+    val previewFormatter = remember(locale) {
+        DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale)
+    }
 
     val editingId = editingHomework?.id
 
@@ -81,7 +100,7 @@ fun HomeworkDialog(
     } else {
         tullabStringResource(id = R.string.homework_dialog_save)
     }
-    val dialogTitle = if (isEditing) {
+    val sheetTitle = if (isEditing) {
         tullabStringResource(id = R.string.homework_dialog_edit_title)
     } else {
         tullabStringResource(id = R.string.homework_dialog_add_title)
@@ -89,36 +108,52 @@ fun HomeworkDialog(
 
     val isConfirmEnabled = title.isNotBlank() && selectedDueDateMillis != null
 
-    AlertDialog(
-        onDismissRequest = {
-            onDismiss()
-        },
-        title = {
-            Text(text = dialogTitle)
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                TextField(
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        dragHandle = { BottomSheetDefaults.DragHandle() }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .imePadding()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f, fill = false)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = sheetTitle,
+                    style = MaterialTheme.typography.titleLarge
+                )
+
+                OutlinedTextField(
                     value = title,
-                    onValueChange = { newValue ->
-                        title = newValue
-                    },
+                    onValueChange = { title = it },
                     modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
                     label = { Text(text = tullabStringResource(id = R.string.homework_dialog_title_label)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
                 )
-                TextField(
+
+                OutlinedTextField(
                     value = description,
-                    onValueChange = { newValue ->
-                        description = newValue
-                    },
+                    onValueChange = { description = it },
                     modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
                     label = { Text(text = tullabStringResource(id = R.string.homework_dialog_description_label)) },
                     singleLine = false,
                     minLines = 2,
                     maxLines = 4
                 )
+
                 // Read-only clickable date field that opens DatePickerDialog
                 val dueDateText = selectedDueDateMillis?.let { millis ->
                     Instant.ofEpochMilli(millis)
@@ -126,12 +161,14 @@ fun HomeworkDialog(
                         .toLocalDate()
                         .format(DateTimeFormatter.ISO_LOCAL_DATE)
                 }.orEmpty()
+
                 OutlinedTextField(
                     value = dueDateText,
                     onValueChange = { /* read-only */ },
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { showDatePickerDialog = true },
+                    shape = RoundedCornerShape(12.dp),
                     label = { Text(text = tullabStringResource(id = R.string.homework_dialog_due_date_label)) },
                     placeholder = { Text(text = tullabStringResource(id = R.string.homework_dialog_due_date_hint)) },
                     singleLine = true,
@@ -145,16 +182,18 @@ fun HomeworkDialog(
                         }
                     }
                 )
+
                 ExposedDropdownMenuBox(
                     expanded = isStatusMenuExpanded,
                     onExpandedChange = { isStatusMenuExpanded = !isStatusMenuExpanded }
                 ) {
-                    TextField(
+                    OutlinedTextField(
                         value = tullabStringResource(id = statusLabelRes(status)),
                         onValueChange = {},
                         modifier = Modifier
                             .fillMaxWidth()
                             .menuAnchor(),
+                        shape = RoundedCornerShape(12.dp),
                         label = { Text(text = tullabStringResource(id = R.string.homework_dialog_status_label)) },
                         readOnly = true,
                         trailingIcon = {
@@ -176,53 +215,65 @@ fun HomeworkDialog(
                         }
                     }
                 }
-                TextField(
+
+                OutlinedTextField(
                     value = performanceNotes,
-                    onValueChange = { newValue ->
-                        performanceNotes = newValue
-                    },
+                    onValueChange = { performanceNotes = it },
                     modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
                     label = { Text(text = tullabStringResource(id = R.string.homework_dialog_performance_notes_label)) },
                     singleLine = false,
                     minLines = 2,
                     maxLines = 4
                 )
+
                 selectedDueDateMillis?.let { millis ->
                     val readable = Instant.ofEpochMilli(millis)
                         .atZone(zoneId)
                         .toLocalDate()
                         .format(previewFormatter)
-                    Text(text = tullabStringResource(id = R.string.homework_due_date_label, readable))
-                }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    val dueDateMillis = selectedDueDateMillis ?: return@Button
-                    onConfirm(
-                        title,
-                        description,
-                        dueDateMillis,
-                        status,
-                        performanceNotes.ifBlank { null }
+                    Text(
+                        text = tullabStringResource(id = R.string.homework_due_date_label, readable),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                },
-                enabled = isConfirmEnabled
-            ) {
-                Text(text = confirmLabel)
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = {
-                    onDismiss()
                 }
+            }
+
+            // Keyboard-protected bottom action buttons
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = tullabStringResource(id = R.string.homework_dialog_cancel))
+                TextButton(
+                    onClick = onDismiss,
+                    contentPadding = PaddingValues(horizontal = 16.dp)
+                ) {
+                    Text(text = tullabStringResource(id = R.string.homework_dialog_cancel))
+                }
+
+                Button(
+                    onClick = {
+                        val dueDateMillis = selectedDueDateMillis ?: return@Button
+                        onConfirm(
+                            title,
+                            description,
+                            dueDateMillis,
+                            status,
+                            performanceNotes.ifBlank { null }
+                        )
+                    },
+                    enabled = isConfirmEnabled,
+                    contentPadding = PaddingValues(horizontal = 24.dp)
+                ) {
+                    Text(text = confirmLabel)
+                }
             }
         }
-    )
+    }
 
     if (showDatePickerDialog) {
         val datePickerState = rememberDatePickerState(

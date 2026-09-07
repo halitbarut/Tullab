@@ -36,6 +36,7 @@ fun BulkSchedulePricingSection(
             OutlinedTextField(
                 value = customRateInput,
                 onValueChange = onCustomRateChanged,
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
                 label = { Text(tullabStringResource(R.string.bulk_schedule_custom_hourly_rate)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
