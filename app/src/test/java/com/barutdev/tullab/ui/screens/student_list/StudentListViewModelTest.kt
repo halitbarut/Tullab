@@ -64,6 +64,24 @@ class StudentListViewModelTest {
     }
 
     @Test
+    fun deleteStudentRemovesStudentFromList() = runTest {
+        val viewModel = createViewModel()
+
+        val initialState = viewModel.uiState.first { it.students.size == 3 }
+        assertEquals(3, initialState.students.size)
+
+        viewModel.deleteStudent(1)
+        advanceUntilIdle()
+
+        val updatedState = viewModel.uiState.first { it.students.size == 2 }
+        assertEquals(2, updatedState.students.size)
+        assertTrue(updatedState.students.none { it.student.id == 1 })
+
+        viewModel.viewModelScope.cancel()
+        advanceUntilIdle()
+    }
+
+    @Test
     fun unmatchedQueryProducesEmptyFilteredListWhileKeepingAllStudentsFlag() = runTest {
         val viewModel = createViewModel()
 

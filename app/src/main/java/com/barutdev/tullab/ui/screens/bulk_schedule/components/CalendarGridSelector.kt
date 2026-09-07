@@ -218,16 +218,19 @@ fun CalendarGridSelector(
                                                 verticalAlignment = Alignment.CenterVertically
                                             ) {
                                                 Box(
-                                                    modifier = Modifier.size(5.dp).clip(androidx.compose.foundation.shape.CircleShape).background(dayIndicators.lessonColor!!)
+                                                    modifier = Modifier.size(5.dp).clip(androidx.compose.foundation.shape.CircleShape).background(dayIndicators.lessonColor)
                                                 )
                                                 Box(
-                                                    modifier = Modifier.size(5.dp).clip(androidx.compose.foundation.shape.CircleShape).background(dayIndicators.homeworkColor!!)
+                                                    modifier = Modifier.size(5.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(1.5.dp)).background(dayIndicators.homeworkColor)
                                                 )
                                             }
-                                        } else {
-                                            val color = dayIndicators.lessonColor ?: dayIndicators.homeworkColor!!
+                                        } else if (dayIndicators.lessonColor != null) {
                                             Box(
-                                                modifier = Modifier.size(5.dp).clip(androidx.compose.foundation.shape.CircleShape).background(color)
+                                                modifier = Modifier.size(5.dp).clip(androidx.compose.foundation.shape.CircleShape).background(dayIndicators.lessonColor)
+                                            )
+                                        } else {
+                                            Box(
+                                                modifier = Modifier.size(5.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(1.5.dp)).background(dayIndicators.homeworkColor!!)
                                             )
                                         }
                                     }

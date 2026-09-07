@@ -2,15 +2,15 @@ package com.barutdev.tullab.util
 
 import com.barutdev.tullab.domain.model.CurrencyOption
 import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
 import java.text.NumberFormat
 import java.util.Currency
 import java.util.Locale
 
-fun formatCurrency(amount: Double, currencyCode: String): String {
+fun formatCurrency(amount: Double, currencyCode: String, locale: Locale = Locale.getDefault()): String {
     val currency = runCatching { Currency.getInstance(currencyCode) }.getOrNull()
         ?: return amount.toString()
         
-    val locale = Locale.getDefault()
     val formatter = NumberFormat.getCurrencyInstance(locale)
     formatter.currency = currency
     
@@ -22,6 +22,36 @@ fun formatCurrency(amount: Double, currencyCode: String): String {
     }
     
     return formatter.format(amount)
+}
+
+fun formatCompactCurrency(
+    amount: Double,
+    currencyCode: String,
+    locale: Locale = Locale.getDefault()
+): String {
+    val symbol = getCurrencySymbol(currencyCode, locale)
+    if (amount <= 0.0) return "${symbol}0"
+
+    val symbols = DecimalFormatSymbols(locale)
+    return when {
+        amount >= 1_000_000 -> {
+            val millions = amount / 1_000_000.0
+            val pattern = if (millions % 1.0 == 0.0 || millions >= 100) "#,##0" else "#,##0.#"
+            val df = DecimalFormat(pattern, symbols)
+            "$symbol${df.format(millions)}M"
+        }
+        amount >= 1_000 -> {
+            val thousands = amount / 1_000.0
+            val pattern = if (thousands % 1.0 == 0.0 || thousands >= 100) "#,##0" else "#,##0.#"
+            val df = DecimalFormat(pattern, symbols)
+            "$symbol${df.format(thousands)}K"
+        }
+        else -> {
+            val pattern = if (amount % 1.0 == 0.0) "#,##0" else "#,##0.#"
+            val df = DecimalFormat(pattern, symbols)
+            "$symbol${df.format(amount)}"
+        }
+    }
 }
 
 fun getCurrencySymbol(currencyCode: String, locale: Locale = Locale.getDefault()): String {

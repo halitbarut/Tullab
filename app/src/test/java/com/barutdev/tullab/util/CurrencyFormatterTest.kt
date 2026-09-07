@@ -68,4 +68,18 @@ class CurrencyFormatterTest {
         val actualPinnedCodes = options.take(pinnedCodes.size).map { it.code }
         assertEquals("Pinned currencies should appear at the top in order", pinnedCodes, actualPinnedCodes)
     }
+
+    @Test
+    fun `test compact currency formatting`() {
+        val usLocale = Locale.US
+        assertEquals("$0", formatCompactCurrency(0.0, "USD", usLocale))
+        assertEquals("$800", formatCompactCurrency(800.0, "USD", usLocale))
+        assertEquals("$12.5K", formatCompactCurrency(12500.0, "USD", usLocale))
+        assertEquals("$1M", formatCompactCurrency(1000000.0, "USD", usLocale))
+
+        val trLocale = Locale("tr", "TR")
+        val tryCompact = formatCompactCurrency(12500.0, "TRY", trLocale)
+        assertTrue(tryCompact.startsWith("₺"))
+        assertTrue(tryCompact.endsWith("K"))
+    }
 }

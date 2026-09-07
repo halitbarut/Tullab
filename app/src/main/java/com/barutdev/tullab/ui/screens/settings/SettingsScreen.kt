@@ -836,12 +836,13 @@ private fun HourlyRateDialog(
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                TextField(
+                androidx.compose.material3.OutlinedTextField(
                     value = rateInput,
                     onValueChange = { newValue ->
                         rateInput = newValue
                         isError = false
                     },
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
                     label = {
                         Text(text = tullabStringResource(id = R.string.settings_hourly_rate_dialog_label))
                     },

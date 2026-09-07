@@ -24,7 +24,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -65,7 +64,14 @@ fun LogLessonDialog(
     onMarkAsPaid: ((duration: String, customFee: String) -> Unit)? = null,
     onSaveScheduled: ((duration: String, notes: String, pricingMode: PricingMode, rateOrFee: String) -> Unit)? = null,
     isPastScheduled: Boolean = false,
-    currencyCode: String = "USD"
+    currencyCode: String = "USD",
+    onSaveStatusAndDetails: ((
+        duration: String,
+        notes: String,
+        pricingMode: PricingMode,
+        rateOrFeeInput: String,
+        statusChoice: LogLessonStatusChoice
+    ) -> Unit)? = null
 ) {
     if (!showDialog || lesson == null) return
 
@@ -82,19 +88,26 @@ fun LogLessonDialog(
             .format(formatter)
     }
 
-    val isPastLesson = remember(lesson.date) {
-        val today = LocalDate.now(ZoneId.systemDefault())
+    val today = remember { LocalDate.now(ZoneId.systemDefault()) }
+    val lessonDate = remember(lesson.date) {
         Instant.ofEpochMilli(lesson.date)
             .atZone(ZoneId.systemDefault())
             .toLocalDate()
-            .isBefore(today)
+    }
+    val isPastLesson = remember(lessonDate, today) {
+        lessonDate.isBefore(today)
+    }
+    val isPastOrToday = remember(lessonDate, today) {
+        !lessonDate.isAfter(today)
     }
 
     val currencySymbol = remember(currencyCode, locale) {
         getCurrencySymbol(currencyCode, locale)
     }
 
-    val initialDurationStr = remember(lesson) { lesson.durationInHours?.let { if (it % 1.0 == 0.0) it.toInt().toString() else it.toString() } ?: "" }
+    val initialDurationStr = remember(lesson) {
+        lesson.durationInHours?.let { if (it % 1.0 == 0.0) it.toInt().toString() else it.toString() } ?: ""
+    }
     var duration by remember(lesson) { mutableStateOf(initialDurationStr) }
 
     val initialNotesStr = remember(lesson) { lesson.notes ?: "" }
@@ -114,18 +127,27 @@ fun LogLessonDialog(
         mutableStateOf(initialRateOrFeeStr)
     }
 
-    val initialIsMarkCompleted = remember(lesson) {
-        lesson.isCompleted
+    // Smart default status:
+    // If existing lesson has explicit completed or cancelled, respect it.
+    // If scheduled: if past/today default to COMPLETED ("Yapıldı"), if future default to SCHEDULED ("Planlandı").
+    val initialStatusChoice = remember(lesson) {
+        when (lesson.status) {
+            LessonStatus.COMPLETED, LessonStatus.PAID -> LogLessonStatusChoice.COMPLETED
+            LessonStatus.CANCELLED -> LogLessonStatusChoice.CANCELLED
+            LessonStatus.SCHEDULED -> {
+                if (isPastOrToday) LogLessonStatusChoice.COMPLETED else LogLessonStatusChoice.SCHEDULED
+            }
+        }
     }
-    var isMarkCompleted by rememberSaveable(lesson.id) {
-        mutableStateOf(initialIsMarkCompleted)
+    var statusChoice by remember(lesson.id, initialStatusChoice) {
+        mutableStateOf(initialStatusChoice)
     }
 
     val isDataChanged = duration != initialDurationStr ||
             notes != initialNotesStr ||
             pricingMode != initialPricingMode ||
             rateOrFeeInput != initialRateOrFeeStr ||
-            isMarkCompleted != initialIsMarkCompleted
+            statusChoice != initialStatusChoice
 
     var showPastWarning by remember { mutableStateOf(false) }
 
@@ -136,7 +158,8 @@ fun LogLessonDialog(
         isMarkAsPaidMode = isMarkAsPaidMode,
         requiresFeePrompt = requiresFeePrompt,
         customFeeStr = customFee,
-        isDataChanged = isDataChanged
+        isDataChanged = isDataChanged,
+        statusChoice = statusChoice
     )
 
     fun resetInputs() {
@@ -145,7 +168,7 @@ fun LogLessonDialog(
         customFee = ""
         pricingMode = lesson.pricingMode
         rateOrFeeInput = lesson.rateOrFee.let { if (it % 1.0 == 0.0) it.toInt().toString() else it.toString() }
-        isMarkCompleted = lesson.isCompleted
+        statusChoice = initialStatusChoice
     }
 
     val onDismissAndReset = {
@@ -159,14 +182,33 @@ fun LogLessonDialog(
             isMarkAsPaidMode -> {
                 onMarkAsPaid?.invoke(duration, customFee)
             }
-            onSave != null -> {
-                onSave(duration, notes, pricingMode, rateOrFeeInput, isMarkCompleted)
+            onSaveStatusAndDetails != null -> {
+                onSaveStatusAndDetails(duration, notes, pricingMode, rateOrFeeInput, statusChoice)
             }
-            isMarkCompleted -> {
-                onComplete?.invoke(duration, notes, pricingMode, rateOrFeeInput)
+            statusChoice == LogLessonStatusChoice.CANCELLED -> {
+                if (onMarkNotDone != null) {
+                    onMarkNotDone(notes)
+                } else if (onSave != null) {
+                    onSave(duration, notes, pricingMode, rateOrFeeInput, false)
+                } else {
+                    onComplete?.invoke(duration, notes, pricingMode, rateOrFeeInput)
+                }
             }
-            else -> {
-                onSaveScheduled?.invoke(duration, notes, pricingMode, rateOrFeeInput)
+            statusChoice == LogLessonStatusChoice.COMPLETED -> {
+                if (onSave != null) {
+                    onSave(duration, notes, pricingMode, rateOrFeeInput, true)
+                } else {
+                    onComplete?.invoke(duration, notes, pricingMode, rateOrFeeInput)
+                }
+            }
+            else -> { // SCHEDULED
+                if (onSave != null) {
+                    onSave(duration, notes, pricingMode, rateOrFeeInput, false)
+                } else if (onSaveScheduled != null) {
+                    onSaveScheduled(duration, notes, pricingMode, rateOrFeeInput)
+                } else {
+                    onComplete?.invoke(duration, notes, pricingMode, rateOrFeeInput)
+                }
             }
         }
     }
@@ -200,61 +242,210 @@ fun LogLessonDialog(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .padding(bottom = 24.dp)
                 .imePadding()
-                .verticalScroll(rememberScrollState()),
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header: Title only
-            Text(
-                text = if (isMarkAsPaidMode) {
-                    tullabStringResource(id = R.string.calendar_lesson_action_mark_as_paid)
-                } else {
-                    tullabStringResource(id = R.string.dashboard_log_lesson_dialog_title)
-                },
-                style = MaterialTheme.typography.titleLarge
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f, fill = false)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Header: Title
+                Text(
+                    text = if (isMarkAsPaidMode) {
+                        tullabStringResource(id = R.string.calendar_lesson_action_mark_as_paid)
+                    } else {
+                        tullabStringResource(id = R.string.dashboard_log_lesson_dialog_title)
+                    },
+                    style = MaterialTheme.typography.titleLarge
+                )
 
-            Text(
-                text = tullabStringResource(id = R.string.dashboard_log_lesson_dialog_date, formattedDate),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+                Text(
+                    text = tullabStringResource(id = R.string.dashboard_log_lesson_dialog_date, formattedDate),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
 
-            // Pricing Type: Toned-down Material 3 SingleChoiceSegmentedButtonRow using secondaryContainer
-            if (!isMarkAsPaidMode) {
-                SingleChoiceSegmentedButtonRow(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    SegmentedButton(
-                        selected = pricingMode == PricingMode.PER_HOUR,
-                        onClick = { pricingMode = PricingMode.PER_HOUR },
-                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-                        colors = SegmentedButtonDefaults.colors(
-                            activeContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            activeContentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
+                // Status: M3 SingleChoiceSegmentedButtonRow
+                if (!isMarkAsPaidMode) {
+                    SingleChoiceSegmentedButtonRow(
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(text = tullabStringResource(id = R.string.pricing_mode_per_hour))
-                    }
-                    SegmentedButton(
-                        selected = pricingMode == PricingMode.FLAT_FEE,
-                        onClick = { pricingMode = PricingMode.FLAT_FEE },
-                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-                        colors = SegmentedButtonDefaults.colors(
-                            activeContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            activeContentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
-                    ) {
-                        Text(text = tullabStringResource(id = R.string.pricing_mode_flat_fee))
+                        SegmentedButton(
+                            selected = statusChoice == LogLessonStatusChoice.SCHEDULED,
+                            onClick = { statusChoice = LogLessonStatusChoice.SCHEDULED },
+                            shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3),
+                            enabled = lesson.status != LessonStatus.PAID
+                        ) {
+                            Text(
+                                text = tullabStringResource(id = R.string.lesson_status_choice_scheduled),
+                                maxLines = 1
+                            )
+                        }
+                        SegmentedButton(
+                            selected = statusChoice == LogLessonStatusChoice.COMPLETED,
+                            onClick = { statusChoice = LogLessonStatusChoice.COMPLETED },
+                            shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3),
+                            enabled = lesson.status != LessonStatus.PAID
+                        ) {
+                            Text(
+                                text = tullabStringResource(id = R.string.lesson_status_choice_completed),
+                                maxLines = 1
+                            )
+                        }
+                        SegmentedButton(
+                            selected = statusChoice == LogLessonStatusChoice.CANCELLED,
+                            onClick = { statusChoice = LogLessonStatusChoice.CANCELLED },
+                            shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3),
+                            enabled = lesson.status != LessonStatus.PAID,
+                            colors = SegmentedButtonDefaults.colors(
+                                activeContainerColor = MaterialTheme.colorScheme.errorContainer,
+                                activeContentColor = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        ) {
+                            Text(
+                                text = tullabStringResource(id = R.string.lesson_status_choice_not_done),
+                                maxLines = 1
+                            )
+                        }
                     }
                 }
-            }
 
-            // Side-by-side fields with shortened labels, hrs suffix, and currency prefix
-            if (isMarkAsPaidMode) {
-                if (requiresFeePrompt) {
+                // Pricing Type: Material 3 SingleChoiceSegmentedButtonRow using secondaryContainer
+                if (!isMarkAsPaidMode) {
+                    SingleChoiceSegmentedButtonRow(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        SegmentedButton(
+                            selected = pricingMode == PricingMode.PER_HOUR,
+                            onClick = { pricingMode = PricingMode.PER_HOUR },
+                            shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                            colors = SegmentedButtonDefaults.colors(
+                                activeContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                activeContentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        ) {
+                            Text(text = tullabStringResource(id = R.string.pricing_mode_per_hour))
+                        }
+                        SegmentedButton(
+                            selected = pricingMode == PricingMode.FLAT_FEE,
+                            onClick = { pricingMode = PricingMode.FLAT_FEE },
+                            shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                            colors = SegmentedButtonDefaults.colors(
+                                activeContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                activeContentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        ) {
+                            Text(text = tullabStringResource(id = R.string.pricing_mode_flat_fee))
+                        }
+                    }
+                }
+
+                // Side-by-side fields with shortened labels, hrs suffix, and currency prefix
+                if (isMarkAsPaidMode) {
+                    if (requiresFeePrompt) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            OutlinedTextField(
+                                value = duration,
+                                onValueChange = { newValue ->
+                                    val normalized = newValue.replace(',', '.')
+                                    var decimalAdded = false
+                                    val sanitized = buildString {
+                                        normalized.forEach { char ->
+                                            when {
+                                                char.isDigit() -> append(char)
+                                                char == '.' && !decimalAdded -> {
+                                                    append(char)
+                                                    decimalAdded = true
+                                                }
+                                            }
+                                        }
+                                    }
+                                    duration = sanitized
+                                },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp),
+                                label = { Text(text = tullabStringResource(id = R.string.dashboard_log_lesson_duration_short_label)) },
+                                suffix = { Text(text = tullabStringResource(id = R.string.dashboard_log_lesson_duration_hrs_suffix)) },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                singleLine = true,
+                                enabled = lesson.status != LessonStatus.PAID,
+                                supportingText = if (lesson.status == LessonStatus.PAID) {
+                                    { Text(text = tullabStringResource(id = R.string.calendar_lesson_duration_locked_helper)) }
+                                } else null
+                            )
+
+                            OutlinedTextField(
+                                value = customFee,
+                                onValueChange = { newValue ->
+                                    val normalized = newValue.replace(',', '.')
+                                    var decimalAdded = false
+                                    val sanitized = buildString {
+                                        normalized.forEach { char ->
+                                            when {
+                                                char.isDigit() -> append(char)
+                                                char == '.' && !decimalAdded -> {
+                                                    append(char)
+                                                    decimalAdded = true
+                                                }
+                                            }
+                                        }
+                                    }
+                                    customFee = sanitized
+                                },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp),
+                                label = { Text(text = tullabStringResource(id = R.string.log_lesson_fee_label)) },
+                                prefix = { Text(text = currencySymbol) },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                singleLine = true
+                            )
+                        }
+                    } else {
+                        OutlinedTextField(
+                            value = duration,
+                            onValueChange = { newValue ->
+                                val normalized = newValue.replace(',', '.')
+                                var decimalAdded = false
+                                val sanitized = buildString {
+                                    normalized.forEach { char ->
+                                        when {
+                                            char.isDigit() -> append(char)
+                                            char == '.' && !decimalAdded -> {
+                                                append(char)
+                                                decimalAdded = true
+                                            }
+                                        }
+                                    }
+                                }
+                                duration = sanitized
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            label = { Text(text = tullabStringResource(id = R.string.dashboard_log_lesson_duration_short_label)) },
+                            suffix = { Text(text = tullabStringResource(id = R.string.dashboard_log_lesson_duration_hrs_suffix)) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            singleLine = true,
+                            enabled = lesson.status != LessonStatus.PAID,
+                            supportingText = if (lesson.status == LessonStatus.PAID) {
+                                { Text(text = tullabStringResource(id = R.string.calendar_lesson_duration_locked_helper)) }
+                            } else null
+                        )
+                    }
+                } else {
+                    val rateLabel = if (pricingMode == PricingMode.PER_HOUR) {
+                        tullabStringResource(id = R.string.dashboard_log_lesson_hourly_rate_short_label)
+                    } else {
+                        tullabStringResource(id = R.string.log_lesson_fee_label)
+                    }
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -290,7 +481,7 @@ fun LogLessonDialog(
                         )
 
                         OutlinedTextField(
-                            value = customFee,
+                            value = rateOrFeeInput,
                             onValueChange = { newValue ->
                                 val normalized = newValue.replace(',', '.')
                                 var decimalAdded = false
@@ -305,174 +496,55 @@ fun LogLessonDialog(
                                         }
                                     }
                                 }
-                                customFee = sanitized
+                                rateOrFeeInput = sanitized
                             },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
-                            label = { Text(text = tullabStringResource(id = R.string.log_lesson_fee_label)) },
+                            label = { Text(text = rateLabel) },
                             prefix = { Text(text = currencySymbol) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                            singleLine = true
+                            singleLine = true,
+                            enabled = lesson.status != LessonStatus.PAID
                         )
                     }
-                } else {
+                }
+
+                // Notes field
+                if (!isMarkAsPaidMode) {
                     OutlinedTextField(
-                        value = duration,
-                        onValueChange = { newValue ->
-                            val normalized = newValue.replace(',', '.')
-                            var decimalAdded = false
-                            val sanitized = buildString {
-                                normalized.forEach { char ->
-                                    when {
-                                        char.isDigit() -> append(char)
-                                        char == '.' && !decimalAdded -> {
-                                            append(char)
-                                            decimalAdded = true
-                                        }
-                                    }
-                                }
-                            }
-                            duration = sanitized
-                        },
+                        value = notes,
+                        onValueChange = { notes = it },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
-                        label = { Text(text = tullabStringResource(id = R.string.dashboard_log_lesson_duration_short_label)) },
-                        suffix = { Text(text = tullabStringResource(id = R.string.dashboard_log_lesson_duration_hrs_suffix)) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        singleLine = true,
-                        enabled = lesson.status != LessonStatus.PAID,
-                        supportingText = if (lesson.status == LessonStatus.PAID) {
-                            { Text(text = tullabStringResource(id = R.string.calendar_lesson_duration_locked_helper)) }
-                        } else null
+                        label = { Text(text = tullabStringResource(id = R.string.dashboard_log_lesson_notes_label)) },
+                        singleLine = false,
+                        minLines = 2,
+                        maxLines = 4
                     )
                 }
-            } else {
-                val rateLabel = if (pricingMode == PricingMode.PER_HOUR) {
-                    tullabStringResource(id = R.string.dashboard_log_lesson_hourly_rate_short_label)
-                } else {
-                    tullabStringResource(id = R.string.log_lesson_fee_label)
-                }
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    OutlinedTextField(
-                        value = duration,
-                        onValueChange = { newValue ->
-                            val normalized = newValue.replace(',', '.')
-                            var decimalAdded = false
-                            val sanitized = buildString {
-                                normalized.forEach { char ->
-                                    when {
-                                        char.isDigit() -> append(char)
-                                        char == '.' && !decimalAdded -> {
-                                            append(char)
-                                            decimalAdded = true
-                                        }
-                                    }
-                                }
-                            }
-                            duration = sanitized
-                        },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
-                        label = { Text(text = tullabStringResource(id = R.string.dashboard_log_lesson_duration_short_label)) },
-                        suffix = { Text(text = tullabStringResource(id = R.string.dashboard_log_lesson_duration_hrs_suffix)) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        singleLine = true,
-                        enabled = lesson.status != LessonStatus.PAID,
-                        supportingText = if (lesson.status == LessonStatus.PAID) {
-                            { Text(text = tullabStringResource(id = R.string.calendar_lesson_duration_locked_helper)) }
-                        } else null
+                // Total fee calculation (for Mark as Paid)
+                if (isMarkAsPaidMode) {
+                    val calculatedFee = calculateDialogTotalFee(
+                        durationStr = duration,
+                        rate = lesson.rateOrFee,
+                        pricingMode = pricingMode,
+                        requiresFeePrompt = requiresFeePrompt,
+                        customFeeStr = customFee
                     )
 
-                    OutlinedTextField(
-                        value = rateOrFeeInput,
-                        onValueChange = { newValue ->
-                            val normalized = newValue.replace(',', '.')
-                            var decimalAdded = false
-                            val sanitized = buildString {
-                                normalized.forEach { char ->
-                                    when {
-                                        char.isDigit() -> append(char)
-                                        char == '.' && !decimalAdded -> {
-                                            append(char)
-                                            decimalAdded = true
-                                        }
-                                    }
-                                }
-                            }
-                            rateOrFeeInput = sanitized
-                        },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
-                        label = { Text(text = rateLabel) },
-                        prefix = { Text(text = currencySymbol) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        singleLine = true,
-                        enabled = lesson.status != LessonStatus.PAID
-                    )
-                }
-            }
-
-            // Dedicated "Mark as completed" Switch placed right above the notes field
-            if (!isMarkAsPaidMode) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
                     Text(
-                        text = tullabStringResource(id = R.string.dashboard_log_lesson_mark_completed_switch),
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                    Switch(
-                        checked = isMarkCompleted,
-                        onCheckedChange = { isMarkCompleted = it },
-                        enabled = lesson.status != LessonStatus.PAID
+                        text = tullabStringResource(
+                            id = R.string.calendar_lesson_details_total,
+                            formatCurrency(calculatedFee, currencyCode)
+                        ),
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
 
-            // Notes field
-            if (!isMarkAsPaidMode) {
-                OutlinedTextField(
-                    value = notes,
-                    onValueChange = { notes = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    label = { Text(text = tullabStringResource(id = R.string.dashboard_log_lesson_notes_label)) },
-                    singleLine = false,
-                    minLines = 2,
-                    maxLines = 4
-                )
-            }
-
-            // Total fee calculation (for Mark as Paid)
-            if (isMarkAsPaidMode) {
-                val calculatedFee = calculateDialogTotalFee(
-                    durationStr = duration,
-                    rate = lesson.rateOrFee,
-                    pricingMode = pricingMode,
-                    requiresFeePrompt = requiresFeePrompt,
-                    customFeeStr = customFee
-                )
-
-                Text(
-                    text = tullabStringResource(
-                        id = R.string.calendar_lesson_details_total,
-                        formatCurrency(calculatedFee, currencyCode)
-                    ),
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            // Spacious single row: subtle Cancel (left), discreet red Not Done (center), solid primary Save button (right)
-            // Any unpaid lesson (past, present, or scheduled future) can be legitimately cancelled via "Not Done"
-            val showNotDone = !isMarkAsPaidMode && lesson.status != LessonStatus.PAID
-
+            // Keyboard-protected bottom row with Cancel and Save
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -482,43 +554,21 @@ fun LogLessonDialog(
             ) {
                 TextButton(
                     onClick = onDismissAndReset,
-                    contentPadding = PaddingValues(horizontal = 8.dp)
+                    contentPadding = PaddingValues(horizontal = 16.dp)
                 ) {
                     Text(text = tullabStringResource(id = R.string.dialog_action_cancel))
                 }
 
-                if (showNotDone) {
-                    TextButton(
-                        onClick = {
-                            showPastWarning = false
-                            if (onMarkNotDone != null) {
-                                onMarkNotDone(notes)
-                            } else {
-                                onDismiss()
-                            }
-                            resetInputs()
-                        },
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.error
-                        ),
-                        contentPadding = PaddingValues(horizontal = 8.dp)
-                    ) {
-                        Text(text = tullabStringResource(id = R.string.dashboard_log_lesson_not_done_button))
-                    }
-                } else {
-                    Spacer(modifier = Modifier.width(1.dp))
-                }
-
                 Button(
                     onClick = {
-                        if (!isMarkAsPaidMode && isPastLesson && !isMarkCompleted) {
+                        if (!isMarkAsPaidMode && isPastLesson && statusChoice == LogLessonStatusChoice.SCHEDULED) {
                             showPastWarning = true
                         } else {
                             performSave()
                         }
                     },
                     enabled = isSaveEnabled,
-                    contentPadding = PaddingValues(horizontal = 16.dp)
+                    contentPadding = PaddingValues(horizontal = 24.dp)
                 ) {
                     Text(
                         text = if (isMarkAsPaidMode) {
@@ -560,8 +610,12 @@ fun isDialogSaveEnabled(
     isMarkAsPaidMode: Boolean = false,
     requiresFeePrompt: Boolean = false,
     customFeeStr: String = "",
-    isDataChanged: Boolean = true
+    isDataChanged: Boolean = true,
+    statusChoice: LogLessonStatusChoice = LogLessonStatusChoice.COMPLETED
 ): Boolean {
+    if (!isDataChanged) return false
+    if (statusChoice == LogLessonStatusChoice.CANCELLED) return true
+
     val parsedDuration = parseDurationDecimal(durationStr)
     val isDurationEntered = durationStr.trim().isNotEmpty()
     val isDurationValid = parsedDuration != null && parsedDuration > 0.0
@@ -570,7 +624,7 @@ fun isDialogSaveEnabled(
 
     return when {
         isMarkAsPaidMode -> isDurationValid && isFeeValid
-        pricingMode == PricingMode.PER_HOUR -> isDurationValid && isRateOrFeeValid && isDataChanged
-        else -> (!isDurationEntered || isDurationValid) && isRateOrFeeValid && isDataChanged
+        pricingMode == PricingMode.PER_HOUR -> isDurationValid && isRateOrFeeValid
+        else -> (!isDurationEntered || isDurationValid) && isRateOrFeeValid
     }
 }

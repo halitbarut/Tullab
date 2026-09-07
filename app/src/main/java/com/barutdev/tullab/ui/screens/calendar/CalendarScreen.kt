@@ -20,12 +20,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.Groups
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -38,8 +40,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -72,6 +77,7 @@ import com.barutdev.tullab.ui.theme.StatusRed
 import com.barutdev.tullab.ui.theme.StatusYellow
 import com.barutdev.tullab.ui.theme.StatusOrange
 import com.barutdev.tullab.ui.theme.StatusOrangeContainer
+import com.barutdev.tullab.ui.theme.StatusRedContainer
 import com.barutdev.tullab.ui.theme.HomeworkTeal
 import com.barutdev.tullab.ui.theme.HomeworkTealContainer
 import com.barutdev.tullab.ui.theme.HomeworkMagenta
@@ -82,6 +88,8 @@ import com.barutdev.tullab.ui.theme.TullabAnimationSpecs
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.material3.Surface
 import com.barutdev.tullab.ui.components.AnimatedListItem
+import com.barutdev.tullab.ui.components.CalendarSpeedDialFab
+import com.barutdev.tullab.ui.screens.calendar.components.CalendarLegendBottomSheet
 import java.text.NumberFormat
 import java.time.DayOfWeek
 import java.time.Instant
@@ -100,6 +108,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.outlined.Assignment
 import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Event
 import androidx.compose.material.icons.outlined.PlaylistAdd
 
 
@@ -239,64 +249,73 @@ fun CalendarScreen(
             actions = emptyList()
         )
     }
-    val fabConfig = remember(
-        selectedDate,
-        addLessonDescription,
-        containerColor,
-        contentColor,
-        scheduledMessage,
-        coroutineScope,
-        viewModel,
-        zoneId,
-        snackbarHostState
-    ) {
-        FabConfig(
-            icon = Icons.Filled.Add,
-            contentDescription = addLessonDescription,
-            onClick = {
-                val epochMillis = selectedDate
-                    .atStartOfDay(zoneId)
-                    .toInstant()
-                    .toEpochMilli()
-                coroutineScope.launch {
-                    viewModel.saveLesson(epochMillis)
-                    snackbarHostState.showSnackbar(message = scheduledMessage)
-                }
-            },
-            containerColor = containerColor,
-            contentColor = contentColor
-        )
-    }
     ScreenScaffoldConfig(
         topBarConfig = topBarConfig,
-        fabConfig = fabConfig
+        fabConfig = null
     )
 
-    CalendarScreenContent(
-        modifier = modifier.fillMaxSize(),
-        currentMonth = currentMonth,
-        selectedDate = selectedDate,
-        lessons = lessons,
-        homework = homework,
-        currencyCode = currencyCode,
-        onPreviousMonth = viewModel::onPreviousMonth,
-        onNextMonth = viewModel::onNextMonth,
-        onSelectDate = viewModel::onSelectDate,
-        onLogLessonClick = viewModel::onLogLessonClicked,
-        onLessonMarkAsPaidClick = viewModel::onMarkLessonAsPaidClicked,
-        onRevertPaymentClick = viewModel::onRevertLessonPaymentClicked,
-        onToggleHomeworkStatus = viewModel::toggleHomeworkStatus,
-        onHomeworkDetailsClick = { homework ->
-            viewModel.studentId?.let { studentId ->
-                onNavigateToHomework(studentId, homework.id)
+    Box(modifier = modifier.fillMaxSize()) {
+        CalendarScreenContent(
+            modifier = Modifier.fillMaxSize(),
+            currentMonth = currentMonth,
+            selectedDate = selectedDate,
+            lessons = lessons,
+            homework = homework,
+            currencyCode = currencyCode,
+            onPreviousMonth = viewModel::onPreviousMonth,
+            onNextMonth = viewModel::onNextMonth,
+            onSelectDate = viewModel::onSelectDate,
+            onLogLessonClick = viewModel::onLogLessonClicked,
+            onLessonMarkAsPaidClick = viewModel::onMarkLessonAsPaidClicked,
+            onRevertPaymentClick = viewModel::onRevertLessonPaymentClicked,
+            onToggleHomeworkStatus = viewModel::toggleHomeworkStatus,
+            onHomeworkDetailsClick = { homework ->
+                viewModel.studentId?.let { studentId ->
+                    onNavigateToHomework(studentId, homework.id)
+                }
             }
-        },
-        onNavigateToBulkSchedule = {
-            viewModel.studentId?.let { studentId ->
-                onNavigateToBulkSchedule(studentId)
+        )
+
+        val selectedDateLesson = remember(selectedDate, lessons, zoneId) {
+            lessons.firstOrNull { lesson ->
+                Instant.ofEpochMilli(lesson.date)
+                    .atZone(zoneId)
+                    .toLocalDate() == selectedDate
             }
         }
-    )
+        val hasLessonOnSelectedDate = selectedDateLesson != null
+        val editLessonLabel = tullabStringResource(id = R.string.calendar_speed_dial_edit_lesson)
+        val scheduleForDateLabel = tullabStringResource(id = R.string.calendar_speed_dial_schedule_for_date)
+        val dateActionLabel = if (hasLessonOnSelectedDate) editLessonLabel else scheduleForDateLabel
+        val dateActionIcon = if (hasLessonOnSelectedDate) Icons.Outlined.Edit else Icons.Outlined.Event
+        val isSnackbarVisible = snackbarHostState.currentSnackbarData != null
+
+        CalendarSpeedDialFab(
+            onScheduleForDateClick = {
+                if (hasLessonOnSelectedDate && selectedDateLesson != null) {
+                    viewModel.onLogLessonClicked(selectedDateLesson)
+                } else {
+                    val epochMillis = selectedDate
+                        .atStartOfDay(zoneId)
+                        .toInstant()
+                        .toEpochMilli()
+                    coroutineScope.launch {
+                        viewModel.saveLesson(epochMillis)
+                        snackbarHostState.showSnackbar(message = scheduledMessage)
+                    }
+                }
+            },
+            onBulkScheduleClick = {
+                viewModel.studentId?.let { studentId ->
+                    onNavigateToBulkSchedule(studentId)
+                }
+            },
+            dateActionLabel = dateActionLabel,
+            dateActionIcon = dateActionIcon,
+            snackbarVisible = isSnackbarVisible,
+            modifier = Modifier.fillMaxSize()
+        )
+    }
 }
 
 @Composable
@@ -315,7 +334,7 @@ private fun CalendarScreenContent(
     onRevertPaymentClick: (Lesson) -> Unit,
     onToggleHomeworkStatus: (Homework) -> Unit,
     onHomeworkDetailsClick: (Homework) -> Unit,
-    onNavigateToBulkSchedule: () -> Unit
+    onNavigateToBulkSchedule: (() -> Unit)? = null
 ) {
     val currentLocale = LocalLocale.current
     val zoneId = remember { ZoneId.systemDefault() }
@@ -342,6 +361,14 @@ private fun CalendarScreenContent(
         homeworkByDate[selectedDate].orEmpty()
     }
 
+    var showLegendBottomSheet by rememberSaveable { mutableStateOf(false) }
+
+    if (showLegendBottomSheet) {
+        CalendarLegendBottomSheet(
+            onDismiss = { showLegendBottomSheet = false }
+        )
+    }
+
     Column(
         modifier = modifier
             .verticalScroll(rememberScrollState())
@@ -356,22 +383,13 @@ private fun CalendarScreenContent(
                 onPreviousMonth = onPreviousMonth,
                 onNextMonth = onNextMonth,
                 onDaySelected = onSelectDate,
+                onOpenLegend = { showLegendBottomSheet = true },
                 lessonsByDate = lessonsByDate,
                 homeworkByDate = homeworkByDate,
                 locale = currentLocale
             )
         }
         AnimatedListItem(index = 1) {
-            androidx.compose.material3.FilledTonalButton(
-                onClick = onNavigateToBulkSchedule,
-                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
-            ) {
-                Icon(androidx.compose.material.icons.Icons.Outlined.DateRange, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text(tullabStringResource(R.string.bulk_schedule_title))
-            }
-        }
-        AnimatedListItem(index = 2) {
             DayDetailsSection(
                 selectedDate = selectedDate,
                 lessons = selectedDateLessons,
@@ -399,6 +417,7 @@ private fun MonthlyCalendarView(
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
     onDaySelected: (LocalDate) -> Unit,
+    onOpenLegend: () -> Unit,
     lessonsByDate: Map<LocalDate, List<Lesson>>,
     homeworkByDate: Map<LocalDate, List<Homework>>,
     locale: Locale
@@ -437,7 +456,8 @@ private fun MonthlyCalendarView(
         CalendarHeader(
             monthTitle = monthTitle,
             onPreviousMonth = onPreviousMonth,
-            onNextMonth = onNextMonth
+            onNextMonth = onNextMonth,
+            onOpenLegend = onOpenLegend
         )
         Spacer(modifier = Modifier.height(16.dp))
         DaysOfWeekRow(daysOfWeek = daysOfWeek, locale = locale)
@@ -485,7 +505,8 @@ private fun MonthlyCalendarView(
 private fun CalendarHeader(
     monthTitle: String,
     onPreviousMonth: () -> Unit,
-    onNextMonth: () -> Unit
+    onNextMonth: () -> Unit,
+    onOpenLegend: () -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -497,12 +518,29 @@ private fun CalendarHeader(
                 contentDescription = tullabStringResource(id = R.string.calendar_previous_month_content_description)
             )
         }
-        Text(
-            text = monthTitle,
-            style = MaterialTheme.typography.titleMedium,
+        Row(
             modifier = Modifier.weight(1f),
-            textAlign = TextAlign.Center
-        )
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = monthTitle,
+                style = MaterialTheme.typography.titleMedium,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            IconButton(
+                onClick = onOpenLegend,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Info,
+                    contentDescription = tullabStringResource(id = R.string.calendar_legend_title),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
         IconButton(onClick = onNextMonth) {
             Icon(
                 imageVector = Icons.Outlined.ChevronRight,
@@ -613,17 +651,23 @@ private fun CalendarDayCell(
                         Box(
                             modifier = Modifier
                                 .size(5.dp)
-                                .clip(CircleShape)
+                                .clip(RoundedCornerShape(1.5.dp))
                                 .background(dayIndicators.homeworkColor)
                         )
                     }
-                } else {
-                    val singleColor = dayIndicators.lessonColor ?: dayIndicators.homeworkColor!!
+                } else if (dayIndicators.lessonColor != null) {
                     Box(
                         modifier = Modifier
                             .size(6.dp)
                             .clip(CircleShape)
-                            .background(singleColor)
+                            .background(dayIndicators.lessonColor)
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(dayIndicators.homeworkColor!!)
                     )
                 }
             }
@@ -746,10 +790,10 @@ private fun HomeworkDetailCard(
     }
     
     val statusColor = when (effectiveStatus) {
-        HomeworkStatus.COMPLETED -> HomeworkTeal
-        HomeworkStatus.OVERDUE -> HomeworkMagenta
+        HomeworkStatus.COMPLETED -> StatusGreen
+        HomeworkStatus.OVERDUE -> StatusRed
         HomeworkStatus.CANCELLED -> HomeworkGray
-        else -> StatusOrange
+        else -> StatusBlue
     }
 
     val textDecoration = if (effectiveStatus == HomeworkStatus.CANCELLED) TextDecoration.LineThrough else TextDecoration.None
@@ -792,12 +836,12 @@ private fun HomeworkDetailCard(
                 )
                 if (effectiveStatus == HomeworkStatus.OVERDUE) {
                     Surface(
-                        color = HomeworkMagentaContainer,
+                        color = StatusRedContainer,
                         shape = MaterialTheme.shapes.small
                     ) {
                         Text(
                             text = tullabStringResource(id = R.string.homework_badge_overdue),
-                            color = HomeworkMagenta,
+                            color = StatusRed,
                             style = MaterialTheme.typography.labelSmall,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                         )
@@ -1041,7 +1085,7 @@ private fun lessonStatusDisplay(
         } else {
             StatusBlue
         }
-        LessonStatus.CANCELLED -> StatusRed
+        LessonStatus.CANCELLED -> HomeworkGray
     }
     return LessonStatusDisplay(
         text = tullabStringResource(id = statusTextRes),
