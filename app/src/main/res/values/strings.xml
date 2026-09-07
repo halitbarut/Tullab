@@ -349,6 +349,11 @@
         <item quantity="other">%1$d lessons scheduled</item>
     </plurals>
 
+    <plurals name="duration_hours">
+        <item quantity="one">%1$s hour</item>
+        <item quantity="other">%1$s hours</item>
+    </plurals>
+
     <string name="bulk_schedule_customize_day_times">Customize Day Times</string>
     <string name="bulk_schedule_default_start_time">Default Start Time</string>
     <string name="bulk_schedule_pricing_override">Pricing Override</string>
