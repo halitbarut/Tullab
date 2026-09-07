@@ -290,8 +290,64 @@ class DashboardViewModel @Inject constructor(
 
     fun onLogLessonComplete(duration: String, notes: String, pricingMode: com.barutdev.tullab.domain.model.PricingMode, rateOrFeeInput: String) {
         val lessonId = selectedLessonForLogging.value?.id ?: return
+        
         viewModelScope.launch {
             completeLesson(lessonId, duration, notes, pricingMode, rateOrFeeInput)
+            clearLogLessonSelection()
+        }
+    }
+
+    fun onSaveLessonDetails(
+        lesson: Lesson,
+        duration: String,
+        notes: String,
+        pricingMode: com.barutdev.tullab.domain.model.PricingMode,
+        rateOrFee: String,
+        isCompleted: Boolean
+    ) {
+        viewModelScope.launch {
+            val normalizedDuration = duration.trim().replace(',', '.')
+            val durationValue = normalizedDuration.toDoubleOrNull()
+            val normalizedRate = rateOrFee.trim().replace(',', '.')
+            val rateValue = normalizedRate.toDoubleOrNull() ?: lesson.rateOrFee
+
+            val newStatus = when {
+                lesson.status == LessonStatus.PAID -> LessonStatus.PAID
+                isCompleted -> LessonStatus.COMPLETED
+                else -> LessonStatus.SCHEDULED
+            }
+
+            val updatedLesson = lesson.copy(
+                status = newStatus,
+                durationInHours = durationValue,
+                notes = notes.trim().ifEmpty { null },
+                pricingMode = pricingMode,
+                rateOrFee = rateValue
+            )
+            lessonRepository.updateLesson(updatedLesson)
+            if (newStatus == LessonStatus.COMPLETED) {
+                cancelNotificationAlarmsUseCase(lesson.id)
+            }
+            clearLogLessonSelection()
+        }
+    }
+
+    fun onSaveScheduledLesson(lesson: Lesson, duration: String, notes: String, pricingMode: com.barutdev.tullab.domain.model.PricingMode, rateOrFee: String) {
+        viewModelScope.launch {
+            val normalizedDuration = duration.trim().replace(',', '.')
+            val durationValue = normalizedDuration.toDoubleOrNull()
+            
+            val normalizedRate = rateOrFee.trim().replace(',', '.')
+            val rateValue = normalizedRate.toDoubleOrNull() ?: lesson.rateOrFee
+
+            val updatedLesson = lesson.copy(
+                durationInHours = durationValue,
+                notes = notes.trim().ifEmpty { null },
+                pricingMode = pricingMode,
+                rateOrFee = rateValue
+            )
+            lessonRepository.updateLesson(updatedLesson)
+            clearLogLessonSelection()
         }
     }
 

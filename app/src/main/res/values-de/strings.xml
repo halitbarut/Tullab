@@ -87,6 +87,7 @@
     <string name="settings_currency_label">Währung</string>
     <string name="settings_currency_content_description">Währung ändern</string>
     <string name="settings_currency_dialog_title">Währung wählen</string>
+    <string name="settings_currency_search_hint">Währung suchen</string>
     <string name="settings_currency_option_usd">US-Dollar (USD)</string>
     <string name="settings_currency_option_eur">Euro (EUR)</string>
     <string name="settings_currency_option_try">Türkische Lira (TRY)</string>
@@ -155,7 +156,7 @@
     <string name="dashboard_student_label">Schüler: %1$s</string>
     <string name="dashboard_payment_cycle_title">Aktueller Zahlungszeitraum</string>
     <string name="dashboard_payment_amount_value">%1$s</string>
-    <string name="dashboard_payment_rate_info">%1$s Stunden x %2$s/Stunde</string>
+    <string name="dashboard_payment_rate_info">%1$s x %2$s/Stunde</string>
     <string name="dashboard_payment_since_last_with_date">Seit der letzten Zahlung am %1$s</string>
     <string name="dashboard_payment_since_last_unknown">Bisher keine Zahlungen erfasst.</string>
     <string name="dashboard_payment_mark_paid">Als bezahlt markieren</string>
@@ -169,14 +170,18 @@
     <string name="dashboard_log_past_lessons_hint">Tippe auf eine Stunde, um Details zu protokollieren.</string>
     <string name="dashboard_completed_lessons_title">Abgeschlossene Stunden, die bezahlt werden müssen</string>
     <string name="dashboard_completed_lessons_empty">Keine abgeschlossenen Stunden, die auf Zahlung warten.</string>
-    <string name="dashboard_completed_lessons_duration">Dauer: %1$s Stunden</string>
+    <string name="dashboard_completed_lessons_duration">Dauer: %1$s</string>
     <string name="dashboard_completed_lessons_notes">Notizen: %1$s</string>
-    <string name="dashboard_log_lesson_dialog_title">Stunde protokollieren</string>
-    <string name="dashboard_log_lesson_dialog_date">Unterricht am %1$s</string>
+    <string name="dashboard_log_lesson_dialog_title">Stunde erfassen</string>
+    <string name="dashboard_log_lesson_dialog_date">Stunde am %1$s</string>
     <string name="dashboard_log_lesson_duration_label">Dauer (in Stunden)</string>
     <string name="dashboard_log_lesson_notes_label">Notizen</string>
     <string name="dashboard_log_lesson_complete_button">Stunde abschließen</string>
-    <string name="dashboard_log_lesson_mark_not_done_button">Als nicht stattgefunden markieren</string>
+    <string name="dashboard_log_lesson_save_button">Speichern</string>
+    <string name="dashboard_log_lesson_mark_not_done_button">Als nicht durchgeführt markieren</string>
+    <string name="dashboard_log_lesson_save_past_warning_title">Vergangene Stunde bearbeiten</string>
+    <string name="dashboard_log_lesson_save_past_warning_message">Sie speichern Änderungen an einer vergangenen Stunde, ohne sie als abgeschlossen zu markieren. Möchten Sie fortfahren?</string>
+    <string name="dashboard_log_lesson_save_past_warning_confirm">Änderungen speichern</string>
     <string name="dashboard_settings_icon_description">Einstellungen öffnen</string>
     <string name="dashboard_edit_student_content_description">Schülerprofil bearbeiten</string>
     <string name="top_bar_navigate_to_student_list_content_description">Zur Schülerliste wechseln</string>
@@ -203,7 +208,7 @@
     <string name="calendar_lesson_details_title">Stunde am %1$s</string>
     <string name="calendar_lesson_details_status">Status: %1$s</string>
     <string name="calendar_lesson_details_paid_on">Bezahlt am %1$s</string>
-    <string name="calendar_lesson_details_duration">Dauer: %1$s Stunden</string>
+    <string name="calendar_lesson_details_duration">Dauer: %1$s</string>
     <string name="calendar_lesson_details_notes">Notizen: %1$s</string>
     <string name="calendar_lesson_action_edit">Bearbeiten</string>
     <string name="calendar_lesson_action_log_details">Details protokollieren</string>
@@ -344,6 +349,11 @@
         <item quantity="other">%1$d Lektionen geplant</item>
     </plurals>
 
+    <plurals name="duration_hours">
+        <item quantity="one">%1$s Stunde</item>
+        <item quantity="other">%1$s Stunden</item>
+    </plurals>
+
     <string name="bulk_schedule_customize_day_times">Tageszeiten anpassen</string>
     <string name="bulk_schedule_default_start_time">Standard-Startzeit</string>
     <string name="bulk_schedule_pricing_override">Preisüberschreibung</string>
@@ -356,5 +366,11 @@
     <string name="bulk_schedule_after">Nach </string>
     <string name="bulk_schedule_occurrences">Wiederholungen</string>
     <string name="bulk_schedule_occurrences_suffix"> Wiederholungen</string>
+
+    <string name="dashboard_log_lesson_duration_short_label">Dauer</string>
+    <string name="dashboard_log_lesson_duration_hrs_suffix">Std.</string>
+    <string name="dashboard_log_lesson_hourly_rate_short_label">Stundensatz</string>
+    <string name="dashboard_log_lesson_mark_completed_switch">Als abgeschlossen markieren</string>
+    <string name="dashboard_log_lesson_not_done_button">Nicht erledigt</string>
 
 </resources>

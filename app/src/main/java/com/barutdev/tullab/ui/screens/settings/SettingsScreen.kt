@@ -273,10 +273,15 @@ fun SettingsScreen(
         )
     }
 
+    val filteredCurrencies by viewModel.filteredCurrencies.collectAsStateWithLifecycle()
+    val currencySearchQuery by viewModel.currencySearchQuery.collectAsStateWithLifecycle()
+
     if (isCurrencyDialogVisible) {
         CurrencySelectionDialog(
             currentCurrency = userPreferences.currencyCode,
-            availableCurrencies = viewModel.availableCurrencies,
+            availableCurrencies = filteredCurrencies,
+            searchQuery = currencySearchQuery,
+            onSearchQueryChange = viewModel::updateCurrencySearchQuery,
             onCurrencySelected = viewModel::updateCurrency,
             onDismiss = viewModel::dismissCurrencyDialog
         )
@@ -369,7 +374,7 @@ fun SettingsScreen(
                     icon = Icons.Outlined.Sell,
                     iconContentDescription = tullabStringResource(id = R.string.settings_currency_content_description),
                     title = tullabStringResource(id = R.string.settings_currency_label),
-                    value = tullabStringResource(id = currencyLabelRes(userPreferences.currencyCode)),
+                    value = "${java.util.Currency.getInstance(userPreferences.currencyCode).displayName} (${userPreferences.currencyCode})",
                     onClick = viewModel::showCurrencyDialog
                 )
             }
@@ -744,7 +749,9 @@ private fun ResetConfirmationDialog(
 @Composable
 private fun CurrencySelectionDialog(
     currentCurrency: String,
-    availableCurrencies: List<String>,
+    availableCurrencies: List<com.barutdev.tullab.domain.model.CurrencyOption>,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
     onCurrencySelected: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -755,29 +762,46 @@ private fun CurrencySelectionDialog(
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                availableCurrencies.forEach { currencyCode ->
-                    val label = tullabStringResource(id = currencyLabelRes(currencyCode))
-                    val selected = currencyCode == currentCurrency
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(MaterialTheme.shapes.medium)
-                            .clickable(
-                                role = Role.RadioButton,
-                                onClick = { onCurrencySelected(currencyCode) }
+                androidx.compose.material3.OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = onSearchQueryChange,
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text(tullabStringResource(id = R.string.settings_currency_search_hint)) },
+                    leadingIcon = { Icon(Icons.Outlined.Language, contentDescription = null) },
+                    singleLine = true
+                )
+                
+                LazyColumn(
+                    modifier = Modifier.weight(1f, fill = false),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(
+                        count = availableCurrencies.size,
+                        key = { availableCurrencies[it].code }
+                    ) { index ->
+                        val currencyOption = availableCurrencies[index]
+                        val selected = currencyOption.code == currentCurrency
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(MaterialTheme.shapes.medium)
+                                .clickable(
+                                    role = Role.RadioButton,
+                                    onClick = { onCurrencySelected(currencyOption.code) }
+                                )
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            androidx.compose.material3.RadioButton(
+                                selected = selected,
+                                onClick = null
                             )
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        androidx.compose.material3.RadioButton(
-                            selected = selected,
-                            onClick = null
-                        )
-                        Text(
-                            text = label,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(start = 8.dp)
-                        )
+                            Text(
+                                text = currencyOption.displayName,
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -893,14 +917,6 @@ private fun languageLabelRes(languageCode: String): Int = when (languageCode.low
     else -> R.string.settings_language_option_en
 }
 
-@androidx.annotation.StringRes
-private fun currencyLabelRes(currencyCode: String): Int = when (currencyCode.uppercase(Locale.ROOT)) {
-    "USD" -> R.string.settings_currency_option_usd
-    "EUR" -> R.string.settings_currency_option_eur
-    "TRY" -> R.string.settings_currency_option_try
-    else -> R.string.settings_currency_option_usd
-}
-
 @Preview(showBackground = true)
 @Composable
 private fun SettingsScreenPreview() {
@@ -958,7 +974,7 @@ private fun SettingsPreviewContent(preferences: UserPreferences) {
                         icon = Icons.Outlined.Sell,
                         iconContentDescription = tullabStringResource(id = R.string.settings_currency_content_description),
                         title = tullabStringResource(id = R.string.settings_currency_label),
-                        value = tullabStringResource(id = currencyLabelRes(preferences.currencyCode)),
+                        value = "${java.util.Currency.getInstance(preferences.currencyCode).displayName} (${preferences.currencyCode})",
                         onClick = {}
                     )
                 }

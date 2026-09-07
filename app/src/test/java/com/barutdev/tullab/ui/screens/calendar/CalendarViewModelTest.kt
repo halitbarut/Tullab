@@ -268,4 +268,83 @@ class CalendarViewModelTest {
         coVerify { undoBulkLessonsUseCase(session) }
         assertEquals(null, viewModel.batchUndoSession.value)
     }
+
+    @Test
+    fun `onSaveLessonDetails uncompletes completed unpaid lesson and persists duration`() = runTest {
+        val completedLesson = Lesson(
+            id = 10,
+            studentId = 1,
+            date = 1000L,
+            status = LessonStatus.COMPLETED,
+            durationInHours = 1.0,
+            notes = "Old note",
+            pricingMode = com.barutdev.tullab.domain.model.PricingMode.PER_HOUR,
+            rateOrFee = 50.0
+        )
+        coEvery { lessonRepository.updateLesson(any()) } returns Unit
+
+        viewModel.onLogLessonClicked(completedLesson)
+        assertEquals(completedLesson, viewModel.lessonToLog.value)
+
+        viewModel.onSaveLessonDetails(
+            lesson = completedLesson,
+            duration = "2,5",
+            notes = "Updated note",
+            pricingMode = com.barutdev.tullab.domain.model.PricingMode.PER_HOUR,
+            rateOrFee = "55.0",
+            isCompleted = false
+        )
+        advanceUntilIdle()
+
+        coVerify {
+            lessonRepository.updateLesson(match {
+                it.id == 10 &&
+                it.status == LessonStatus.SCHEDULED &&
+                it.durationInHours == 2.5 &&
+                it.notes == "Updated note" &&
+                it.rateOrFee == 55.0
+            })
+        }
+        assertEquals(null, viewModel.lessonToLog.value)
+        assertEquals(false, viewModel.isLogLessonDialogVisible.value)
+    }
+
+    @Test
+    fun `onSaveLessonDetails completes scheduled lesson and persists duration`() = runTest {
+        val scheduledLesson = Lesson(
+            id = 11,
+            studentId = 1,
+            date = 1000L,
+            status = LessonStatus.SCHEDULED,
+            durationInHours = null,
+            notes = null,
+            pricingMode = com.barutdev.tullab.domain.model.PricingMode.PER_HOUR,
+            rateOrFee = 50.0
+        )
+        coEvery { lessonRepository.updateLesson(any()) } returns Unit
+
+        viewModel.onLogLessonClicked(scheduledLesson)
+        assertEquals(scheduledLesson, viewModel.lessonToLog.value)
+
+        viewModel.onSaveLessonDetails(
+            lesson = scheduledLesson,
+            duration = "1.5",
+            notes = "Done",
+            pricingMode = com.barutdev.tullab.domain.model.PricingMode.PER_HOUR,
+            rateOrFee = "50.0",
+            isCompleted = true
+        )
+        advanceUntilIdle()
+
+        coVerify {
+            lessonRepository.updateLesson(match {
+                it.id == 11 &&
+                it.status == LessonStatus.COMPLETED &&
+                it.durationInHours == 1.5 &&
+                it.notes == "Done"
+            })
+        }
+        assertEquals(null, viewModel.lessonToLog.value)
+        assertEquals(false, viewModel.isLogLessonDialogVisible.value)
+    }
 }
