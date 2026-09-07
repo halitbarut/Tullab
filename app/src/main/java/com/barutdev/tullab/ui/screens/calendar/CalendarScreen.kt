@@ -340,6 +340,7 @@ private fun CalendarScreenContent(
     val currentLocale = LocalLocale.current
     val zoneId = remember { ZoneId.systemDefault() }
     val today = remember { LocalDate.now(zoneId) }
+    val utcToday = remember { LocalDate.now(ZoneOffset.UTC) }
 
     val lessonsByDate = remember(lessons, zoneId) {
         lessons.groupBy { lesson ->
@@ -381,6 +382,7 @@ private fun CalendarScreenContent(
                 currentMonth = currentMonth,
                 selectedDate = selectedDate,
                 today = today,
+                utcToday = utcToday,
                 onPreviousMonth = onPreviousMonth,
                 onNextMonth = onNextMonth,
                 onDaySelected = onSelectDate,
@@ -396,6 +398,7 @@ private fun CalendarScreenContent(
                 lessons = selectedDateLessons,
                 homework = selectedDateHomework,
                 today = today,
+                utcToday = utcToday,
                 locale = currentLocale,
                 currencyCode = currencyCode,
                 onLessonActionClick = onLogLessonClick,
@@ -421,7 +424,8 @@ private fun MonthlyCalendarView(
     onOpenLegend: () -> Unit,
     lessonsByDate: Map<LocalDate, List<Lesson>>,
     homeworkByDate: Map<LocalDate, List<Homework>>,
-    locale: Locale
+    locale: Locale,
+    utcToday: LocalDate = today
 ) {
     val monthName = remember(currentMonth, locale) {
         currentMonth.month.getDisplayName(TextStyle.FULL, locale)
@@ -489,7 +493,8 @@ private fun MonthlyCalendarView(
                                     lessons = lessonsForDate,
                                     homework = homeworkForDate,
                                     date = date,
-                                    today = today
+                                    today = today,
+                                    homeworkToday = utcToday
                                 ),
                                 onClick = { onDaySelected(date) },
                                 modifier = Modifier.weight(1f)
@@ -696,7 +701,8 @@ private fun DayDetailsSection(
     onRevertPaymentClick: (Lesson) -> Unit,
     onToggleHomeworkStatus: (Homework) -> Unit,
     onHomeworkDetailsClick: (Homework) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    utcToday: LocalDate = today
 ) {
     val dateFormatter = remember(locale) {
         DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale)
@@ -753,7 +759,7 @@ private fun DayDetailsSection(
                     HomeworkDetailCard(
                         homework = h,
                         dateFormatter = dateFormatter,
-                        today = today,
+                        utcToday = utcToday,
                         locale = locale,
                         onToggleStatus = { onToggleHomeworkStatus(h) },
                         onDetailsClick = { onHomeworkDetailsClick(h) }
@@ -768,7 +774,7 @@ private fun DayDetailsSection(
 private fun HomeworkDetailCard(
     homework: Homework,
     dateFormatter: DateTimeFormatter,
-    today: LocalDate,
+    utcToday: LocalDate,
     locale: Locale,
     onToggleStatus: () -> Unit,
     onDetailsClick: () -> Unit,
@@ -780,7 +786,7 @@ private fun HomeworkDetailCard(
             .toLocalDate()
     }
     
-    val isOverdue = homework.status == HomeworkStatus.PENDING && dueDate.isBefore(today)
+    val isOverdue = homework.status == HomeworkStatus.PENDING && dueDate.isBefore(utcToday)
     val effectiveStatus = if (isOverdue) HomeworkStatus.OVERDUE else homework.status
     
     val statusText = when (effectiveStatus) {

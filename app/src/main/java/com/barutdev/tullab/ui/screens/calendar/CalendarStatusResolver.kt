@@ -50,7 +50,8 @@ internal fun resolveDayIndicators(
     lessons: List<Lesson>,
     homework: List<Homework>,
     date: LocalDate,
-    today: LocalDate
+    today: LocalDate,
+    homeworkToday: LocalDate = today
 ): DayIndicators {
     val lessonColor = if (lessons.isEmpty()) null else {
         val lessonStatuses = lessons.map { lesson ->
@@ -75,7 +76,7 @@ internal fun resolveDayIndicators(
         val homeworkStatuses = homework.map { h ->
             when (h.status) {
                 HomeworkStatus.OVERDUE -> InternalHomeworkStatus.RED_OVERDUE
-                HomeworkStatus.PENDING -> if (date.isBefore(today)) InternalHomeworkStatus.RED_OVERDUE else InternalHomeworkStatus.BLUE_SCHEDULED
+                HomeworkStatus.PENDING -> if (date.isBefore(homeworkToday)) InternalHomeworkStatus.RED_OVERDUE else InternalHomeworkStatus.BLUE_SCHEDULED
                 HomeworkStatus.COMPLETED -> InternalHomeworkStatus.GREEN_COMPLETED
                 HomeworkStatus.CANCELLED -> InternalHomeworkStatus.GRAY_CANCELLED
             }

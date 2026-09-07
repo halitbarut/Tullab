@@ -238,5 +238,32 @@ class CalendarStatusLogicTest {
         assertEquals(StatusRed, indicators.lessonColor)
         assertEquals(StatusRed, indicators.homeworkColor)
     }
+
+    @Test
+    fun `homework pending evaluates overdue based on homeworkToday UTC boundary`() {
+        val date = LocalDate.of(2026, 3, 5)
+        val localToday = LocalDate.of(2026, 3, 6)
+        val utcToday = LocalDate.of(2026, 3, 5)
+
+        // When evaluated with local today (Mar 6), date (Mar 5) would appear overdue
+        val indicatorsLocal = resolveDayIndicators(
+            lessons = emptyList(),
+            homework = listOf(homework(HomeworkStatus.PENDING)),
+            date = date,
+            today = localToday,
+            homeworkToday = localToday
+        )
+        assertEquals(StatusRed, indicatorsLocal.homeworkColor)
+
+        // When evaluated with UTC today (Mar 5), date (Mar 5) is NOT before utcToday -> BLUE_SCHEDULED
+        val indicatorsUtc = resolveDayIndicators(
+            lessons = emptyList(),
+            homework = listOf(homework(HomeworkStatus.PENDING)),
+            date = date,
+            today = localToday,
+            homeworkToday = utcToday
+        )
+        assertEquals(StatusBlue, indicatorsUtc.homeworkColor)
+    }
 }
 
