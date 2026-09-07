@@ -157,7 +157,7 @@ fun HomeworkBottomSheet(
                 // Read-only clickable date field that opens DatePickerDialog
                 val dueDateText = selectedDueDateMillis?.let { millis ->
                     Instant.ofEpochMilli(millis)
-                        .atZone(zoneId)
+                        .atZone(java.time.ZoneOffset.UTC)
                         .toLocalDate()
                         .format(DateTimeFormatter.ISO_LOCAL_DATE)
                 }.orEmpty()

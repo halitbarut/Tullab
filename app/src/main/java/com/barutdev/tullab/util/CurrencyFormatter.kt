@@ -33,23 +33,28 @@ fun formatCompactCurrency(
     if (amount <= 0.0) return "${symbol}0"
 
     val symbols = DecimalFormatSymbols(locale)
+
+    fun formatWithPattern(value: Double): String {
+        val pattern = if (value % 1.0 == 0.0 || value >= 100) "#,##0" else "#,##0.#"
+        return DecimalFormat(pattern, symbols).format(value)
+    }
+
+    val thousands = amount / 1_000.0
+    val isPromotedToMillions = amount >= 1_000_000.0 || (amount >= 1_000.0 && Math.round(thousands) >= 1_000)
+
     return when {
-        amount >= 1_000_000 -> {
+        isPromotedToMillions -> {
             val millions = amount / 1_000_000.0
-            val pattern = if (millions % 1.0 == 0.0 || millions >= 100) "#,##0" else "#,##0.#"
-            val df = DecimalFormat(pattern, symbols)
-            "$symbol${df.format(millions)}M"
+            val formatted = formatWithPattern(millions)
+            "$symbol${formatted}M"
         }
-        amount >= 1_000 -> {
-            val thousands = amount / 1_000.0
-            val pattern = if (thousands % 1.0 == 0.0 || thousands >= 100) "#,##0" else "#,##0.#"
-            val df = DecimalFormat(pattern, symbols)
-            "$symbol${df.format(thousands)}K"
+        amount >= 1_000.0 || (amount >= 999.5) -> {
+            val formatted = formatWithPattern(thousands)
+            "$symbol${formatted}K"
         }
         else -> {
-            val pattern = if (amount % 1.0 == 0.0) "#,##0" else "#,##0.#"
-            val df = DecimalFormat(pattern, symbols)
-            "$symbol${df.format(amount)}"
+            val formatted = formatWithPattern(amount)
+            "$symbol$formatted"
         }
     }
 }

@@ -536,7 +536,7 @@ fun LogLessonDialog(
                     Text(
                         text = tullabStringResource(
                             id = R.string.calendar_lesson_details_total,
-                            formatCurrency(calculatedFee, currencyCode)
+                            formatCurrency(calculatedFee, currencyCode, locale)
                         ),
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.fillMaxWidth()
@@ -613,7 +613,7 @@ fun isDialogSaveEnabled(
     isDataChanged: Boolean = true,
     statusChoice: LogLessonStatusChoice = LogLessonStatusChoice.COMPLETED
 ): Boolean {
-    if (!isDataChanged) return false
+    if (!isMarkAsPaidMode && !isDataChanged) return false
     if (statusChoice == LogLessonStatusChoice.CANCELLED) return true
 
     val parsedDuration = parseDurationDecimal(durationStr)

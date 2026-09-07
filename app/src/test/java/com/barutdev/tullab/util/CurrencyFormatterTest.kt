@@ -82,4 +82,26 @@ class CurrencyFormatterTest {
         assertTrue(tryCompact.startsWith("₺"))
         assertTrue(tryCompact.endsWith("K"))
     }
+
+    @Test
+    fun `test compact currency boundary promotion from thousands to millions`() {
+        val usLocale = Locale.US
+        // 999,990 should promote to 1M, not 1,000K
+        assertEquals("$1M", formatCompactCurrency(999990.0, "USD", usLocale))
+        assertEquals("$1M", formatCompactCurrency(999999.0, "USD", usLocale))
+        assertEquals("$1M", formatCompactCurrency(999500.0, "USD", usLocale))
+        assertEquals("$999K", formatCompactCurrency(999400.0, "USD", usLocale))
+
+        val trLocale = Locale("tr", "TR")
+        assertEquals("₺1M", formatCompactCurrency(999990.0, "TRY", trLocale))
+        assertEquals("₺999K", formatCompactCurrency(999400.0, "TRY", trLocale))
+    }
+
+    @Test
+    fun `test compact currency boundary promotion from base to thousands`() {
+        val usLocale = Locale.US
+        assertEquals("$1K", formatCompactCurrency(999.99, "USD", usLocale))
+        assertEquals("$1K", formatCompactCurrency(999.5, "USD", usLocale))
+        assertEquals("$999", formatCompactCurrency(999.4, "USD", usLocale))
+    }
 }

@@ -47,6 +47,10 @@ class LogLessonDialogValidationTest {
         assertTrue(isDialogSaveEnabled(durationStr = "2.0", rateOrFeeInput = "60.0", pricingMode = PricingMode.PER_HOUR, isDataChanged = true))
         assertFalse(isDialogSaveEnabled(durationStr = "2.0", rateOrFeeInput = "60.0", pricingMode = PricingMode.PER_HOUR, isDataChanged = false))
 
+        // Mark as paid mode ignores isDataChanged guard
+        assertTrue(isDialogSaveEnabled(durationStr = "1.5", rateOrFeeInput = "50.0", pricingMode = PricingMode.PER_HOUR, isMarkAsPaidMode = true, isDataChanged = false))
+        assertTrue(isDialogSaveEnabled(durationStr = "1.5", rateOrFeeInput = "50.0", pricingMode = PricingMode.PER_HOUR, isMarkAsPaidMode = true, isDataChanged = true))
+
         // Cancelled status choice allows saving even with empty duration
         assertTrue(isDialogSaveEnabled(durationStr = "", rateOrFeeInput = "", pricingMode = PricingMode.PER_HOUR, isDataChanged = true, statusChoice = LogLessonStatusChoice.CANCELLED))
         assertFalse(isDialogSaveEnabled(durationStr = "", rateOrFeeInput = "", pricingMode = PricingMode.PER_HOUR, isDataChanged = false, statusChoice = LogLessonStatusChoice.CANCELLED))

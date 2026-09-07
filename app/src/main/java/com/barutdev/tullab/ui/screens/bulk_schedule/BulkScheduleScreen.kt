@@ -84,10 +84,10 @@ fun BulkScheduleScreen(
                 .toLocalDate()
         }
     }
-    val homeworkByDate = remember(state.existingHomework, zoneId) {
+    val homeworkByDate = remember(state.existingHomework) {
         state.existingHomework.groupBy { h ->
             Instant.ofEpochMilli(h.dueDate)
-                .atZone(zoneId)
+                .atZone(java.time.ZoneOffset.UTC)
                 .toLocalDate()
         }
     }

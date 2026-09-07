@@ -95,6 +95,7 @@ import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -347,10 +348,10 @@ private fun CalendarScreenContent(
                 .toLocalDate()
         }
     }
-    val homeworkByDate = remember(homework, zoneId) {
+    val homeworkByDate = remember(homework) {
         homework.groupBy { h ->
             Instant.ofEpochMilli(h.dueDate)
-                .atZone(zoneId)
+                .atZone(ZoneOffset.UTC)
                 .toLocalDate()
         }
     }
@@ -775,7 +776,7 @@ private fun HomeworkDetailCard(
 ) {
     val dueDate = remember(homework.dueDate) {
         Instant.ofEpochMilli(homework.dueDate)
-            .atZone(ZoneId.systemDefault())
+            .atZone(ZoneOffset.UTC)
             .toLocalDate()
     }
     
@@ -981,8 +982,8 @@ private fun LessonDetailCard(
                 )
             }
             
-            val totalText = remember(lesson.calculatedValue, currencyCode) {
-                formatCurrency(lesson.calculatedValue, currencyCode)
+            val totalText = remember(lesson.calculatedValue, currencyCode, locale) {
+                formatCurrency(lesson.calculatedValue, currencyCode, locale)
             }
             Text(
                 text = tullabStringResource(

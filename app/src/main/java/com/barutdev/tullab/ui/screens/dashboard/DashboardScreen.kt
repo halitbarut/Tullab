@@ -192,11 +192,12 @@ LaunchedEffect(viewModel) {
     )
 
     val paymentHistory by viewModel.paymentHistory.collectAsStateWithLifecycle()
-PaymentHistoryDialog(
+    PaymentHistoryDialog(
         showDialog = uiState.isPaymentHistoryDialogVisible,
         records = paymentHistory,
         currencyCode = userPreferences.currencyCode,
-        onDismiss = viewModel::dismissPaymentHistoryDialog
+        onDismiss = viewModel::dismissPaymentHistoryDialog,
+        locale = locale
     )
 
     MarkAsPaidConfirmDialog(
@@ -405,11 +406,11 @@ fun PaymentTrackingCard(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val amountText = remember(totalAmountDue, currencyCode) {
-        formatCurrency(totalAmountDue, currencyCode)
+    val amountText = remember(totalAmountDue, currencyCode, locale) {
+        formatCurrency(totalAmountDue, currencyCode, locale)
     }
-    val hourlyRateText = remember(hourlyRate, currencyCode) {
-        formatCurrency(hourlyRate, currencyCode)
+    val hourlyRateText = remember(hourlyRate, currencyCode, locale) {
+        formatCurrency(hourlyRate, currencyCode, locale)
     }
     val hoursText = formatDurationHours(context, totalHours, locale)
     val formattedLastPaymentDate = remember(lastPaymentDate, locale) {
@@ -483,7 +484,7 @@ fun PaymentTrackingCard(
                         val tierText = when (tier.pricingMode) {
                             com.barutdev.tullab.domain.model.PricingMode.PER_HOUR -> {
                                 val formattedHours = formatDurationHours(context, tier.totalHours, locale)
-                                val formattedRate = formatCurrency(tier.rateOrFee, currencyCode)
+                                val formattedRate = formatCurrency(tier.rateOrFee, currencyCode, locale)
                                 tullabStringResource(
                                     id = R.string.dashboard_payment_rate_info,
                                     formattedHours,
@@ -491,7 +492,7 @@ fun PaymentTrackingCard(
                                 )
                             }
                             com.barutdev.tullab.domain.model.PricingMode.FLAT_FEE -> {
-                                val formattedFee = formatCurrency(tier.rateOrFee, currencyCode)
+                                val formattedFee = formatCurrency(tier.rateOrFee, currencyCode, locale)
                                 tullabStringResource(
                                     id = R.string.dashboard_payment_flat_fee_tier,
                                     tier.lessonCount,
@@ -543,10 +544,11 @@ fun PaymentHistoryDialog(
     showDialog: Boolean,
     records: List<PaymentRecord>,
     currencyCode: String,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    locale: Locale = LocalLocale.current
 ) {
     if (!showDialog) return
-val title = tullabStringResource(id = R.string.payment_history_title)
+    val title = tullabStringResource(id = R.string.payment_history_title)
     val empty = tullabStringResource(id = R.string.no_payment_history_toast)
     val close = tullabStringResource(id = R.string.close_button)
     AlertDialog(
@@ -559,9 +561,10 @@ val title = tullabStringResource(id = R.string.payment_history_title)
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     records.forEach { rec ->
-                        val amountText = formatCurrency(rec.amountMinor / 100.0, currencyCode)
+                        val amountText = formatCurrency(rec.amountMinor / 100.0, currencyCode, locale)
                         val dateText = DateTimeFormatter
                             .ofLocalizedDate(FormatStyle.LONG)
+                            .withLocale(locale)
                             .format(Instant.ofEpochMilli(rec.paidAtEpochMs).atZone(ZoneId.systemDefault()).toLocalDate())
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -634,7 +637,7 @@ private fun CompletedLessonsCard(
                     dateText = dateText,
                     durationText = durationText,
                     notes = lesson.notes,
-                    totalText = formatCurrency(lesson.calculatedValue, currencyCode),
+                    totalText = formatCurrency(lesson.calculatedValue, currencyCode, locale),
                     isFlatFee = lesson.pricingMode == com.barutdev.tullab.domain.model.PricingMode.FLAT_FEE
                 )
             }

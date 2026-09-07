@@ -414,8 +414,9 @@ fun StudentListItem(
     onDeleteClick: ((Student) -> Unit)? = null
 ) {
     val studentDetails = student.student
-    val formattedDebt by remember(student.currentDebt, currencyCode) {
-        derivedStateOf { formatCurrency(student.currentDebt, currencyCode) }
+    val locale = com.barutdev.tullab.ui.theme.LocalLocale.current
+    val formattedDebt by remember(student.currentDebt, currencyCode, locale) {
+        derivedStateOf { formatCurrency(student.currentDebt, currencyCode, locale) }
     }
     val studentInitials by remember(studentDetails.fullName) {
         derivedStateOf { studentDetails.initials() }

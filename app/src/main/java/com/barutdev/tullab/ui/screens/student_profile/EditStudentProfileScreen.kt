@@ -140,8 +140,9 @@ fun StudentProfileContent(
             )
         } else {
             val scrollState = rememberScrollState()
-            val defaultRateText = remember(state.defaultHourlyRate, state.currencyCode) {
-                formatCurrency(state.defaultHourlyRate, state.currencyCode)
+            val locale = com.barutdev.tullab.ui.theme.LocalLocale.current
+            val defaultRateText = remember(state.defaultHourlyRate, state.currencyCode, locale) {
+                formatCurrency(state.defaultHourlyRate, state.currencyCode, locale)
             }
             val fullNameLabel = tullabStringResource(id = R.string.student_profile_full_name_label)
             val parentNameLabel = tullabStringResource(id = R.string.student_profile_parent_name_label)

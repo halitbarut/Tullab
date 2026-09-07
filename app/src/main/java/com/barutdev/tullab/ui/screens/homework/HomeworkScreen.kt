@@ -252,11 +252,10 @@ private fun HomeworkListItem(
     onClick: (Homework) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val zoneId = remember { ZoneId.systemDefault() }
     val dueDateText = remember(homework.dueDate, locale) {
         val formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale)
         Instant.ofEpochMilli(homework.dueDate)
-            .atZone(zoneId)
+            .atZone(java.time.ZoneOffset.UTC)
             .toLocalDate()
             .format(formatter)
     }
