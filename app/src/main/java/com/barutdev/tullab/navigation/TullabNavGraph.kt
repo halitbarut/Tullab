@@ -18,6 +18,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
@@ -546,6 +547,7 @@ fun TullabNavGraph(
                         "Rendering Reports entry=${backStackEntry.id} (global)"
                     )
                     ReportsScreen(
+                        onBackClick = { navController.popBackStack() },
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -621,7 +623,10 @@ private fun TullabTopBar(state: TullabTopBarState) {
         navigationIcon = {
             val navigation = state.navigationIcon
             if (navigation != null) {
-                IconButton(onClick = navigation.onClick) {
+                IconButton(
+                    onClick = navigation.onClick,
+                    modifier = Modifier.size(48.dp)
+                ) {
                     Icon(
                         imageVector = navigation.icon,
                         contentDescription = navigation.contentDescription

@@ -42,9 +42,9 @@ composables.txt
 # Gradle scripts temp files
 .gradle-test-kit/
 
-# Lint & reports
-lint/
-reports/
+# Lint & reports (root build outputs only - must not ignore source packages like app/.../reports/)
+/lint/
+/reports/
 
 # Misc
 *.hprof
