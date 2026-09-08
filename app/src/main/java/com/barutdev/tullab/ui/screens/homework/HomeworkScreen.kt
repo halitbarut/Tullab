@@ -72,9 +72,13 @@ import com.barutdev.tullab.ui.components.AnimatedListItem
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
+import com.barutdev.tullab.util.calculateDelayToNextMidnight
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 
 @Composable
 fun HomeworkScreen(
@@ -189,12 +193,21 @@ private fun HomeworkScreenContent(
 ) {
     val locale = LocalLocale.current
     var selectedFilter by rememberSaveable { mutableStateOf(HomeworkFilter.ALL) }
+    var utcToday by remember { mutableStateOf(LocalDate.now(ZoneOffset.UTC)) }
+
+    LaunchedEffect(Unit) {
+        while (isActive) {
+            val delayMs = calculateDelayToNextMidnight(Instant.now(), ZoneOffset.UTC)
+            delay(delayMs)
+            utcToday = LocalDate.now(ZoneOffset.UTC)
+        }
+    }
 
     val filteredHomeworkList = remember(homeworkList, selectedFilter) {
         when (selectedFilter) {
             HomeworkFilter.ALL -> homeworkList
             HomeworkFilter.PENDING -> homeworkList.filter {
-                it.status == HomeworkStatus.PENDING || it.status == HomeworkStatus.OVERDUE
+                it.status == HomeworkStatus.PENDING
             }
             HomeworkFilter.COMPLETED -> homeworkList.filter {
                 it.status == HomeworkStatus.COMPLETED
@@ -239,7 +252,8 @@ private fun HomeworkScreenContent(
                     HomeworkListItem(
                         homework = homework,
                         locale = locale,
-                        onClick = onHomeworkClick
+                        onClick = onHomeworkClick,
+                        utcToday = utcToday
                     )
                 }
             }
@@ -287,15 +301,17 @@ private fun HomeworkListItem(
     homework: Homework,
     locale: Locale,
     onClick: (Homework) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    utcToday: LocalDate = LocalDate.now(ZoneOffset.UTC)
 ) {
     val dueDateText = remember(homework.dueDate, locale) {
         val formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale)
         Instant.ofEpochMilli(homework.dueDate)
-            .atZone(java.time.ZoneOffset.UTC)
+            .atZone(ZoneOffset.UTC)
             .toLocalDate()
             .format(formatter)
     }
+    val isOverdue = remember(homework, utcToday) { homework.isOverdue(utcToday) }
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -324,7 +340,7 @@ private fun HomeworkListItem(
                 )
             }
             Spacer(modifier = Modifier.width(12.dp))
-            StatusBadge(status = homework.status)
+            StatusBadge(status = homework.status, isOverdue = isOverdue)
             Icon(
                 imageVector = Icons.Outlined.ChevronRight,
                 contentDescription = null,
@@ -336,12 +352,17 @@ private fun HomeworkListItem(
 }
 
 @Composable
-private fun StatusBadge(status: HomeworkStatus, modifier: Modifier = Modifier) {
-    val (labelRes, targetColor) = when (status) {
-        HomeworkStatus.PENDING -> R.string.homework_status_pending to StatusYellow
-        HomeworkStatus.COMPLETED -> R.string.homework_status_completed to StatusGreen
-        HomeworkStatus.OVERDUE -> R.string.homework_status_overdue to StatusRed
-        HomeworkStatus.CANCELLED -> R.string.homework_status_cancelled to androidx.compose.ui.graphics.Color.Gray
+private fun StatusBadge(
+    status: HomeworkStatus,
+    isOverdue: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val (labelRes, targetColor) = when {
+        isOverdue -> R.string.homework_status_overdue to StatusRed
+        status == HomeworkStatus.PENDING -> R.string.homework_status_pending to StatusYellow
+        status == HomeworkStatus.COMPLETED -> R.string.homework_status_completed to StatusGreen
+        status == HomeworkStatus.CANCELLED -> R.string.homework_status_cancelled to androidx.compose.ui.graphics.Color.Gray
+        else -> R.string.homework_status_pending to StatusYellow
     }
     val text = tullabStringResource(id = labelRes)
     

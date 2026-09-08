@@ -3,6 +3,7 @@ package com.barutdev.tullab.ui.screens.homework.components
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
@@ -35,9 +36,15 @@ import androidx.compose.ui.unit.dp
 import com.barutdev.tullab.R
 import com.barutdev.tullab.domain.model.Homework
 import com.barutdev.tullab.domain.model.HomeworkStatus
+import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.Alignment
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import com.barutdev.tullab.ui.theme.StatusRed
+import com.barutdev.tullab.ui.theme.StatusRedContainer
 import com.barutdev.tullab.ui.theme.LocalLocale
 import java.time.Instant
-import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
@@ -52,7 +59,6 @@ fun HomeworkDialog(
     if (!showDialog) return
 
     val locale = LocalLocale.current
-    val zoneId = remember { ZoneId.systemDefault() }
     val previewFormatter = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
 
     val editingId = editingHomework?.id
@@ -94,7 +100,29 @@ fun HomeworkDialog(
             onDismiss()
         },
         title = {
-            Text(text = dialogTitle)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(text = dialogTitle, modifier = Modifier.weight(1f, fill = false))
+                if (isEditing && editingHomework?.copy(
+                        status = status,
+                        dueDate = selectedDueDateMillis ?: editingHomework.dueDate
+                    )?.isOverdue() == true) {
+                    Surface(
+                        color = StatusRedContainer,
+                        shape = MaterialTheme.shapes.small
+                    ) {
+                        Text(
+                            text = tullabStringResource(id = R.string.homework_badge_overdue),
+                            color = StatusRed,
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+            }
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -189,7 +217,7 @@ fun HomeworkDialog(
                 )
                 selectedDueDateMillis?.let { millis ->
                     val readable = Instant.ofEpochMilli(millis)
-                        .atZone(zoneId)
+                        .atZone(ZoneOffset.UTC)
                         .toLocalDate()
                         .format(previewFormatter)
                     Text(text = tullabStringResource(id = R.string.homework_due_date_label, readable))
@@ -258,6 +286,5 @@ fun HomeworkDialog(
 private fun statusLabelRes(status: HomeworkStatus): Int = when (status) {
     HomeworkStatus.PENDING -> R.string.homework_status_pending
     HomeworkStatus.COMPLETED -> R.string.homework_status_completed
-    HomeworkStatus.OVERDUE -> R.string.homework_status_overdue
     HomeworkStatus.CANCELLED -> R.string.homework_status_cancelled
 }

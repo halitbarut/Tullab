@@ -28,6 +28,8 @@ import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Schedule
+import com.barutdev.tullab.util.formatLessonStartTime
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Button
@@ -42,6 +44,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -111,9 +114,15 @@ import java.time.temporal.WeekFields
 import java.util.Locale
 import com.barutdev.tullab.domain.model.Homework
 import com.barutdev.tullab.domain.model.HomeworkStatus
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import com.barutdev.tullab.util.calculateDelayToNextMidnight
 import androidx.compose.material.icons.outlined.Assignment
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.Edit
@@ -187,24 +196,25 @@ fun CalendarScreen(
 
     val today = LocalDate.now(ZoneId.systemDefault())
     val currentLessonToLog = lessonToLog
-    val isScheduled = currentLessonToLog != null && currentLessonToLog.status == LessonStatus.SCHEDULED
-    val isPastScheduled = isScheduled && Instant.ofEpochMilli(currentLessonToLog!!.date).atZone(ZoneId.systemDefault()).toLocalDate().isBefore(today)
-    val isFutureScheduled = isScheduled && !isPastScheduled
 
     LogLessonDialog(
         showDialog = isLogLessonDialogVisible,
         lesson = lessonToLog,
+        existingLessons = lessons,
         onDismiss = viewModel::dismissLogLessonDialog,
-        onSave = { duration, notes, pricingMode, rateOrFeeInput, isCompleted ->
+        onSave = { duration, notes, pricingMode, rateOrFeeInput, isCompleted, dateMillis ->
             currentLessonToLog?.let {
-                viewModel.onSaveLessonDetails(it, duration, notes, pricingMode, rateOrFeeInput, isCompleted)
+                viewModel.onSaveLessonDetails(it, duration, notes, pricingMode, rateOrFeeInput, isCompleted, dateMillis)
             }
         },
         onComplete = { duration, notes, pricingMode, rateOrFeeInput ->
             viewModel.onLogLessonComplete(duration, notes, pricingMode, rateOrFeeInput)
         },
-        onMarkNotDone = { notes ->
-            viewModel.onLogLessonMarkNotDone(notes)
+        onMarkNotDone = { notes, dateMillis ->
+            viewModel.onLogLessonMarkNotDone(notes, dateMillis)
+        },
+        onDelete = { lesson ->
+            viewModel.deleteLesson(lesson.id)
         },
         currencyCode = currencyCode
     )
@@ -212,9 +222,10 @@ fun CalendarScreen(
     LogLessonDialog(
         showDialog = pendingLessonForPayment != null,
         lesson = pendingLessonForPayment,
+        existingLessons = lessons,
         onDismiss = viewModel::dismissMarkLessonAsPaidDialog,
         onComplete = { _, _, _, _ -> },
-        onMarkNotDone = { _ -> },
+        onMarkNotDone = { _, _ -> },
         isMarkAsPaidMode = true,
         requiresFeePrompt = requiresFeePrompt,
         onMarkAsPaid = { durationStr, feeStr ->
@@ -282,7 +293,8 @@ fun CalendarScreen(
                 viewModel.studentId?.let { studentId ->
                     onNavigateToHomework(studentId, homework.id)
                 }
-            }
+            },
+            zoneId = zoneId
         )
 
         val selectedDateLesson = remember(selectedDate, lessons, zoneId) {
@@ -362,7 +374,7 @@ fun CalendarScreen(
 }
 
 @Composable
-private fun CalendarScreenContent(
+internal fun CalendarScreenContent(
     modifier: Modifier = Modifier,
     currentMonth: YearMonth,
     selectedDate: LocalDate,
@@ -377,12 +389,44 @@ private fun CalendarScreenContent(
     onRevertPaymentClick: (Lesson) -> Unit,
     onToggleHomeworkStatus: (Homework) -> Unit,
     onHomeworkDetailsClick: (Homework) -> Unit,
-    onNavigateToBulkSchedule: (() -> Unit)? = null
+    onNavigateToBulkSchedule: (() -> Unit)? = null,
+    zoneId: ZoneId = ZoneId.systemDefault(),
+    timeProvider: () -> Instant = { Instant.now() }
 ) {
     val currentLocale = LocalLocale.current
-    val zoneId = remember { ZoneId.systemDefault() }
-    val today = remember { LocalDate.now(zoneId) }
-    val utcToday = remember { LocalDate.now(ZoneOffset.UTC) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    var today by remember(zoneId) { mutableStateOf(timeProvider().atZone(zoneId).toLocalDate()) }
+    var utcToday by remember { mutableStateOf(timeProvider().atZone(ZoneOffset.UTC).toLocalDate()) }
+
+    DisposableEffect(lifecycleOwner, zoneId) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                today = timeProvider().atZone(zoneId).toLocalDate()
+                utcToday = timeProvider().atZone(ZoneOffset.UTC).toLocalDate()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    LaunchedEffect(zoneId) {
+        while (isActive) {
+            val delayMs = calculateDelayToNextMidnight(timeProvider(), zoneId)
+            delay(delayMs)
+            today = timeProvider().atZone(zoneId).toLocalDate()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        while (isActive) {
+            val delayMs = calculateDelayToNextMidnight(timeProvider(), ZoneOffset.UTC)
+            delay(delayMs)
+            utcToday = timeProvider().atZone(ZoneOffset.UTC).toLocalDate()
+        }
+    }
 
     val lessonsByDate = remember(lessons, zoneId) {
         lessons.groupBy { lesson ->
@@ -830,31 +874,24 @@ private fun HomeworkDetailCard(
     onDetailsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val dueDate = remember(homework.dueDate) {
-        Instant.ofEpochMilli(homework.dueDate)
-            .atZone(ZoneOffset.UTC)
-            .toLocalDate()
-    }
+    val isOverdue = remember(homework, utcToday) { homework.isOverdue(utcToday) }
     
-    val isOverdue = homework.status == HomeworkStatus.PENDING && dueDate.isBefore(utcToday)
-    val effectiveStatus = if (isOverdue) HomeworkStatus.OVERDUE else homework.status
-    
-    val statusText = when (effectiveStatus) {
-        HomeworkStatus.COMPLETED -> tullabStringResource(id = R.string.homework_status_completed)
-        HomeworkStatus.OVERDUE -> tullabStringResource(id = R.string.homework_status_overdue)
-        HomeworkStatus.CANCELLED -> tullabStringResource(id = R.string.homework_status_cancelled)
+    val statusText = when {
+        isOverdue -> tullabStringResource(id = R.string.homework_status_overdue)
+        homework.status == HomeworkStatus.COMPLETED -> tullabStringResource(id = R.string.homework_status_completed)
+        homework.status == HomeworkStatus.CANCELLED -> tullabStringResource(id = R.string.homework_status_cancelled)
         else -> tullabStringResource(id = R.string.homework_status_pending)
     }
     
-    val statusColor = when (effectiveStatus) {
-        HomeworkStatus.COMPLETED -> StatusGreen
-        HomeworkStatus.OVERDUE -> StatusRed
-        HomeworkStatus.CANCELLED -> HomeworkGray
+    val statusColor = when {
+        isOverdue -> StatusRed
+        homework.status == HomeworkStatus.COMPLETED -> StatusGreen
+        homework.status == HomeworkStatus.CANCELLED -> HomeworkGray
         else -> StatusBlue
     }
 
-    val textDecoration = if (effectiveStatus == HomeworkStatus.CANCELLED) TextDecoration.LineThrough else TextDecoration.None
-    val titleColor = if (effectiveStatus == HomeworkStatus.CANCELLED) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface
+    val textDecoration = if (homework.status == HomeworkStatus.CANCELLED) TextDecoration.LineThrough else TextDecoration.None
+    val titleColor = if (homework.status == HomeworkStatus.CANCELLED) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface
 
     Card(
         shape = MaterialTheme.shapes.large,
@@ -871,7 +908,7 @@ private fun HomeworkDetailCard(
                 Icon(
                     imageVector = Icons.Outlined.Assignment,
                     contentDescription = null,
-                    tint = if (effectiveStatus == HomeworkStatus.CANCELLED) MaterialTheme.colorScheme.primary.copy(alpha = 0.6f) else MaterialTheme.colorScheme.primary,
+                    tint = if (homework.status == HomeworkStatus.CANCELLED) MaterialTheme.colorScheme.primary.copy(alpha = 0.6f) else MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(20.dp)
                 )
                 Text(
@@ -891,7 +928,7 @@ private fun HomeworkDetailCard(
                     style = MaterialTheme.typography.bodyMedium,
                     color = statusColor
                 )
-                if (effectiveStatus == HomeworkStatus.OVERDUE) {
+                if (isOverdue) {
                     Surface(
                         color = StatusRedContainer,
                         shape = MaterialTheme.shapes.small
@@ -910,7 +947,7 @@ private fun HomeworkDetailCard(
                 Text(
                     text = homework.description,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = if (effectiveStatus == HomeworkStatus.CANCELLED) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = if (homework.status == HomeworkStatus.CANCELLED) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurfaceVariant,
                     textDecoration = textDecoration
                 )
             }
@@ -923,7 +960,7 @@ private fun HomeworkDetailCard(
                         notes
                     ),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = if (effectiveStatus == HomeworkStatus.CANCELLED) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (homework.status == HomeworkStatus.CANCELLED) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -932,7 +969,7 @@ private fun HomeworkDetailCard(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (effectiveStatus != HomeworkStatus.CANCELLED) {
+                if (homework.status != HomeworkStatus.CANCELLED) {
                     Button(
                         onClick = onToggleStatus,
                         modifier = Modifier.weight(1f),
@@ -947,7 +984,7 @@ private fun HomeworkDetailCard(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.size(8.dp))
-                        val labelRes = if (effectiveStatus == HomeworkStatus.COMPLETED) {
+                        val labelRes = if (homework.status == HomeworkStatus.COMPLETED) {
                             R.string.calendar_homework_action_mark_pending
                         } else {
                             R.string.calendar_homework_action_mark_complete
@@ -999,13 +1036,11 @@ private fun LessonDetailCard(
     val durationText = lesson.durationInHours?.let { duration ->
         formatDurationHours(duration)
     }
-    val actionTextRes = if (
-        lesson.status == LessonStatus.SCHEDULED && lessonDate.isBefore(today)
-    ) {
-        R.string.calendar_lesson_action_log_details
-    } else {
-        R.string.calendar_lesson_action_edit
-    }
+    val actionTextRes = resolveLessonActionTextRes(
+        lessonStatus = lesson.status,
+        lessonDate = lessonDate,
+        today = today
+    )
 
     Card(
         shape = MaterialTheme.shapes.large,
@@ -1030,6 +1065,28 @@ private fun LessonDetailCard(
                 style = MaterialTheme.typography.bodyMedium,
                 color = statusDisplay.color
             )
+            val formattedStartTime = formatLessonStartTime(lesson.date)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Schedule,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp)
+                )
+                val timeSpan = if (durationText != null) {
+                    "$formattedStartTime ($durationText)"
+                } else {
+                    formattedStartTime
+                }
+                Text(
+                    text = timeSpan,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
             val pricingModeRes = remember(lesson.pricingMode) {
                 if (lesson.pricingMode == PricingMode.FLAT_FEE) R.string.pricing_mode_flat_fee
                 else R.string.pricing_mode_per_hour
@@ -1130,6 +1187,19 @@ private fun LessonDetailCard(
                 }
             }
         }
+    }
+}
+
+@androidx.annotation.StringRes
+fun resolveLessonActionTextRes(
+    lessonStatus: LessonStatus,
+    lessonDate: LocalDate,
+    today: LocalDate
+): Int {
+    return if (lessonStatus == LessonStatus.SCHEDULED && lessonDate.isBefore(today)) {
+        R.string.calendar_lesson_action_log_lesson
+    } else {
+        R.string.calendar_lesson_action_edit
     }
 }
 

@@ -305,7 +305,8 @@ class DashboardViewModel @Inject constructor(
         notes: String,
         pricingMode: com.barutdev.tullab.domain.model.PricingMode,
         rateOrFee: String,
-        isCompleted: Boolean
+        isCompleted: Boolean,
+        dateMillis: Long = lesson.date
     ) {
         viewModelScope.launch {
             val normalizedDuration = duration.trim().replace(',', '.')
@@ -320,6 +321,7 @@ class DashboardViewModel @Inject constructor(
             }
 
             val updatedLesson = lesson.copy(
+                date = dateMillis,
                 status = newStatus,
                 durationInHours = if (pricingMode == com.barutdev.tullab.domain.model.PricingMode.PER_HOUR) durationValue else null,
                 notes = notes.trim().ifEmpty { null },
@@ -329,9 +331,20 @@ class DashboardViewModel @Inject constructor(
             lessonRepository.updateLesson(updatedLesson)
             when (newStatus) {
                 LessonStatus.COMPLETED -> cancelNotificationAlarmsUseCase(lesson.id)
-                LessonStatus.SCHEDULED -> scheduleNotificationAlarmsUseCase(lesson.id)
-                else -> Unit
+                LessonStatus.SCHEDULED -> {
+                    cancelNotificationAlarmsUseCase(lesson.id)
+                    scheduleNotificationAlarmsUseCase(lesson.id)
+                }
+                else -> cancelNotificationAlarmsUseCase(lesson.id)
             }
+            clearLogLessonSelection()
+        }
+    }
+
+    fun deleteLesson(lessonId: Int) {
+        viewModelScope.launch {
+            cancelNotificationAlarmsUseCase(lessonId)
+            lessonRepository.deleteLesson(lessonId)
             clearLogLessonSelection()
         }
     }
@@ -355,10 +368,10 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
-    fun onLogLessonMarkNotDone(notes: String) {
+    fun onLogLessonMarkNotDone(notes: String, dateMillis: Long? = null) {
         val lessonId = selectedLessonForLogging.value?.id ?: return
         viewModelScope.launch {
-            markLessonNotDone(lessonId, notes)
+            markLessonNotDone(lessonId, notes, dateMillis)
         }
     }
 
@@ -388,10 +401,11 @@ class DashboardViewModel @Inject constructor(
         clearLogLessonSelection()
     }
 
-    private suspend fun markLessonNotDone(lessonId: Int, notes: String) {
-        val lesson = lessons.value.firstOrNull { it.id == lessonId } ?: return
+    private suspend fun markLessonNotDone(lessonId: Int, notes: String, dateMillis: Long? = null) {
+        val lesson = lessons.value.firstOrNull { it.id == lessonId } ?: selectedLessonForLogging.value ?: return
         val updatedLesson = lesson.copy(
             status = LessonStatus.CANCELLED,
+            date = dateMillis ?: lesson.date,
             durationInHours = null,
             notes = notes.trim().takeIf { it.isNotBlank() }
         )
