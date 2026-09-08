@@ -110,4 +110,13 @@ class PaymentRepositoryImpl @Inject constructor(
             studentDao.updateLastPaymentDate(studentId, latestPayment?.paidAtEpochMs)
         }
     }
+
+    override suspend fun revertPaymentCycle(studentId: Int, paymentTimestamp: Long) {
+        database.withTransaction {
+            lessonDao.revertPaidLessonsByTimestamp(studentId, paymentTimestamp)
+            paymentRecordDao.deleteByStudentAndTimestamp(studentId, paymentTimestamp)
+            val latestPayment = paymentRecordDao.getLatestPaymentRecord(studentId)
+            studentDao.updateLastPaymentDate(studentId, latestPayment?.paidAtEpochMs)
+        }
+    }
 }

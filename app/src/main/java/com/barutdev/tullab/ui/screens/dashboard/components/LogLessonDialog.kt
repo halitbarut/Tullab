@@ -61,6 +61,8 @@ import com.barutdev.tullab.R
 import com.barutdev.tullab.domain.model.Lesson
 import com.barutdev.tullab.domain.model.LessonStatus
 import com.barutdev.tullab.domain.model.PricingMode
+import com.barutdev.tullab.ui.components.TullabHapticFeedbackType
+import com.barutdev.tullab.ui.components.rememberTullabHapticFeedback
 import com.barutdev.tullab.ui.theme.LocalLocale
 import com.barutdev.tullab.util.formatCurrency
 import com.barutdev.tullab.util.getCurrencySymbol
@@ -102,6 +104,7 @@ fun LogLessonDialog(
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val locale = LocalLocale.current
+    val haptics = rememberTullabHapticFeedback()
 
     val conflictingDates = remember(existingLessons, lesson.id, lesson.studentId) {
         getConflictingLessonDates(
@@ -528,7 +531,12 @@ fun LogLessonDialog(
                     ) {
                         SegmentedButton(
                             selected = statusChoice == LogLessonStatusChoice.SCHEDULED,
-                            onClick = { statusChoice = LogLessonStatusChoice.SCHEDULED },
+                            onClick = {
+                                if (statusChoice != LogLessonStatusChoice.SCHEDULED) {
+                                    haptics.perform(TullabHapticFeedbackType.SEGMENT_PULSE)
+                                }
+                                statusChoice = LogLessonStatusChoice.SCHEDULED
+                            },
                             shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3),
                             enabled = lesson.status != LessonStatus.PAID
                         ) {
@@ -539,7 +547,12 @@ fun LogLessonDialog(
                         }
                         SegmentedButton(
                             selected = statusChoice == LogLessonStatusChoice.COMPLETED,
-                            onClick = { statusChoice = LogLessonStatusChoice.COMPLETED },
+                            onClick = {
+                                if (statusChoice != LogLessonStatusChoice.COMPLETED) {
+                                    haptics.perform(TullabHapticFeedbackType.SEGMENT_PULSE)
+                                }
+                                statusChoice = LogLessonStatusChoice.COMPLETED
+                            },
                             shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3),
                             enabled = lesson.status != LessonStatus.PAID
                         ) {
@@ -550,7 +563,12 @@ fun LogLessonDialog(
                         }
                         SegmentedButton(
                             selected = statusChoice == LogLessonStatusChoice.CANCELLED,
-                            onClick = { statusChoice = LogLessonStatusChoice.CANCELLED },
+                            onClick = {
+                                if (statusChoice != LogLessonStatusChoice.CANCELLED) {
+                                    haptics.perform(TullabHapticFeedbackType.SEGMENT_PULSE)
+                                }
+                                statusChoice = LogLessonStatusChoice.CANCELLED
+                            },
                             shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3),
                             enabled = lesson.status != LessonStatus.PAID,
                             colors = SegmentedButtonDefaults.colors(
@@ -682,7 +700,12 @@ fun LogLessonDialog(
                     ) {
                         SegmentedButton(
                             selected = pricingMode == PricingMode.PER_HOUR,
-                            onClick = { pricingMode = PricingMode.PER_HOUR },
+                            onClick = {
+                                if (pricingMode != PricingMode.PER_HOUR) {
+                                    haptics.perform(TullabHapticFeedbackType.SEGMENT_PULSE)
+                                }
+                                pricingMode = PricingMode.PER_HOUR
+                            },
                             shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
                             colors = SegmentedButtonDefaults.colors(
                                 activeContainerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -693,7 +716,12 @@ fun LogLessonDialog(
                         }
                         SegmentedButton(
                             selected = pricingMode == PricingMode.FLAT_FEE,
-                            onClick = { pricingMode = PricingMode.FLAT_FEE },
+                            onClick = {
+                                if (pricingMode != PricingMode.FLAT_FEE) {
+                                    haptics.perform(TullabHapticFeedbackType.SEGMENT_PULSE)
+                                }
+                                pricingMode = PricingMode.FLAT_FEE
+                            },
                             shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
                             colors = SegmentedButtonDefaults.colors(
                                 activeContainerColor = MaterialTheme.colorScheme.secondaryContainer,

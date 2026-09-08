@@ -340,6 +340,49 @@ class CalendarViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Reverts a lesson payment as part of an undo action triggered by the Snackbar.
+     * Delegates directly to [paymentRepository.revertLessonPayment].
+     */
+    fun revertLessonPaymentUndo(lessonId: Int) {
+        viewModelScope.launch {
+            paymentRepository.revertLessonPayment(lessonId)
+        }
+    }
+
+    /**
+     * Immediately deletes a lesson from the database and invokes [onDeleted] with the lesson
+     * snapshot so the caller can offer an undo Snackbar.
+     */
+    fun deleteLessonWithUndo(lessonId: Int, onDeleted: (Lesson) -> Unit) {
+        viewModelScope.launch {
+            val lesson = lessons.value.firstOrNull { it.id == lessonId } ?: return@launch
+            cancelNotificationAlarmsUseCase(lessonId)
+            lessonRepository.deleteLesson(lessonId)
+            clearLogLessonSelection()
+            onDeleted(lesson)
+        }
+    }
+
+    /**
+     * Re-inserts a lesson snapshot into the database as an undo for deletion.
+     */
+    fun restoreLesson(lesson: Lesson) {
+        viewModelScope.launch {
+            val restoredId = lessonRepository.insertLesson(lesson.copy(id = 0))
+            scheduleNotificationAlarmsUseCase(restoredId)
+        }
+    }
+
+    /**
+     * Reverts homework status as part of an undo action triggered by the Snackbar.
+     */
+    fun revertHomeworkStatusUndo(homework: Homework, previousStatus: HomeworkStatus) {
+        viewModelScope.launch {
+            homeworkRepository.updateHomework(homework.copy(status = previousStatus))
+        }
+    }
+
     private val batchUndoSessionState = MutableStateFlow<BatchUndoSession?>(null)
     val batchUndoSession: StateFlow<BatchUndoSession?> = batchUndoSessionState.asStateFlow()
 
@@ -357,3 +400,4 @@ class CalendarViewModel @Inject constructor(
         }
     }
 }
+

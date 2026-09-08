@@ -100,7 +100,9 @@ private const val NAVIGATION_LOG_TAG = "TullabNavigation"
 fun TullabNavGraph(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
-    scaffoldController: TullabScaffoldController = rememberTullabScaffoldController()
+    scaffoldController: TullabScaffoldController = rememberTullabScaffoldController(
+        coroutineScope = rememberCoroutineScope()
+    )
 ) {
     val startDestinationViewModel: StartDestinationViewModel = hiltViewModel()
     val startRoute: String? by startDestinationViewModel.startRoute.collectAsState(initial = null)

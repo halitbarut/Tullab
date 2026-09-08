@@ -446,4 +446,15 @@
     <string name="student_action_edit">Edit</string>
     <string name="student_action_delete">Delete</string>
 
+    <!-- Feedback & Undo Snackbar strings (feature 013) -->
+    <string name="snackbar_payment_recorded">Payment of %1$s recorded</string>
+    <string name="snackbar_homework_completed">Homework completed</string>
+    <string name="snackbar_lesson_deleted">Lesson deleted</string>
+    <string name="snackbar_homework_deleted">Homework deleted</string>
+    <string name="snackbar_action_undo">Undo</string>
+    <string name="snackbar_backup_export_success">Backup exported successfully</string>
+    <string name="snackbar_backup_export_failure">Backup export failed</string>
+    <string name="snackbar_backup_import_success">Backup imported successfully</string>
+    <string name="snackbar_backup_import_failure">Backup import failed</string>
+
 </resources>

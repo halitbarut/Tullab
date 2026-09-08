@@ -440,13 +440,22 @@ fun showPaymentHistoryDialog() {
         markAsPaidDialogVisibility.value = false
     }
 
-    fun confirmMarkAsPaidAndDismiss() {
+    fun confirmMarkAsPaidAndDismiss(onConfirmed: ((paymentTimestamp: Long, amount: Double) -> Unit)? = null) {
         viewModelScope.launch {
             try {
+                val amountSnapshot = uiState.value.totalAmountDue
+                val now = System.currentTimeMillis()
                 markCurrentCycleAsPaid()
+                onConfirmed?.invoke(now, amountSnapshot)
             } finally {
                 markAsPaidDialogVisibility.value = false
             }
+        }
+    }
+
+    fun revertPaymentCycleUndo(paymentTimestamp: Long) {
+        viewModelScope.launch {
+            paymentRepository.revertPaymentCycle(studentId, paymentTimestamp)
         }
     }
 }

@@ -34,3 +34,15 @@ inline fun tullabPluralResource(
     val localizedContext = context.createConfigurationContext(newConfiguration)
     return localizedContext.resources.getQuantityString(id, quantity, *formatArgs)
 }
+
+fun getLocalizedString(
+    context: android.content.Context,
+    locale: java.util.Locale,
+    @StringRes id: Int,
+    vararg formatArgs: Any
+): String {
+    val configuration = Configuration(context.resources.configuration)
+    configuration.setLocale(locale)
+    val localizedContext = context.createConfigurationContext(configuration)
+    return localizedContext.resources.getString(id, *formatArgs)
+}
