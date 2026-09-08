@@ -84,8 +84,6 @@ import java.util.Locale
 import com.barutdev.tullab.util.calculateDelayToNextMidnight
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import androidx.compose.runtime.rememberCoroutineScope
 
 @Composable
 fun HomeworkScreen(
@@ -104,7 +102,6 @@ fun HomeworkScreen(
     val locale = LocalLocale.current
     val scaffoldController = LocalTullabScaffoldController.current
     val haptics = rememberTullabHapticFeedback()
-    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(expectedStudentId) {
         Log.d("HomeworkScreen", "Composing for expectedStudentId=$expectedStudentId")
@@ -133,13 +130,12 @@ fun HomeworkScreen(
         onDelete = { homework ->
             haptics.perform(TullabHapticFeedbackType.WARNING)
             viewModel.deleteHomeworkWithUndo(homework) { snapshot ->
-                coroutineScope.launch {
-                    scaffoldController.showUndoSnackbar(
-                        message = homeworkDeletedMessage,
-                        actionLabel = undoLabel,
-                        onUndo = { viewModel.restoreHomework(snapshot) }
-                    )
-                }
+                // Persistent controller scope: survives navigation/tab switches.
+                scaffoldController.launchUndoSnackbar(
+                    message = homeworkDeletedMessage,
+                    actionLabel = undoLabel,
+                    onUndo = { viewModel.restoreHomework(snapshot) }
+                )
             }
         }
     )
@@ -211,13 +207,12 @@ fun HomeworkScreen(
                 val previousStatus = homework.status
                 viewModel.toggleHomeworkStatus(homework)
                 if (previousStatus == com.barutdev.tullab.domain.model.HomeworkStatus.PENDING) {
-                    coroutineScope.launch {
-                        scaffoldController.showUndoSnackbar(
-                            message = homeworkCompletedMessage,
-                            actionLabel = undoLabel,
-                            onUndo = { viewModel.revertHomeworkStatusUndo(homework, previousStatus) }
-                        )
-                    }
+                    // Persistent controller scope: survives navigation/tab switches.
+                    scaffoldController.launchUndoSnackbar(
+                        message = homeworkCompletedMessage,
+                        actionLabel = undoLabel,
+                        onUndo = { viewModel.revertHomeworkStatusUndo(homework, previousStatus) }
+                    )
                 }
             }
         }

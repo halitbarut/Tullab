@@ -49,7 +49,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -124,7 +123,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import com.barutdev.tullab.util.calculateDelayToNextMidnight
 import androidx.compose.material.icons.outlined.Assignment
 import androidx.compose.material.icons.outlined.DateRange
@@ -157,7 +155,6 @@ fun CalendarScreen(
     val requiresFeePrompt by viewModel.requiresFeePrompt.collectAsStateWithLifecycle()
     val lessonToRevert by viewModel.lessonToRevert.collectAsStateWithLifecycle()
     val currencyCode by viewModel.currencyCode.collectAsStateWithLifecycle()
-    val coroutineScope = rememberCoroutineScope()
     val zoneId = remember { ZoneId.systemDefault() }
     val snackbarHostState = scaffoldController.snackbarHostState
     val haptics = rememberTullabHapticFeedback()
@@ -396,9 +393,10 @@ fun CalendarScreen(
                             .atZone(zoneId)
                             .toInstant()
                             .toEpochMilli()
-                        coroutineScope.launch {
+                        // Persistent controller scope: save + Snackbar survive tab switches.
+                        scaffoldController.launchPersistent {
                             viewModel.saveLesson(epochMillis)
-                            snackbarHostState.showSnackbar(message = scheduledMessage)
+                            scaffoldController.showMessage(message = scheduledMessage)
                         }
                         showScheduleTimePicker = false
                     }) {

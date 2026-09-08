@@ -389,6 +389,7 @@ class DashboardViewModelTest {
             override suspend fun markStudentAsPaid(studentId: Int) {}
             override suspend fun markLessonAsPaid(lessonId: Int, durationInHours: Double?, customFee: Double?) {}
             override suspend fun revertLessonPayment(lessonId: Int) {}
+            override suspend fun revertPaymentCycle(studentId: Int, paymentTimestamp: Long) {}
         }
 
         val userPreferencesRepository = object : UserPreferencesRepository {

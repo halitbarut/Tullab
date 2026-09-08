@@ -238,13 +238,14 @@ class TullabScaffoldController internal constructor(
     suspend fun showUndoSnackbar(
         message: String,
         actionLabel: String,
-        onUndo: suspend () -> Unit
+        onUndo: suspend () -> Unit,
+        duration: SnackbarDuration = SnackbarDuration.Short
     ) {
         snackbarHostState.currentSnackbarData?.dismiss()
         val result = snackbarHostState.showSnackbar(
             message = message,
             actionLabel = actionLabel,
-            duration = SnackbarDuration.Short,
+            duration = duration,
             withDismissAction = false
         )
         if (result == SnackbarResult.ActionPerformed) {
@@ -256,26 +257,61 @@ class TullabScaffoldController internal constructor(
      * Non-suspending variant of [showUndoSnackbar] that launches in the persistent
      * controller scope. Use this from screen composables so the Snackbar is not
      * cancelled when the screen leaves composition during navigation.
+     *
+     * The root SnackbarHost outlives individual screens, so launching here keeps
+     * notifications active and actionable across all tab switches.
      */
     fun launchUndoSnackbar(
         message: String,
         actionLabel: String,
-        onUndo: suspend () -> Unit
+        onUndo: suspend () -> Unit,
+        duration: SnackbarDuration = SnackbarDuration.Short
     ) {
         coroutineScope.launch {
-            showUndoSnackbar(message = message, actionLabel = actionLabel, onUndo = onUndo)
+            showUndoSnackbar(
+                message = message,
+                actionLabel = actionLabel,
+                onUndo = onUndo,
+                duration = duration
+            )
         }
     }
 
     /**
      * Displays a standard informational message Snackbar (e.g. backup export/import status).
      */
-    suspend fun showMessage(message: String) {
+    suspend fun showMessage(
+        message: String,
+        duration: SnackbarDuration = SnackbarDuration.Short
+    ) {
         snackbarHostState.currentSnackbarData?.dismiss()
         snackbarHostState.showSnackbar(
             message = message,
-            duration = SnackbarDuration.Short
+            duration = duration
         )
+    }
+
+    /**
+     * Non-suspending variant of [showMessage] that launches in the persistent
+     * controller scope. Use this from screen composables so the Snackbar is not
+     * cancelled when the screen leaves composition during navigation.
+     */
+    fun launchMessage(
+        message: String,
+        duration: SnackbarDuration = SnackbarDuration.Short
+    ) {
+        coroutineScope.launch {
+            showMessage(message = message, duration = duration)
+        }
+    }
+
+    /**
+     * Launches arbitrary suspend work in the persistent controller scope.
+     * Use this when both background work and its resulting Snackbar must survive
+     * navigation/tab switches (e.g. backup export/import, reset).
+     */
+    fun launchPersistent(block: suspend CoroutineScope.() -> Unit) {
+        coroutineScope.launch(block = block)
     }
 
     private fun isActiveOwner(ownerId: Any): Boolean = activeChromeOwnerId === ownerId
