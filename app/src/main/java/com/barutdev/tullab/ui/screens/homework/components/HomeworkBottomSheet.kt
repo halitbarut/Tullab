@@ -53,7 +53,7 @@ import com.barutdev.tullab.ui.theme.StatusRed
 import com.barutdev.tullab.ui.theme.StatusRedContainer
 import com.barutdev.tullab.util.tullabStringResource
 import java.time.Instant
-import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
@@ -76,7 +76,6 @@ fun HomeworkBottomSheet(
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val locale = LocalLocale.current
-    val zoneId = remember { ZoneId.systemDefault() }
     val previewFormatter = remember(locale) {
         DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale)
     }
@@ -176,7 +175,10 @@ fun HomeworkBottomSheet(
                         style = MaterialTheme.typography.titleLarge,
                         modifier = Modifier.weight(1f)
                     )
-                    if (isEditing && editingHomework?.isOverdue() == true) {
+                    if (isEditing && editingHomework?.copy(
+                            status = status,
+                            dueDate = selectedDueDateMillis ?: editingHomework.dueDate
+                        )?.isOverdue() == true) {
                         Surface(
                             color = StatusRedContainer,
                             shape = MaterialTheme.shapes.small
@@ -224,7 +226,7 @@ fun HomeworkBottomSheet(
                 // Read-only clickable date field that opens DatePickerDialog with localized format
                 val dueDateText = selectedDueDateMillis?.let { millis ->
                     Instant.ofEpochMilli(millis)
-                        .atZone(zoneId)
+                        .atZone(ZoneOffset.UTC)
                         .toLocalDate()
                         .format(previewFormatter)
                 }.orEmpty()
@@ -296,7 +298,7 @@ fun HomeworkBottomSheet(
 
                 selectedDueDateMillis?.let { millis ->
                     val readable = Instant.ofEpochMilli(millis)
-                        .atZone(zoneId)
+                        .atZone(ZoneOffset.UTC)
                         .toLocalDate()
                         .format(previewFormatter)
                     Text(

@@ -400,4 +400,65 @@ class CalendarViewModelTest {
         assertEquals(null, viewModel.lessonToLog.value)
         assertEquals(false, viewModel.isLogLessonDialogVisible.value)
     }
+
+    @Test
+    fun `onLogLessonMarkNotDone updates date to dateMillis and marks lesson as cancelled`() = runTest {
+        val scheduledLesson = Lesson(
+            id = 16,
+            studentId = 1,
+            date = 1000L,
+            status = LessonStatus.SCHEDULED,
+            durationInHours = 1.0,
+            notes = null,
+            pricingMode = com.barutdev.tullab.domain.model.PricingMode.PER_HOUR,
+            rateOrFee = 50.0
+        )
+        viewModel.onLogLessonClicked(scheduledLesson)
+        val updatedDateMillis = 9999L
+
+        viewModel.onLogLessonMarkNotDone(notes = "Cancelled due to illness", dateMillis = updatedDateMillis)
+        advanceUntilIdle()
+
+        coVerify {
+            lessonRepository.updateLesson(match {
+                it.id == 16 &&
+                it.date == updatedDateMillis &&
+                it.status == LessonStatus.CANCELLED &&
+                it.notes == "Cancelled due to illness" &&
+                it.durationInHours == null
+            })
+        }
+        coVerify { cancelNotificationAlarmsUseCase(16) }
+        assertEquals(null, viewModel.lessonToLog.value)
+        assertEquals(false, viewModel.isLogLessonDialogVisible.value)
+    }
+
+    @Test
+    fun `onLogLessonMarkNotDone preserves original date when dateMillis is null`() = runTest {
+        val scheduledLesson = Lesson(
+            id = 17,
+            studentId = 1,
+            date = 1000L,
+            status = LessonStatus.SCHEDULED,
+            durationInHours = 1.0,
+            notes = null,
+            pricingMode = com.barutdev.tullab.domain.model.PricingMode.PER_HOUR,
+            rateOrFee = 50.0
+        )
+        viewModel.onLogLessonClicked(scheduledLesson)
+
+        viewModel.onLogLessonMarkNotDone(notes = "Cancelled", dateMillis = null)
+        advanceUntilIdle()
+
+        coVerify {
+            lessonRepository.updateLesson(match {
+                it.id == 17 &&
+                it.date == 1000L &&
+                it.status == LessonStatus.CANCELLED
+            })
+        }
+        coVerify { cancelNotificationAlarmsUseCase(17) }
+        assertEquals(null, viewModel.lessonToLog.value)
+        assertEquals(false, viewModel.isLogLessonDialogVisible.value)
+    }
 }

@@ -256,6 +256,89 @@ class DashboardViewModelTest {
         viewModel.viewModelScope.cancel()
     }
 
+    @Test
+    fun `onLogLessonMarkNotDone updates date to dateMillis and marks lesson as cancelled`() = runTest {
+        val student = Student(id = 1, fullName = "Test Student", hourlyRate = 80.0)
+        val lesson = Lesson(
+            id = 26, studentId = 1, date = 1000L,
+            status = LessonStatus.SCHEDULED,
+            durationInHours = 1.0, notes = null,
+            pricingMode = PricingMode.PER_HOUR,
+            rateOrFee = 80.0
+        )
+        val cancelAlarmUseCase: CancelNotificationAlarmsUseCase = mockk(relaxed = true)
+        val mockLessonRepo: LessonRepository = mockk(relaxed = true)
+
+        val viewModel = createViewModel(
+            student = student,
+            lessons = listOf(lesson),
+            lessonRepository = mockLessonRepo,
+            cancelNotificationAlarmsUseCase = cancelAlarmUseCase
+        )
+
+        viewModel.onLogLessonClicked(lesson)
+        val updatedDateMillis = 9999L
+
+        viewModel.onLogLessonMarkNotDone(notes = "Cancelled due to illness", dateMillis = updatedDateMillis)
+        advanceUntilIdle()
+        val stateDismissed = viewModel.uiState.first { !it.isLogLessonDialogVisible }
+
+        coVerify {
+            mockLessonRepo.updateLesson(match {
+                it.id == 26 &&
+                it.date == updatedDateMillis &&
+                it.status == LessonStatus.CANCELLED &&
+                it.notes == "Cancelled due to illness" &&
+                it.durationInHours == null
+            })
+        }
+        coVerify { cancelAlarmUseCase(26) }
+        assertEquals(null, stateDismissed.lessonToLog)
+        assertEquals(false, stateDismissed.isLogLessonDialogVisible)
+
+        viewModel.viewModelScope.cancel()
+    }
+
+    @Test
+    fun `onLogLessonMarkNotDone preserves original date when dateMillis is null`() = runTest {
+        val student = Student(id = 1, fullName = "Test Student", hourlyRate = 80.0)
+        val lesson = Lesson(
+            id = 27, studentId = 1, date = 1000L,
+            status = LessonStatus.SCHEDULED,
+            durationInHours = 1.0, notes = null,
+            pricingMode = PricingMode.PER_HOUR,
+            rateOrFee = 80.0
+        )
+        val cancelAlarmUseCase: CancelNotificationAlarmsUseCase = mockk(relaxed = true)
+        val mockLessonRepo: LessonRepository = mockk(relaxed = true)
+
+        val viewModel = createViewModel(
+            student = student,
+            lessons = listOf(lesson),
+            lessonRepository = mockLessonRepo,
+            cancelNotificationAlarmsUseCase = cancelAlarmUseCase
+        )
+
+        viewModel.onLogLessonClicked(lesson)
+
+        viewModel.onLogLessonMarkNotDone(notes = "Cancelled", dateMillis = null)
+        advanceUntilIdle()
+        val stateDismissed = viewModel.uiState.first { !it.isLogLessonDialogVisible }
+
+        coVerify {
+            mockLessonRepo.updateLesson(match {
+                it.id == 27 &&
+                it.date == 1000L &&
+                it.status == LessonStatus.CANCELLED
+            })
+        }
+        coVerify { cancelAlarmUseCase(27) }
+        assertEquals(null, stateDismissed.lessonToLog)
+        assertEquals(false, stateDismissed.isLogLessonDialogVisible)
+
+        viewModel.viewModelScope.cancel()
+    }
+
     private fun createViewModel(
         student: Student,
         lessons: List<Lesson>,

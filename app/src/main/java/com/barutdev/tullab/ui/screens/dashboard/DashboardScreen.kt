@@ -224,8 +224,8 @@ LaunchedEffect(viewModel) {
         onComplete = { duration, notes, pricingMode, rateOrFeeInput ->
             viewModel.onLogLessonComplete(duration, notes, pricingMode, rateOrFeeInput)
         },
-        onMarkNotDone = { notes ->
-            viewModel.onLogLessonMarkNotDone(notes)
+        onMarkNotDone = { notes, dateMillis ->
+            viewModel.onLogLessonMarkNotDone(notes, dateMillis)
         },
         onDelete = { lesson ->
             viewModel.deleteLesson(lesson.id)

@@ -44,7 +44,7 @@ import com.barutdev.tullab.ui.theme.StatusRed
 import com.barutdev.tullab.ui.theme.StatusRedContainer
 import com.barutdev.tullab.ui.theme.LocalLocale
 import java.time.Instant
-import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
@@ -59,7 +59,6 @@ fun HomeworkDialog(
     if (!showDialog) return
 
     val locale = LocalLocale.current
-    val zoneId = remember { ZoneId.systemDefault() }
     val previewFormatter = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
 
     val editingId = editingHomework?.id
@@ -107,7 +106,10 @@ fun HomeworkDialog(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(text = dialogTitle, modifier = Modifier.weight(1f, fill = false))
-                if (isEditing && editingHomework?.isOverdue() == true) {
+                if (isEditing && editingHomework?.copy(
+                        status = status,
+                        dueDate = selectedDueDateMillis ?: editingHomework.dueDate
+                    )?.isOverdue() == true) {
                     Surface(
                         color = StatusRedContainer,
                         shape = MaterialTheme.shapes.small
@@ -215,7 +217,7 @@ fun HomeworkDialog(
                 )
                 selectedDueDateMillis?.let { millis ->
                     val readable = Instant.ofEpochMilli(millis)
-                        .atZone(zoneId)
+                        .atZone(ZoneOffset.UTC)
                         .toLocalDate()
                         .format(previewFormatter)
                     Text(text = tullabStringResource(id = R.string.homework_due_date_label, readable))

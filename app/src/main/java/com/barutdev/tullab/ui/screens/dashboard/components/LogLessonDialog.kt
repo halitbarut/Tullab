@@ -81,7 +81,7 @@ fun LogLessonDialog(
     onDismiss: () -> Unit,
     onSave: ((duration: String, notes: String, pricingMode: PricingMode, rateOrFee: String, isCompleted: Boolean, dateMillis: Long) -> Unit)? = null,
     onComplete: ((duration: String, notes: String, pricingMode: PricingMode, rateOrFee: String) -> Unit)? = null,
-    onMarkNotDone: ((notes: String) -> Unit)? = null,
+    onMarkNotDone: ((notes: String, dateMillis: Long) -> Unit)? = null,
     onDelete: ((lesson: Lesson) -> Unit)? = null,
     isMarkAsPaidMode: Boolean = false,
     requiresFeePrompt: Boolean = false,
@@ -266,7 +266,7 @@ fun LogLessonDialog(
             }
             statusChoice == LogLessonStatusChoice.CANCELLED -> {
                 if (onMarkNotDone != null) {
-                    onMarkNotDone(notes)
+                    onMarkNotDone(notes, selectedDateMillis)
                 } else if (onSave != null) {
                     onSave(duration, notes, pricingMode, rateOrFeeInput, false, selectedDateMillis)
                 } else {

@@ -44,6 +44,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -113,9 +114,15 @@ import java.time.temporal.WeekFields
 import java.util.Locale
 import com.barutdev.tullab.domain.model.Homework
 import com.barutdev.tullab.domain.model.HomeworkStatus
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import com.barutdev.tullab.util.calculateDelayToNextMidnight
 import androidx.compose.material.icons.outlined.Assignment
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.Edit
@@ -203,8 +210,8 @@ fun CalendarScreen(
         onComplete = { duration, notes, pricingMode, rateOrFeeInput ->
             viewModel.onLogLessonComplete(duration, notes, pricingMode, rateOrFeeInput)
         },
-        onMarkNotDone = { notes ->
-            viewModel.onLogLessonMarkNotDone(notes)
+        onMarkNotDone = { notes, dateMillis ->
+            viewModel.onLogLessonMarkNotDone(notes, dateMillis)
         },
         onDelete = { lesson ->
             viewModel.deleteLesson(lesson.id)
@@ -218,7 +225,7 @@ fun CalendarScreen(
         existingLessons = lessons,
         onDismiss = viewModel::dismissMarkLessonAsPaidDialog,
         onComplete = { _, _, _, _ -> },
-        onMarkNotDone = { _ -> },
+        onMarkNotDone = { _, _ -> },
         isMarkAsPaidMode = true,
         requiresFeePrompt = requiresFeePrompt,
         onMarkAsPaid = { durationStr, feeStr ->
@@ -286,7 +293,8 @@ fun CalendarScreen(
                 viewModel.studentId?.let { studentId ->
                     onNavigateToHomework(studentId, homework.id)
                 }
-            }
+            },
+            zoneId = zoneId
         )
 
         val selectedDateLesson = remember(selectedDate, lessons, zoneId) {
@@ -366,7 +374,7 @@ fun CalendarScreen(
 }
 
 @Composable
-private fun CalendarScreenContent(
+internal fun CalendarScreenContent(
     modifier: Modifier = Modifier,
     currentMonth: YearMonth,
     selectedDate: LocalDate,
@@ -381,12 +389,44 @@ private fun CalendarScreenContent(
     onRevertPaymentClick: (Lesson) -> Unit,
     onToggleHomeworkStatus: (Homework) -> Unit,
     onHomeworkDetailsClick: (Homework) -> Unit,
-    onNavigateToBulkSchedule: (() -> Unit)? = null
+    onNavigateToBulkSchedule: (() -> Unit)? = null,
+    zoneId: ZoneId = ZoneId.systemDefault(),
+    timeProvider: () -> Instant = { Instant.now() }
 ) {
     val currentLocale = LocalLocale.current
-    val zoneId = remember { ZoneId.systemDefault() }
-    val today = remember { LocalDate.now(zoneId) }
-    val utcToday = remember { LocalDate.now(ZoneOffset.UTC) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    var today by remember(zoneId) { mutableStateOf(timeProvider().atZone(zoneId).toLocalDate()) }
+    var utcToday by remember { mutableStateOf(timeProvider().atZone(ZoneOffset.UTC).toLocalDate()) }
+
+    DisposableEffect(lifecycleOwner, zoneId) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                today = timeProvider().atZone(zoneId).toLocalDate()
+                utcToday = timeProvider().atZone(ZoneOffset.UTC).toLocalDate()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    LaunchedEffect(zoneId) {
+        while (isActive) {
+            val delayMs = calculateDelayToNextMidnight(timeProvider(), zoneId)
+            delay(delayMs)
+            today = timeProvider().atZone(zoneId).toLocalDate()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        while (isActive) {
+            val delayMs = calculateDelayToNextMidnight(timeProvider(), ZoneOffset.UTC)
+            delay(delayMs)
+            utcToday = timeProvider().atZone(ZoneOffset.UTC).toLocalDate()
+        }
+    }
 
     val lessonsByDate = remember(lessons, zoneId) {
         lessons.groupBy { lesson ->
@@ -834,13 +874,7 @@ private fun HomeworkDetailCard(
     onDetailsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val dueDate = remember(homework.dueDate) {
-        Instant.ofEpochMilli(homework.dueDate)
-            .atZone(ZoneOffset.UTC)
-            .toLocalDate()
-    }
-    
-    val isOverdue = homework.status == HomeworkStatus.PENDING && dueDate.isBefore(utcToday)
+    val isOverdue = remember(homework, utcToday) { homework.isOverdue(utcToday) }
     
     val statusText = when {
         isOverdue -> tullabStringResource(id = R.string.homework_status_overdue)

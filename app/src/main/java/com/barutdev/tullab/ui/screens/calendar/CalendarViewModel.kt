@@ -222,10 +222,10 @@ class CalendarViewModel @Inject constructor(
         }
     }
 
-    fun onLogLessonMarkNotDone(notes: String) {
+    fun onLogLessonMarkNotDone(notes: String, dateMillis: Long? = null) {
         val lessonId = selectedLessonForLogging.value?.id ?: return
         viewModelScope.launch {
-            markLessonNotDone(lessonId, notes)
+            markLessonNotDone(lessonId, notes, dateMillis)
         }
     }
 
@@ -249,10 +249,11 @@ class CalendarViewModel @Inject constructor(
         clearLogLessonSelection()
     }
 
-    private suspend fun markLessonNotDone(lessonId: Int, notes: String) {
-        val lesson = lessons.value.firstOrNull { it.id == lessonId } ?: return
+    private suspend fun markLessonNotDone(lessonId: Int, notes: String, dateMillis: Long? = null) {
+        val lesson = lessons.value.firstOrNull { it.id == lessonId } ?: selectedLessonForLogging.value ?: return
         val updatedLesson = lesson.copy(
             status = LessonStatus.CANCELLED,
+            date = dateMillis ?: lesson.date,
             durationInHours = null,
             notes = notes.trim().takeIf { it.isNotBlank() }
         )

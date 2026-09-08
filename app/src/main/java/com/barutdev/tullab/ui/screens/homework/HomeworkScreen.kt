@@ -72,9 +72,13 @@ import com.barutdev.tullab.ui.components.AnimatedListItem
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
+import com.barutdev.tullab.util.calculateDelayToNextMidnight
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 
 @Composable
 fun HomeworkScreen(
@@ -189,6 +193,15 @@ private fun HomeworkScreenContent(
 ) {
     val locale = LocalLocale.current
     var selectedFilter by rememberSaveable { mutableStateOf(HomeworkFilter.ALL) }
+    var utcToday by remember { mutableStateOf(LocalDate.now(ZoneOffset.UTC)) }
+
+    LaunchedEffect(Unit) {
+        while (isActive) {
+            val delayMs = calculateDelayToNextMidnight(Instant.now(), ZoneOffset.UTC)
+            delay(delayMs)
+            utcToday = LocalDate.now(ZoneOffset.UTC)
+        }
+    }
 
     val filteredHomeworkList = remember(homeworkList, selectedFilter) {
         when (selectedFilter) {
@@ -239,7 +252,8 @@ private fun HomeworkScreenContent(
                     HomeworkListItem(
                         homework = homework,
                         locale = locale,
-                        onClick = onHomeworkClick
+                        onClick = onHomeworkClick,
+                        utcToday = utcToday
                     )
                 }
             }
@@ -287,16 +301,17 @@ private fun HomeworkListItem(
     homework: Homework,
     locale: Locale,
     onClick: (Homework) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    utcToday: LocalDate = LocalDate.now(ZoneOffset.UTC)
 ) {
     val dueDateText = remember(homework.dueDate, locale) {
         val formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale)
         Instant.ofEpochMilli(homework.dueDate)
-            .atZone(java.time.ZoneOffset.UTC)
+            .atZone(ZoneOffset.UTC)
             .toLocalDate()
             .format(formatter)
     }
-    val isOverdue = remember(homework) { homework.isOverdue() }
+    val isOverdue = remember(homework, utcToday) { homework.isOverdue(utcToday) }
     Card(
         modifier = modifier
             .fillMaxWidth()
