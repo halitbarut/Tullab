@@ -182,10 +182,19 @@ class CalendarViewModel @Inject constructor(
                 else -> LessonStatus.SCHEDULED
             }
 
+            // Duration consistency: COMPLETED/PAID require duration > 0 for any
+            // pricing mode so hour statistics stay accurate. Flat-fee totals
+            // still never multiply (see calculatedValue).
+            if ((newStatus == LessonStatus.COMPLETED || newStatus == LessonStatus.PAID) &&
+                (durationValue == null || durationValue <= 0.0)
+            ) {
+                return@launch
+            }
+
             val updatedLesson = lesson.copy(
                 date = dateMillis,
                 status = newStatus,
-                durationInHours = if (pricingMode == com.barutdev.tullab.domain.model.PricingMode.PER_HOUR) durationValue else null,
+                durationInHours = durationValue,
                 notes = notes.trim().ifEmpty { null },
                 pricingMode = pricingMode,
                 rateOrFee = rateValue
@@ -207,12 +216,12 @@ class CalendarViewModel @Inject constructor(
         viewModelScope.launch {
             val normalizedDuration = duration.trim().replace(',', '.')
             val durationValue = normalizedDuration.toDoubleOrNull()
-            
+
             val normalizedRate = rateOrFee.trim().replace(',', '.')
             val rateValue = normalizedRate.toDoubleOrNull() ?: lesson.rateOrFee
 
             val updatedLesson = lesson.copy(
-                durationInHours = if (pricingMode == com.barutdev.tullab.domain.model.PricingMode.PER_HOUR) durationValue else null,
+                durationInHours = durationValue,
                 notes = notes.trim().ifEmpty { null },
                 pricingMode = pricingMode,
                 rateOrFee = rateValue
@@ -232,14 +241,15 @@ class CalendarViewModel @Inject constructor(
     private suspend fun completeLesson(lessonId: Int, duration: String, notes: String, pricingMode: com.barutdev.tullab.domain.model.PricingMode, rateOrFeeInput: String) {
         val normalizedDuration = duration.trim().replace(',', '.')
         val durationValue = normalizedDuration.toDoubleOrNull()
-        if (pricingMode == com.barutdev.tullab.domain.model.PricingMode.PER_HOUR && (durationValue == null || durationValue <= 0.0)) {
+        // COMPLETED requires duration > 0 for any pricing mode (hour statistics).
+        if (durationValue == null || durationValue <= 0.0) {
             return
         }
         val parsedRateOrFee = rateOrFeeInput.trim().replace(',', '.').toDoubleOrNull()
         val lesson = lessons.value.firstOrNull { it.id == lessonId } ?: return
         val updatedLesson = lesson.copy(
             status = LessonStatus.COMPLETED,
-            durationInHours = if (pricingMode == com.barutdev.tullab.domain.model.PricingMode.PER_HOUR) durationValue else null,
+            durationInHours = durationValue,
             notes = notes.trim().takeIf { it.isNotBlank() },
             pricingMode = pricingMode,
             rateOrFee = parsedRateOrFee ?: lesson.rateOrFee
@@ -283,7 +293,13 @@ class CalendarViewModel @Inject constructor(
 
     fun onMarkLessonAsPaidClicked(lesson: Lesson) {
         viewModelScope.launch {
-            if (lesson.status == LessonStatus.COMPLETED && lesson.durationInHours != null && lesson.rateOrFee > 0.0) {
+            // Harmonized trigger: immediate one-tap payment only when COMPLETED
+            // with valid duration > 0 (any pricing mode) and a known rate/fee.
+            // SCHEDULED or missing/zero duration always opens the sheet to
+            // capture hours. Flat-fee totals still never multiply by duration.
+            val hasValidDuration = (lesson.durationInHours ?: 0.0) > 0.0
+            val hasSufficientDetails = hasValidDuration && lesson.rateOrFee > 0.0
+            if (lesson.status == LessonStatus.COMPLETED && hasSufficientDetails) {
                 paymentRepository.markLessonAsPaid(lesson.id, lesson.durationInHours, null)
             } else {
                 requiresFeePromptState.value = lesson.rateOrFee <= 0.0
@@ -354,11 +370,10 @@ class CalendarViewModel @Inject constructor(
      * Immediately deletes a lesson from the database and invokes [onDeleted] with the lesson
      * snapshot so the caller can offer an undo Snackbar.
      */
-    fun deleteLessonWithUndo(lessonId: Int, onDeleted: (Lesson) -> Unit) {
+    fun deleteLessonWithUndo(lesson: Lesson, onDeleted: (Lesson) -> Unit) {
         viewModelScope.launch {
-            val lesson = lessons.value.firstOrNull { it.id == lessonId } ?: return@launch
-            cancelNotificationAlarmsUseCase(lessonId)
-            lessonRepository.deleteLesson(lessonId)
+            cancelNotificationAlarmsUseCase(lesson.id)
+            lessonRepository.deleteLesson(lesson.id)
             clearLogLessonSelection()
             onDeleted(lesson)
         }

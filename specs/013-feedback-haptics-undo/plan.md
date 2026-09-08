@@ -1,10 +1,10 @@
 # Implementation Plan: Comprehensive Haptic & Visual Feedback with Undo
 
-**Branch**: `013-feedback-haptics-undo` | **Date**: 2026-09-08 | **Spec**: [specs/013-feedback-haptics-undo/spec.md](file:///home/halit/AndroidStudioProjects/Tullab/specs/013-feedback-haptics-undo/spec.md)
+**Branch**: `013-feedback-haptics-undo` | **Date**: 2026-09-08 | **Spec**: [specs/013-feedback-haptics-undo/spec.md](spec.md)
 
 ## Summary
 
-Implement tactile feedback via Jetpack Compose and Android system haptic constants on critical interactions (payment logging, homework completion toggle, segmented button switches, destructive deletions). Introduce actionable Material 3 visual feedback via the root `SnackbarHost` in `TullabApp` managed by `TullabScaffoldController`, enabling immediate, non-intrusive "Undo" actions for payments, homework completions, and item deletions with in-memory snapshot restoration. Ensure complete trilingual localization parity across English, Turkish, and German without obstructing user navigation.
+Implement tactile feedback via Jetpack Compose and Android system haptic constants on critical interactions (payment logging, homework completion toggle, segmented button switches, destructive deletions). Introduce actionable Material 3 visual feedback via the root Compose scaffold in `TullabNavGraph` managed by `TullabScaffoldController`, enabling immediate, non-intrusive "Undo" actions for payments, homework completions, and item deletions with in-memory snapshot restoration. Ensure complete trilingual localization parity across English, Turkish, and German without obstructing user navigation.
 
 ## Technical Context
 

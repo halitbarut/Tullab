@@ -221,7 +221,7 @@ fun CalendarScreen(
         },
         onDelete = { lesson ->
             haptics.perform(TullabHapticFeedbackType.WARNING)
-            viewModel.deleteLessonWithUndo(lesson.id) { snapshot ->
+            viewModel.deleteLessonWithUndo(lesson) { snapshot ->
                 scaffoldController.launchUndoSnackbar(
                     message = lessonDeletedMessage,
                     actionLabel = undoLabel,
@@ -248,7 +248,15 @@ fun CalendarScreen(
             haptics.perform(TullabHapticFeedbackType.CONFIRMATION)
             viewModel.onConfirmMarkLessonAsPaid(duration, fee)
             if (pendingLesson != null) {
-                val amount = fee ?: ((duration ?: pendingLesson.durationInHours ?: 0.0) * pendingLesson.rateOrFee)
+                val amount = fee ?: if (duration != null) {
+                    if (pendingLesson.pricingMode == com.barutdev.tullab.domain.model.PricingMode.PER_HOUR) {
+                        duration * pendingLesson.rateOrFee
+                    } else {
+                        pendingLesson.rateOrFee
+                    }
+                } else {
+                    pendingLesson.calculatedValue
+                }
                 val formattedAmount = com.barutdev.tullab.util.formatCurrency(amount, currencyCode, currentLocale)
                 val message = getLocalizedString(context, currentLocale, R.string.snackbar_payment_recorded, formattedAmount)
                 scaffoldController.launchUndoSnackbar(
@@ -312,11 +320,16 @@ fun CalendarScreen(
             onSelectDate = viewModel::onSelectDate,
             onLogLessonClick = viewModel::onLogLessonClicked,
             onLessonMarkAsPaidClick = { lesson ->
-                // Immediate payment path: lesson is COMPLETED with known rate
+                // Harmonized trigger (parity with ViewModel): immediate one-tap
+                // payment only when COMPLETED with valid duration > 0 and known
+                // rate/fee. SCHEDULED or zero/missing duration always opens the
+                // sheet to capture hours. Flat-fee totals never multiply.
+                val hasValidDuration = (lesson.durationInHours ?: 0.0) > 0.0
+                val hasSufficientDetails = hasValidDuration && lesson.rateOrFee > 0.0
                 if (lesson.status == com.barutdev.tullab.domain.model.LessonStatus.COMPLETED &&
-                    lesson.durationInHours != null && lesson.rateOrFee > 0.0) {
+                    hasSufficientDetails) {
                     haptics.perform(TullabHapticFeedbackType.CONFIRMATION)
-                    val amount = lesson.durationInHours * lesson.rateOrFee
+                    val amount = lesson.calculatedValue
                     val formattedAmount = com.barutdev.tullab.util.formatCurrency(amount, currencyCode, currentLocale)
                     val message = getLocalizedString(context, currentLocale, R.string.snackbar_payment_recorded, formattedAmount)
                     viewModel.onMarkLessonAsPaidClicked(lesson)

@@ -28,11 +28,11 @@ Extend `TullabScaffoldController` and introduce an `UndoManager` / `FeedbackCont
    suspend fun showUndoSnackbar(
        message: String,
        actionLabel: String,
-       onUndo: () -> Unit
+       onUndo: suspend () -> Unit
    )
    ```
 3. When `showUndoSnackbar` is called:
-   - Any currently active undo callback is committed / executed if pending.
+   - Any currently active snackbar is dismissed without invoking the previous undo callback (only the latest action is undoable).
    - It calls `snackbarHostState.showSnackbar(message, actionLabel = actionLabel, duration = SnackbarDuration.Short)`.
    - If the returned `SnackbarResult == SnackbarResult.ActionPerformed`, execute `onUndo()`.
 4. For plain notifications (like CSV backup export/import):

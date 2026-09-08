@@ -6,7 +6,7 @@
 ## 1. Haptic Feedback Interface Contract
 
 ### `HapticFeedbackHelper`
-Located in `ui/theme/` or `util/`:
+Located in `app/src/main/java/com/barutdev/tullab/ui/components/TullabHaptics.kt`:
 
 ```kotlin
 enum class TullabHapticFeedbackType {

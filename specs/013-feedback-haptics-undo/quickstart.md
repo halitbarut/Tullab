@@ -64,5 +64,7 @@ Verify build compilation:
 ### Scenario 5: Localization Parity
 1. Switch app language to Turkish in Settings.
 2. Repeat Scenario 1 & 2. Verify Turkish labels: `"Geri Al"`, `"... tutarında ödeme kaydedildi"`, `"Ödev tamamlandı"`.
-3. Switch app language to German in Settings.
-4. Repeat Scenario 1 & 2. Verify German labels: `"Rückgängig"`, `"Zahlung von ... erfasst"`, `"Hausaufgabe abgeschlossen"`.
+3. Verify Turkish CSV backup notifications: `"Yedekleme başarıyla dışa aktarıldı"`, `"Dışa aktarma başarısız oldu"`, `"Yedekleme başarıyla içe aktarıldı"`, `"İçe aktarma başarısız oldu"`.
+4. Switch app language to German in Settings.
+5. Repeat Scenario 1 & 2. Verify German labels: `"Rückgängig"`, `"Zahlung von ... erfasst"`, `"Hausaufgabe abgeschlossen"`.
+6. Verify German CSV backup notifications: `"Sicherung erfolgreich exportiert"`, `"Export fehlgeschlagen"`, `"Sicherung erfolgreich importiert"`, `"Import fehlgeschlagen"`.

@@ -1,8 +1,8 @@
 # Tasks: Comprehensive Haptic & Visual Feedback with Undo
 
 **Branch**: `013-feedback-haptics-undo`
-**Spec**: [spec.md](file:///home/halit/AndroidStudioProjects/Tullab/specs/013-feedback-haptics-undo/spec.md)
-**Plan**: [plan.md](file:///home/halit/AndroidStudioProjects/Tullab/specs/013-feedback-haptics-undo/plan.md)
+**Spec**: [spec.md](spec.md)
+**Plan**: [plan.md](plan.md)
 
 ---
 
@@ -87,7 +87,7 @@
 
 **Independent Test**: Export or import CSV backup in Settings and observe the resulting confirmation or failure Snackbar.
 
-- [x] T016 [US5] Audit and route backup export/import success and error notifications through `scaffoldController.snackbarHostState` in `app/src/main/java/com/barutdev/tullab/ui/screens/settings/SettingsScreen.kt`
+- [x] T016 [US5] Audit and route backup export/import success and error notifications through `scaffoldController.showMessage(message)` in `app/src/main/java/com/barutdev/tullab/ui/screens/settings/SettingsScreen.kt`
 
 **Checkpoint**: Backup visual feedback validated.
 

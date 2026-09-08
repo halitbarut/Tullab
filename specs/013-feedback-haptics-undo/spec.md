@@ -12,7 +12,7 @@
 
 ### Session 2026-09-08
 - Q: How should the deletion and "Undo" mechanism behave for items (lessons and homework) in terms of data persistence? → A: Immediate deletion from database with full in-memory snapshot re-inserted upon tapping "Undo".
-- Q: Where should the Snackbar notifications and Undo state orchestration be hosted to ensure navigation between screens doesn't interrupt active notifications or cause memory leaks? → A: Root/App-level `SnackbarHost` in `TullabApp` so Snackbars and Undo persist smoothly across screen navigation.
+- Q: Where should the Snackbar notifications and Undo state orchestration be hosted to ensure navigation between screens doesn't interrupt active notifications or cause memory leaks? → A: Root Compose scaffold in `TullabNavGraph` orchestrated by `TullabScaffoldController` so Snackbars and Undo persist smoothly across screen navigation.
 - Q: If the user performs a new undoable action while a previous Undo Snackbar is still active, how should the system handle the active Undo action? → A: Replace the active Snackbar with the new one and commit the previous action (only the latest action is undoable).
 
 ## User Scenarios & Testing *(mandatory)*

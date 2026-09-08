@@ -5,7 +5,7 @@
 
 ## 1. Entities & Snapshots
 
-The feature requires no changes to the Room database schema. All persistence transitions occur via existing Room entities and DAOs (`Lesson`, `Homework`). Undo operations rely on in-memory snapshot restoration.
+The feature requires no changes to the Room database schema. All persistence transitions occur via existing Room entities and DAOs (`Lesson`, `Homework`, and `PaymentRecordEntity` via `PaymentRecordDao`). During `markLessonAsPaid`, an associated payment record is created alongside updating the lesson. On revert, the payment record is resolved and deleted via the lesson's `paymentTimestamp` before clearing the lesson payment fields. Undo operations rely on in-memory snapshot restoration. Revert operations remain keyed by `lessonId` without introducing a separate payment-record ID.
 
 ### In-Memory Undo Data Models
 

@@ -56,18 +56,24 @@ class PaymentRepositoryImpl @Inject constructor(
 
     override suspend fun markLessonAsPaid(lessonId: Int, durationInHours: Double?, customFee: Double?) {
         val now = System.currentTimeMillis()
-        
+
         database.withTransaction {
             val lesson = lessonDao.getLessonById(lessonId) ?: return@withTransaction
             val studentId = lesson.studentId
+            val isFlatFee = lesson.pricingMode == com.barutdev.tullab.domain.model.PricingMode.FLAT_FEE
 
-            val effectiveDuration = durationInHours ?: lesson.durationInHours ?: 0.0
+            // Duration consistency: PAID lessons always require duration > 0 for
+            // hour statistics (any pricing mode), defaulting missing values to
+            // 1.0h. FLAT_FEE totals still never multiply (rateOrFee alone);
+            // PER_HOUR totals remain duration * rateOrFee exclusively.
             val effectiveRate = customFee ?: lesson.rateOrFee
-            
-            val amount = if (lesson.pricingMode == com.barutdev.tullab.domain.model.PricingMode.PER_HOUR) {
-                effectiveDuration * effectiveRate
-            } else {
+            val rawDuration = durationInHours ?: lesson.durationInHours ?: 1.0
+            val effectiveDuration = if (rawDuration > 0.0) rawDuration else 1.0
+
+            val amount = if (isFlatFee) {
                 effectiveRate
+            } else {
+                effectiveDuration * effectiveRate
             }
             val amountMinor = (amount * 100.0).roundToLong()
 

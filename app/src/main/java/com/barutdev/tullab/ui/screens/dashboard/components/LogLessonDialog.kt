@@ -157,7 +157,23 @@ fun LogLessonDialog(
     val initialDurationStr = remember(lesson) {
         lesson.durationInHours?.let { if (it % 1.0 == 0.0) it.toInt().toString() else it.toString() } ?: ""
     }
-    var duration by remember(lesson) { mutableStateOf(initialDurationStr) }
+    // Duration consistency: completed/paid lessons (any pricing mode) and
+    // mark-as-paid transitions always require duration > 0 for hour statistics.
+    // Prefill missing durations with 1.0h default so the sheet never opens empty
+    // when a duration is mandatory. Flat-fee totals still never multiply.
+    val defaultDurationStr = remember(lesson, isMarkAsPaidMode) {
+        if (isMarkAsPaidMode ||
+            lesson.status == LessonStatus.COMPLETED ||
+            lesson.status == LessonStatus.PAID
+        ) {
+            "1"
+        } else {
+            ""
+        }
+    }
+    var duration by remember(lesson, isMarkAsPaidMode) {
+        mutableStateOf(initialDurationStr.ifEmpty { defaultDurationStr })
+    }
 
     val initialNotesStr = remember(lesson) { lesson.notes ?: "" }
     var notes by remember(lesson) { mutableStateOf(initialNotesStr) }
@@ -223,7 +239,13 @@ fun LogLessonDialog(
         isMarkAsPaidMode,
         requiresFeePrompt,
         selectedDateMillis,
-        isDateConflict
+        isDateConflict,
+        duration,
+        rateOrFeeInput,
+        pricingMode,
+        customFee,
+        isDataChanged,
+        statusChoice
     ) {
         derivedStateOf {
             isDialogSaveEnabled(
@@ -241,7 +263,8 @@ fun LogLessonDialog(
     }
 
     fun resetInputs() {
-        duration = lesson.durationInHours?.let { if (it % 1.0 == 0.0) it.toInt().toString() else it.toString() } ?: ""
+        duration = lesson.durationInHours?.let { if (it % 1.0 == 0.0) it.toInt().toString() else it.toString() }
+            ?: defaultDurationStr
         notes = lesson.notes.orEmpty()
         customFee = ""
         pricingMode = lesson.pricingMode
@@ -469,7 +492,11 @@ fun LogLessonDialog(
     val parsedDuration = parseDurationDecimal(duration)
     val isDurationEntered = duration.trim().isNotEmpty()
     val isDurationValid = parsedDuration != null && parsedDuration > 0.0
-    val isDurationRequired = isMarkAsPaidMode || (statusChoice == LogLessonStatusChoice.COMPLETED && pricingMode == PricingMode.PER_HOUR)
+    // Duration consistency: required for ALL completed/paid lessons regardless
+    // of pricing mode (Hourly or Flat Fee) so teaching hours are always captured.
+    // Flat-fee totals still never multiply by duration.
+    val isDurationRequired = isMarkAsPaidMode ||
+        statusChoice == LogLessonStatusChoice.COMPLETED
 
     val durationErrorText = when {
         isDurationEntered && !isDurationValid -> tullabStringResource(id = R.string.lesson_duration_invalid_error)
@@ -1033,11 +1060,14 @@ fun isDialogSaveEnabled(
     val isFeeValid = !requiresFeePrompt || parseDurationDecimal(customFeeStr)?.let { it > 0.0 } == true
     val isRateOrFeeValid = parseDurationDecimal(rateOrFeeInput) != null
 
+    // Harmonized validation: duration > 0 is required for ALL mark-as-paid
+    // transitions and ALL completed lessons, regardless of pricing mode, so hour
+    // statistics stay accurate. Flat-fee totals still never multiply by duration
+    // (see calculateDialogTotalFee / calculatedValue).
     return when {
         isMarkAsPaidMode -> isDurationValid && isFeeValid
         statusChoice == LogLessonStatusChoice.SCHEDULED -> (!isDurationEntered || isDurationValid) && isRateOrFeeValid
-        pricingMode == PricingMode.PER_HOUR -> isDurationValid && isRateOrFeeValid
-        else -> (!isDurationEntered || isDurationValid) && isRateOrFeeValid
+        else -> isDurationValid && isRateOrFeeValid
     }
 }
 
