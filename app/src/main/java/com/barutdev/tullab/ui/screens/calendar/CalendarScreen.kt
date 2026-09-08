@@ -28,6 +28,8 @@ import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -37,6 +39,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -49,6 +53,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import com.barutdev.tullab.util.tullabStringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -95,6 +100,7 @@ import java.text.NumberFormat
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.YearMonth
@@ -115,6 +121,7 @@ import androidx.compose.material.icons.outlined.Event
 import androidx.compose.material.icons.outlined.PlaylistAdd
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(
     onNavigateToStudentList: () -> Unit,
@@ -292,19 +299,53 @@ fun CalendarScreen(
         val dateActionIcon = if (hasLessonOnSelectedDate) Icons.Outlined.Edit else Icons.Outlined.Event
         val isSnackbarVisible = snackbarHostState.currentSnackbarData != null
 
+        var showScheduleTimePicker by remember { mutableStateOf(false) }
+
+        if (showScheduleTimePicker) {
+            val context = LocalContext.current
+            val timePickerState = rememberTimePickerState(
+                initialHour = 15,
+                initialMinute = 0,
+                is24Hour = android.text.format.DateFormat.is24HourFormat(context)
+            )
+
+            AlertDialog(
+                onDismissRequest = { showScheduleTimePicker = false },
+                title = { Text(tullabStringResource(R.string.bulk_schedule_time_picker_title)) },
+                text = {
+                    TimePicker(state = timePickerState)
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        val time = LocalTime.of(timePickerState.hour, timePickerState.minute)
+                        val epochMillis = selectedDate
+                            .atTime(time)
+                            .atZone(zoneId)
+                            .toInstant()
+                            .toEpochMilli()
+                        coroutineScope.launch {
+                            viewModel.saveLesson(epochMillis)
+                            snackbarHostState.showSnackbar(message = scheduledMessage)
+                        }
+                        showScheduleTimePicker = false
+                    }) {
+                        Text(tullabStringResource(R.string.dialog_action_ok))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showScheduleTimePicker = false }) {
+                        Text(tullabStringResource(R.string.dialog_action_cancel))
+                    }
+                }
+            )
+        }
+
         CalendarSpeedDialFab(
             onScheduleForDateClick = {
                 if (hasLessonOnSelectedDate && selectedDateLesson != null) {
                     viewModel.onLogLessonClicked(selectedDateLesson)
                 } else {
-                    val epochMillis = selectedDate
-                        .atStartOfDay(zoneId)
-                        .toInstant()
-                        .toEpochMilli()
-                    coroutineScope.launch {
-                        viewModel.saveLesson(epochMillis)
-                        snackbarHostState.showSnackbar(message = scheduledMessage)
-                    }
+                    showScheduleTimePicker = true
                 }
             },
             onBulkScheduleClick = {

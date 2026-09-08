@@ -13,6 +13,8 @@ import com.barutdev.tullab.domain.usecase.lesson.CreateBulkLessonsUseCase
 import com.barutdev.tullab.domain.usecase.lesson.UndoBulkLessonsUseCase
 import com.barutdev.tullab.domain.repository.LessonRepository
 import com.barutdev.tullab.domain.repository.HomeworkRepository
+import com.barutdev.tullab.domain.usecase.notification.CancelNotificationAlarmsUseCase
+import com.barutdev.tullab.domain.usecase.notification.ScheduleNotificationAlarmsUseCase
 import com.barutdev.tullab.navigation.STUDENT_ID_ARG
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,7 +31,9 @@ class BulkScheduleViewModel @Inject constructor(
     private val createLessonsUseCase: CreateBulkLessonsUseCase,
     private val undoUseCase: UndoBulkLessonsUseCase,
     private val lessonRepository: LessonRepository,
-    private val homeworkRepository: HomeworkRepository
+    private val homeworkRepository: HomeworkRepository,
+    private val scheduleNotificationAlarmsUseCase: ScheduleNotificationAlarmsUseCase,
+    private val cancelNotificationAlarmsUseCase: CancelNotificationAlarmsUseCase
 ) : ViewModel() {
 
     private val studentId: Int = checkNotNull(savedStateHandle[STUDENT_ID_ARG])
@@ -213,6 +217,9 @@ class BulkScheduleViewModel @Inject constructor(
             
             result.onSuccess { bulkResult ->
                 if (bulkResult.createdCount > 0) {
+                    bulkResult.createdLessons.forEach { lesson ->
+                        scheduleNotificationAlarmsUseCase(lesson.id)
+                    }
                     activeUndoSession = BatchUndoSession(
                         studentId = studentId,
                         lessonIds = bulkResult.createdLessonIds
@@ -256,6 +263,9 @@ class BulkScheduleViewModel @Inject constructor(
     private fun undoBatch() {
         val session = activeUndoSession ?: return
         viewModelScope.launch {
+            session.lessonIds.forEach { lessonId ->
+                cancelNotificationAlarmsUseCase(lessonId)
+            }
             val result = undoUseCase(session)
             result.onSuccess {
                 activeUndoSession = null

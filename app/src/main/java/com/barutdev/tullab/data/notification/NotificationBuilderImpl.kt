@@ -13,7 +13,6 @@ import com.barutdev.tullab.domain.model.LessonWithStudent
 import com.barutdev.tullab.domain.model.NotificationType
 import com.barutdev.tullab.domain.repository.NotificationBuilder
 import dagger.hilt.android.qualifiers.ApplicationContext
-import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -53,18 +52,38 @@ class NotificationBuilderImpl @Inject constructor(
     }
 
     /**
+     * Extracts and formats the lesson's actual start time using the user's localized time format.
+     * If the lesson was stored at midnight (e.g. legacy date-only records), falls back to 15:00
+     * so it never displays as midnight ("00:00").
+     */
+    private fun formatLocalizedLessonTime(lessonDateMillis: Long): String {
+        val zonedDateTime = java.time.Instant.ofEpochMilli(lessonDateMillis)
+            .atZone(java.time.ZoneId.systemDefault())
+        val localTime = zonedDateTime.toLocalTime()
+
+        val effectiveTime = if (localTime == java.time.LocalTime.MIDNIGHT) {
+            java.time.LocalTime.of(15, 0)
+        } else {
+            localTime
+        }
+
+        val effectiveInstant = zonedDateTime
+            .withHour(effectiveTime.hour)
+            .withMinute(effectiveTime.minute)
+            .toInstant()
+
+        return android.text.format.DateFormat.getTimeFormat(context)
+            .format(java.util.Date.from(effectiveInstant))
+    }
+
+    /**
      * Builds a lesson reminder notification with student name and lesson time.
      * Deep links to student calendar screen on tap.
      */
     private fun buildLessonReminder(lessonWithStudent: LessonWithStudent): Notification {
         val lesson = lessonWithStudent.lesson
         val student = lessonWithStudent.student
-        val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
-
-        // Convert timestamp to LocalTime
-        val lessonTime = java.time.Instant.ofEpochMilli(lesson.date)
-            .atZone(java.time.ZoneId.systemDefault())
-            .toLocalTime()
+        val formattedTime = formatLocalizedLessonTime(lesson.date)
 
         val title = context.getString(
             R.string.notification_lesson_reminder_title_new,
@@ -72,15 +91,16 @@ class NotificationBuilderImpl @Inject constructor(
         )
         val content = context.getString(
             R.string.notification_lesson_reminder_content,
-            lessonTime.format(timeFormatter)
+            formattedTime
         )
 
         val deepLinkIntent = createDeepLinkIntent(student.id)
 
         return NotificationCompat.Builder(context, CHANNEL_LESSON_REMINDERS)
-            .setSmallIcon(R.drawable.ic_launcher_foreground) // TODO: Replace with proper notification icon
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
             .setContentText(content)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(content))
             .setContentIntent(deepLinkIntent)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
@@ -94,12 +114,7 @@ class NotificationBuilderImpl @Inject constructor(
     private fun buildNoteReminder(lessonWithStudent: LessonWithStudent): Notification {
         val lesson = lessonWithStudent.lesson
         val student = lessonWithStudent.student
-        val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
-
-        // Convert timestamp to LocalTime
-        val lessonTime = java.time.Instant.ofEpochMilli(lesson.date)
-            .atZone(java.time.ZoneId.systemDefault())
-            .toLocalTime()
+        val formattedTime = formatLocalizedLessonTime(lesson.date)
 
         val title = context.getString(
             R.string.notification_note_reminder_title,
@@ -107,15 +122,16 @@ class NotificationBuilderImpl @Inject constructor(
         )
         val content = context.getString(
             R.string.notification_note_reminder_content,
-            lessonTime.format(timeFormatter)
+            formattedTime
         )
 
         val deepLinkIntent = createDeepLinkIntent(student.id)
 
         return NotificationCompat.Builder(context, CHANNEL_LESSON_NOTES)
-            .setSmallIcon(R.drawable.ic_launcher_foreground) // TODO: Replace with proper notification icon
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
             .setContentText(content)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(content))
             .setContentIntent(deepLinkIntent)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)

@@ -29,6 +29,8 @@ import java.time.DayOfWeek
 import com.barutdev.tullab.domain.model.WeeklyRoutineEndCondition
 import com.barutdev.tullab.domain.repository.HomeworkRepository
 import com.barutdev.tullab.domain.repository.LessonRepository
+import com.barutdev.tullab.domain.usecase.notification.CancelNotificationAlarmsUseCase
+import com.barutdev.tullab.domain.usecase.notification.ScheduleNotificationAlarmsUseCase
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class BulkScheduleViewModelTest {
@@ -36,6 +38,8 @@ class BulkScheduleViewModelTest {
     private lateinit var calculateCandidatesUseCase: CalculateBulkLessonCandidatesUseCase
     private lateinit var createLessonsUseCase: CreateBulkLessonsUseCase
     private lateinit var undoUseCase: UndoBulkLessonsUseCase
+    private lateinit var scheduleNotificationAlarmsUseCase: ScheduleNotificationAlarmsUseCase
+    private lateinit var cancelNotificationAlarmsUseCase: CancelNotificationAlarmsUseCase
     private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var viewModel: BulkScheduleViewModel
 
@@ -53,6 +57,8 @@ class BulkScheduleViewModelTest {
         undoUseCase = mockk(relaxed = true)
         lessonRepository = mockk(relaxed = true)
         homeworkRepository = mockk(relaxed = true)
+        scheduleNotificationAlarmsUseCase = mockk(relaxed = true)
+        cancelNotificationAlarmsUseCase = mockk(relaxed = true)
         savedStateHandle = SavedStateHandle(mapOf(STUDENT_ID_ARG to 1))
         
         viewModel = BulkScheduleViewModel(
@@ -61,7 +67,9 @@ class BulkScheduleViewModelTest {
             createLessonsUseCase,
             undoUseCase,
             lessonRepository,
-            homeworkRepository
+            homeworkRepository,
+            scheduleNotificationAlarmsUseCase,
+            cancelNotificationAlarmsUseCase
         )
     }
 
