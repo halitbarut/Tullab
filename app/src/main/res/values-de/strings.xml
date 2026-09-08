@@ -231,7 +231,7 @@
     <string name="calendar_status_scheduled_needs_logging">Geplant (Protokoll erforderlich)</string>
     <string name="calendar_status_cancelled">Abgesagt</string>
     <string name="calendar_homework_action_mark_complete">Erledigen</string>
-    <string name="calendar_homework_action_mark_pending">Ausstehend</string>
+    <string name="calendar_homework_action_mark_pending">Rückgängig</string>
     <string name="calendar_homework_action_details">Details</string>
     
     <string name="bulk_schedule_cap_reached_warning">Du kannst maximal 30 Lektionen auf einmal planen.</string>

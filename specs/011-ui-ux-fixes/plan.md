@@ -1,8 +1,8 @@
 # Implementation Plan: UI, UX, and Domain Fixes (Homework, Calendar, Settings)
 
-**Branch**: `011-ui-ux-fixes` | **Date**: 2026-09-08 | **Spec**: [specs/011-ui-ux-fixes/spec.md](file:///home/halit/AndroidStudioProjects/Tullab/specs/011-ui-ux-fixes/spec.md)
+**Branch**: `011-ui-ux-fixes` | **Date**: 2026-09-08 | **Spec**: [spec.md](spec.md)
 
-**Input**: Feature specification from `/specs/011-ui-ux-fixes/spec.md`
+**Input**: Feature specification from `spec.md`
 
 ## Summary
 

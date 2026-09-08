@@ -2,7 +2,7 @@
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-09-08
-**Feature**: [spec.md](file:///home/halit/AndroidStudioProjects/Tullab/specs/011-ui-ux-fixes/spec.md)
+**Feature**: [spec.md](../spec.md)
 
 ## Content Quality
 

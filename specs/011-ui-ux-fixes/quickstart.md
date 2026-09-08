@@ -12,7 +12,7 @@
 3. Verify that the header contains a trash can icon button.
 4. Tap the trash can icon button -> Verify that a confirmation dialog appears.
 5. Tap Cancel -> Verify dialog closes and homework remains.
-6. Tap the trash can icon button again and confirm deletion -> Verify sheet closes and homework is permanently removed from the list and database.
+6. Tap the trash can icon button again and confirm deletion -> Verify sheet closes and homework is removed. Reopen the student profile or restart the app to ensure Room reloads the persisted data and the homework remains absent from both the list and the database.
 7. Tap the FAB to Add Homework -> Verify that the trash can icon is NOT present in the header.
 
 ### 2. Calendar Dynamic Agenda Header
