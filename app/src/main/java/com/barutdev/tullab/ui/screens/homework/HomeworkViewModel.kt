@@ -190,4 +190,11 @@ class HomeworkViewModel @Inject constructor(
         )
         homeworkRepository.updateHomework(updated)
     }
+
+    fun onDeleteHomework(homework: Homework) {
+        viewModelScope.launch {
+            homeworkRepository.deleteHomework(homework)
+            dismissHomeworkDialog()
+        }
+    }
 }

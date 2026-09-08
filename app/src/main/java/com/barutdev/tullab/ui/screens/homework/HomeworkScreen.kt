@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.outlined.Assignment
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material3.Card
@@ -42,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import com.barutdev.tullab.util.tullabStringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -109,7 +111,8 @@ fun HomeworkScreen(
                 status = status,
                 performanceNotes = performanceNotes
             )
-        }
+        },
+        onDelete = viewModel::onDeleteHomework
     )
 
     val studentNameStatus = deriveStudentNameUiStatus(
@@ -224,10 +227,10 @@ private fun HomeworkScreenContent(
 
         if (filteredHomeworkList.isEmpty()) {
             AnimatedListItem(index = 2) {
-                Text(
-                    text = tullabStringResource(id = R.string.homework_empty_state_message),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                HomeworkEmptyState(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 48.dp)
                 )
             }
         } else {
@@ -240,6 +243,40 @@ private fun HomeworkScreenContent(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun HomeworkEmptyState(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Assignment,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.surfaceVariant,
+                modifier = Modifier.size(120.dp)
+            )
+            Text(
+                text = tullabStringResource(id = R.string.homework_empty_state_title),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(top = 24.dp)
+            )
+            Text(
+                text = tullabStringResource(id = R.string.homework_empty_state_message),
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 8.dp)
+            )
         }
     }
 }

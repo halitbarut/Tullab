@@ -97,6 +97,37 @@ class HomeworkViewModelTest {
         advanceUntilIdle()
     }
 
+    @Test
+    fun deleteHomework_removesEntityAndDismissesDialog() = runTest {
+        val targetHomework = homework(id = 11, studentId = 1, title = "Math sheet")
+        val studentRepository = FakeStudentRepository().apply {
+            setStudent(student(id = 1, name = "Ahmet"))
+        }
+        val homeworkRepository = FakeHomeworkRepository().apply {
+            setHomework(studentId = 1, homework = listOf(targetHomework))
+        }
+
+        val savedStateHandle = SavedStateHandle(mapOf(STUDENT_ID_ARG to 1))
+        val viewModel = HomeworkViewModel(
+            savedStateHandle = savedStateHandle,
+            homeworkRepository = homeworkRepository,
+            studentRepository = studentRepository,
+        )
+
+        advanceUntilIdle()
+        viewModel.showEditHomeworkDialog(targetHomework)
+        assertEquals(true, viewModel.isDialogVisible.value)
+        assertEquals(targetHomework, viewModel.editingHomework.value)
+
+        viewModel.onDeleteHomework(targetHomework)
+        advanceUntilIdle()
+
+        assertEquals(false, viewModel.isDialogVisible.value)
+        assertEquals(null, viewModel.editingHomework.value)
+        val remaining = viewModel.homework.first()
+        assertEquals(0, remaining.size)
+    }
+
     private fun student(id: Int, name: String) = Student(
         id = id,
         fullName = name,
@@ -164,6 +195,11 @@ private class FakeHomeworkRepository : HomeworkRepository {
         flow.value = flow.value.map { existing ->
             if (existing.id == homework.id) homework else existing
         }
+    }
+
+    override suspend fun deleteHomework(homework: Homework) {
+        val flow = this.homework.getOrPut(homework.studentId) { MutableStateFlow(emptyList()) }
+        flow.value = flow.value.filter { it.id != homework.id }
     }
 }
 

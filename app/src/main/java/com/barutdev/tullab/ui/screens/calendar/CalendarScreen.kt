@@ -51,6 +51,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import com.barutdev.tullab.util.tullabStringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.graphicsLayer
@@ -714,13 +715,21 @@ private fun DayDetailsSection(
         lessons.sortedBy { lesson -> lesson.date }
     }
 
+    val headerTitleRes = remember(lessonsSorted, homework) {
+        when {
+            lessonsSorted.isNotEmpty() && homework.isNotEmpty() -> R.string.calendar_day_schedule_details_title
+            homework.isNotEmpty() && lessonsSorted.isEmpty() -> R.string.calendar_day_homework_details_title
+            else -> R.string.calendar_day_details_title
+        }
+    }
+
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
             text = tullabStringResource(
-                id = R.string.calendar_day_details_title,
+                id = headerTitleRes,
                 formattedSelectedDate
             ),
             style = MaterialTheme.typography.titleMedium
@@ -879,7 +888,8 @@ private fun HomeworkDetailCard(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 if (effectiveStatus != HomeworkStatus.CANCELLED) {
                     Button(
@@ -890,12 +900,22 @@ private fun HomeworkDetailCard(
                             contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.size(8.dp))
                         val labelRes = if (effectiveStatus == HomeworkStatus.COMPLETED) {
                             R.string.calendar_homework_action_mark_pending
                         } else {
                             R.string.calendar_homework_action_mark_complete
                         }
-                        Text(text = tullabStringResource(id = labelRes))
+                        Text(
+                            text = tullabStringResource(id = labelRes),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
                 }
 
@@ -903,7 +923,11 @@ private fun HomeworkDetailCard(
                     onClick = onDetailsClick,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text(text = tullabStringResource(id = R.string.calendar_homework_action_details))
+                    Text(
+                        text = tullabStringResource(id = R.string.calendar_homework_action_details),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
         }

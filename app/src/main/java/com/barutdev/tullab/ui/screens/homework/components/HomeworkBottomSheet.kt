@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
@@ -14,6 +15,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
@@ -63,7 +66,8 @@ fun HomeworkBottomSheet(
         dueDate: Long,
         status: HomeworkStatus,
         performanceNotes: String?
-    ) -> Unit
+    ) -> Unit,
+    onDelete: ((Homework) -> Unit)? = null
 ) {
     if (!showSheet) return
 
@@ -93,6 +97,7 @@ fun HomeworkBottomSheet(
     }
     var isStatusMenuExpanded by remember { mutableStateOf(false) }
     var showDatePickerDialog by rememberSaveable { mutableStateOf(false) }
+    var showDeleteConfirmationDialog by rememberSaveable { mutableStateOf(false) }
 
     val isEditing = editingHomework != null
     val confirmLabel = if (isEditing) {
@@ -107,6 +112,36 @@ fun HomeworkBottomSheet(
     }
 
     val isConfirmEnabled = title.isNotBlank() && selectedDueDateMillis != null
+
+    if (showDeleteConfirmationDialog && editingHomework != null) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmationDialog = false },
+            title = {
+                Text(text = tullabStringResource(id = R.string.homework_delete_confirmation_title))
+            },
+            text = {
+                Text(text = tullabStringResource(id = R.string.homework_delete_confirmation_message))
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteConfirmationDialog = false
+                        onDelete?.invoke(editingHomework)
+                    }
+                ) {
+                    Text(
+                        text = tullabStringResource(id = R.string.dialog_action_delete),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmationDialog = false }) {
+                    Text(text = tullabStringResource(id = R.string.dialog_action_cancel))
+                }
+            }
+        )
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -128,10 +163,26 @@ fun HomeworkBottomSheet(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text(
-                    text = sheetTitle,
-                    style = MaterialTheme.typography.titleLarge
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = sheetTitle,
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (isEditing && onDelete != null) {
+                        IconButton(onClick = { showDeleteConfirmationDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Outlined.Delete,
+                                contentDescription = tullabStringResource(id = R.string.homework_dialog_delete_content_description),
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                }
 
                 OutlinedTextField(
                     value = title,
@@ -154,12 +205,12 @@ fun HomeworkBottomSheet(
                     maxLines = 4
                 )
 
-                // Read-only clickable date field that opens DatePickerDialog
+                // Read-only clickable date field that opens DatePickerDialog with localized format
                 val dueDateText = selectedDueDateMillis?.let { millis ->
                     Instant.ofEpochMilli(millis)
-                        .atZone(java.time.ZoneOffset.UTC)
+                        .atZone(zoneId)
                         .toLocalDate()
-                        .format(DateTimeFormatter.ISO_LOCAL_DATE)
+                        .format(previewFormatter)
                 }.orEmpty()
 
                 OutlinedTextField(

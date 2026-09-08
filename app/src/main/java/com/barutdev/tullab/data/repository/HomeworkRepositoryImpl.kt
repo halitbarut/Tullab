@@ -30,4 +30,8 @@ class HomeworkRepositoryImpl @Inject constructor(
     override suspend fun updateHomework(homework: Homework) {
         homeworkDao.insert(homework.toEntity())
     }
+
+    override suspend fun deleteHomework(homework: Homework) {
+        homeworkDao.delete(homework.toEntity())
+    }
 }

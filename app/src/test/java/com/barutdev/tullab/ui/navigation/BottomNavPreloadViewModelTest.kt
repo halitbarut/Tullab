@@ -95,4 +95,5 @@ private class RecordingHomeworkRepository : HomeworkRepository {
     override fun getHomeworkById(homeworkId: Int): Flow<Homework?> = flowOf(null)
     override suspend fun insertHomework(homework: Homework) = error("unused")
     override suspend fun updateHomework(homework: Homework) = error("unused")
+    override suspend fun deleteHomework(homework: Homework) = error("unused")
 }

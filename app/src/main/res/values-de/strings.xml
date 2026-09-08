@@ -51,7 +51,8 @@
     <string name="homework_title">Hausaufgaben</string>
     <string name="homework_top_bar_title">%1$s – %2$s</string>
     <string name="homework_assignments_section_title">Alle Aufgaben</string>
-    <string name="homework_empty_state_message">Noch keine Hausaufgaben zugewiesen.</string>
+    <string name="homework_empty_state_title">Noch keine Hausaufgaben</string>
+    <string name="homework_empty_state_message">Hier erscheinen Hausaufgaben, sobald sie erstellt wurden.</string>
     <string name="homework_due_date_label">Fällig: %1$s</string>
     <string name="homework_status_pending">Ausstehend</string>
     <string name="homework_status_completed">Abgeschlossen</string>
@@ -63,14 +64,17 @@
     <string name="homework_dialog_edit_title">Hausaufgabe bearbeiten</string>
     <string name="homework_dialog_title_label">Titel</string>
     <string name="homework_dialog_description_label">Beschreibung</string>
-    <string name="homework_dialog_due_date_label">Fälligkeitsdatum (JJJJ–MM–TT)</string>
-    <string name="homework_dialog_due_date_hint">Beispiel: 2024–04–15</string>
+    <string name="homework_dialog_due_date_label">Fälligkeitsdatum</string>
+    <string name="homework_dialog_due_date_hint">Fälligkeitsdatum auswählen</string>
     <string name="homework_dialog_due_date_error">Gib ein gültiges Fälligkeitsdatum ein.</string>
     <string name="homework_dialog_status_label">Status</string>
     <string name="homework_dialog_performance_notes_label">Leistungsnotizen</string>
     <string name="homework_dialog_cancel">Abbrechen</string>
     <string name="homework_dialog_save">Speichern</string>
     <string name="homework_dialog_update">Aktualisieren</string>
+    <string name="homework_dialog_delete_content_description">Hausaufgabe löschen</string>
+    <string name="homework_delete_confirmation_title">Hausaufgabe löschen?</string>
+    <string name="homework_delete_confirmation_message">Möchtest du diese Hausaufgabe wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.</string>
     <string name="settings_title">Einstellungen</string>
     <string name="navigate_to_settings">Zu den Einstellungen</string>
     <string name="settings_back_content_description">Zurück</string>
@@ -204,6 +208,8 @@
     <string name="calendar_select_day_message">Bitte zuerst einen Tag auswählen</string>
     <string name="calendar_lesson_scheduled_message">Stunde geplant</string>
     <string name="calendar_day_details_title">Stunden am %1$s</string>
+    <string name="calendar_day_homework_details_title">Hausaufgaben am %1$s</string>
+    <string name="calendar_day_schedule_details_title">Plan am %1$s</string>
     <string name="calendar_no_lessons_message">Für diesen Tag sind keine Termine geplant.</string>
     <string name="calendar_lesson_details_title">Stunde am %1$s</string>
     <string name="calendar_lesson_details_status">Status: %1$s</string>
@@ -224,8 +230,8 @@
     <string name="calendar_status_scheduled">Geplant</string>
     <string name="calendar_status_scheduled_needs_logging">Geplant (Protokoll erforderlich)</string>
     <string name="calendar_status_cancelled">Abgesagt</string>
-    <string name="calendar_homework_action_mark_complete">Als erledigt markieren</string>
-    <string name="calendar_homework_action_mark_pending">Als ausstehend markieren</string>
+    <string name="calendar_homework_action_mark_complete">Erledigen</string>
+    <string name="calendar_homework_action_mark_pending">Ausstehend</string>
     <string name="calendar_homework_action_details">Details</string>
     
     <string name="bulk_schedule_cap_reached_warning">Du kannst maximal 30 Lektionen auf einmal planen.</string>
