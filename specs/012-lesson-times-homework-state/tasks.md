@@ -6,7 +6,7 @@
 
 **Purpose**: Utility functions for localized time formatting
 
-- [ ] T001 [P] Implement `formatLessonStartTime` helper function in `app/src/main/java/com/barutdev/tullab/util/TimeFormatter.kt`
+- [x] T001 [P] Implement `formatLessonStartTime` helper function in `app/src/main/java/com/barutdev/tullab/util/TimeFormatter.kt`
 
 ---
 
@@ -16,11 +16,11 @@
 
 **⚠️ CRITICAL**: Must complete before UI user story implementation
 
-- [ ] T002 [P] Remove `OVERDUE` from `HomeworkStatus` enum in `app/src/main/java/com/barutdev/tullab/domain/model/HomeworkStatus.kt`
-- [ ] T003 [P] Implement dynamic `Homework.isOverdue(today)` helper method in `app/src/main/java/com/barutdev/tullab/domain/model/Homework.kt`
-- [ ] T004 [P] Update `HomeworkStatusConverter` to safely map legacy `"OVERDUE"` strings to `HomeworkStatus.PENDING` on read in `app/src/main/java/com/barutdev/tullab/data/local/HomeworkStatusConverter.kt`
-- [ ] T005 [P] Add unit tests for `HomeworkStatusConverter` verifying legacy `"OVERDUE"` fallback in `app/src/test/java/com/barutdev/tullab/data/local/HomeworkStatusConverterTest.kt`
-- [ ] T006 [P] Add unit tests for `Homework.isOverdue` validating boundary conditions in `app/src/test/java/com/barutdev/tullab/domain/model/HomeworkTest.kt`
+- [x] T002 [P] Remove `OVERDUE` from `HomeworkStatus` enum in `app/src/main/java/com/barutdev/tullab/domain/model/HomeworkStatus.kt`
+- [x] T003 [P] Implement dynamic `Homework.isOverdue(today)` helper method in `app/src/main/java/com/barutdev/tullab/domain/model/Homework.kt`
+- [x] T004 [P] Update `HomeworkStatusConverter` to safely map legacy `"OVERDUE"` strings to `HomeworkStatus.PENDING` on read in `app/src/main/java/com/barutdev/tullab/data/local/HomeworkStatusConverter.kt`
+- [x] T005 [P] Add unit tests for `HomeworkStatusConverter` verifying legacy `"OVERDUE"` fallback in `app/src/test/java/com/barutdev/tullab/data/local/HomeworkStatusConverterTest.kt`
+- [x] T006 [P] Add unit tests for `Homework.isOverdue` validating boundary conditions in `app/src/test/java/com/barutdev/tullab/domain/model/HomeworkTest.kt`
 
 **Checkpoint**: Foundation ready - domain entities and converter support dynamic overdue handling.
 
@@ -34,9 +34,9 @@
 
 ### Implementation for User Story 1
 
-- [ ] T007 [P] [US1] Surface localized start time with `Icons.Outlined.Schedule` icon and duration span in `LessonDetailCard` in `app/src/main/java/com/barutdev/tullab/ui/screens/calendar/CalendarScreen.kt`
-- [ ] T008 [P] [US1] Surface localized start time in `UpcomingLessonsCard`, `CompletedLessonsCard`, and `LogPastLessonsCard` in `app/src/main/java/com/barutdev/tullab/ui/screens/dashboard/DashboardScreen.kt`
-- [ ] T009 [P] [US1] Surface localized start time alongside date with `Icons.Outlined.Schedule` icon in `LogLessonDialog` header in `app/src/main/java/com/barutdev/tullab/ui/screens/dashboard/components/LogLessonDialog.kt`
+- [x] T007 [P] [US1] Surface localized start time with `Icons.Outlined.Schedule` icon and duration span in `LessonDetailCard` in `app/src/main/java/com/barutdev/tullab/ui/screens/calendar/CalendarScreen.kt`
+- [x] T008 [P] [US1] Surface localized start time in `UpcomingLessonsCard`, `CompletedLessonsCard`, and `LogPastLessonsCard` in `app/src/main/java/com/barutdev/tullab/ui/screens/dashboard/DashboardScreen.kt`
+- [x] T009 [P] [US1] Surface localized start time alongside date with `Icons.Outlined.Schedule` icon in `LogLessonDialog` header in `app/src/main/java/com/barutdev/tullab/ui/screens/dashboard/components/LogLessonDialog.kt`
 
 **Checkpoint**: User Story 1 complete - all specified screens display localized lesson start times.
 
@@ -50,12 +50,12 @@
 
 ### Implementation for User Story 2
 
-- [ ] T010 [P] [US2] Update `CalendarStatusResolver.kt` to remove `HomeworkStatus.OVERDUE` branch in `app/src/main/java/com/barutdev/tullab/ui/screens/calendar/CalendarStatusResolver.kt`
-- [ ] T011 [P] [US2] Update `CalendarViewModel.kt` `toggleHomeworkStatus` to remove `HomeworkStatus.OVERDUE` branch in `app/src/main/java/com/barutdev/tullab/ui/screens/calendar/CalendarViewModel.kt`
-- [ ] T012 [P] [US2] Update calendar status and toggle unit tests in `app/src/test/java/com/barutdev/tullab/ui/screens/calendar/CalendarStatusLogicTest.kt` and `app/src/test/java/com/barutdev/tullab/ui/screens/calendar/CalendarViewModelTest.kt`
-- [ ] T013 [US2] Update `CalendarScreen.kt` homework daily card to dynamically evaluate `isOverdue` and render the red Overdue badge in `app/src/main/java/com/barutdev/tullab/ui/screens/calendar/CalendarScreen.kt`
-- [ ] T014 [P] [US2] Update `HomeworkScreen.kt` list items, `StatusBadge`, and filter logic to dynamically evaluate and render red Overdue badge on past-due pending items in `app/src/main/java/com/barutdev/tullab/ui/screens/homework/HomeworkScreen.kt`
-- [ ] T015 [P] [US2] Update `HomeworkBottomSheet.kt` and `HomeworkDialog.kt` to remove "Overdue" from selectable status options and display overdue badge when editing past-due items in `app/src/main/java/com/barutdev/tullab/ui/screens/homework/components/HomeworkBottomSheet.kt` and `app/src/main/java/com/barutdev/tullab/ui/screens/homework/components/HomeworkDialog.kt`
+- [x] T010 [P] [US2] Update `CalendarStatusResolver.kt` to remove `HomeworkStatus.OVERDUE` branch in `app/src/main/java/com/barutdev/tullab/ui/screens/calendar/CalendarStatusResolver.kt`
+- [x] T011 [P] [US2] Update `CalendarViewModel.kt` `toggleHomeworkStatus` to remove `HomeworkStatus.OVERDUE` branch in `app/src/main/java/com/barutdev/tullab/ui/screens/calendar/CalendarViewModel.kt`
+- [x] T012 [P] [US2] Update calendar status and toggle unit tests in `app/src/test/java/com/barutdev/tullab/ui/screens/calendar/CalendarStatusLogicTest.kt` and `app/src/test/java/com/barutdev/tullab/ui/screens/calendar/CalendarViewModelTest.kt`
+- [x] T013 [US2] Update `CalendarScreen.kt` homework daily card to dynamically evaluate `isOverdue` and render the red Overdue badge in `app/src/main/java/com/barutdev/tullab/ui/screens/calendar/CalendarScreen.kt`
+- [x] T014 [P] [US2] Update `HomeworkScreen.kt` list items, `StatusBadge`, and filter logic to dynamically evaluate and render red Overdue badge on past-due pending items in `app/src/main/java/com/barutdev/tullab/ui/screens/homework/HomeworkScreen.kt`
+- [x] T015 [P] [US2] Update `HomeworkBottomSheet.kt` and `HomeworkDialog.kt` to remove "Overdue" from selectable status options and display overdue badge when editing past-due items in `app/src/main/java/com/barutdev/tullab/ui/screens/homework/components/HomeworkBottomSheet.kt` and `app/src/main/java/com/barutdev/tullab/ui/screens/homework/components/HomeworkDialog.kt`
 
 **Checkpoint**: User Story 2 complete - Overdue status is strictly dynamic and non-selectable.
 
@@ -65,8 +65,8 @@
 
 **Purpose**: Validation across the application and regression verification
 
-- [ ] T016 Execute automated unit tests via `./gradlew testDebugUnitTest` to verify zero regressions
-- [ ] T017 Execute manual validation steps per `specs/012-lesson-times-homework-state/quickstart.md`
+- [x] T016 Execute automated unit tests via `./gradlew testDebugUnitTest` to verify zero regressions
+- [x] T017 Execute manual validation steps per `specs/012-lesson-times-homework-state/quickstart.md`
 
 ---
 

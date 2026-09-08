@@ -194,7 +194,7 @@ private fun HomeworkScreenContent(
         when (selectedFilter) {
             HomeworkFilter.ALL -> homeworkList
             HomeworkFilter.PENDING -> homeworkList.filter {
-                it.status == HomeworkStatus.PENDING || it.status == HomeworkStatus.OVERDUE
+                it.status == HomeworkStatus.PENDING
             }
             HomeworkFilter.COMPLETED -> homeworkList.filter {
                 it.status == HomeworkStatus.COMPLETED
@@ -296,6 +296,7 @@ private fun HomeworkListItem(
             .toLocalDate()
             .format(formatter)
     }
+    val isOverdue = remember(homework) { homework.isOverdue() }
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -324,7 +325,7 @@ private fun HomeworkListItem(
                 )
             }
             Spacer(modifier = Modifier.width(12.dp))
-            StatusBadge(status = homework.status)
+            StatusBadge(status = homework.status, isOverdue = isOverdue)
             Icon(
                 imageVector = Icons.Outlined.ChevronRight,
                 contentDescription = null,
@@ -336,12 +337,17 @@ private fun HomeworkListItem(
 }
 
 @Composable
-private fun StatusBadge(status: HomeworkStatus, modifier: Modifier = Modifier) {
-    val (labelRes, targetColor) = when (status) {
-        HomeworkStatus.PENDING -> R.string.homework_status_pending to StatusYellow
-        HomeworkStatus.COMPLETED -> R.string.homework_status_completed to StatusGreen
-        HomeworkStatus.OVERDUE -> R.string.homework_status_overdue to StatusRed
-        HomeworkStatus.CANCELLED -> R.string.homework_status_cancelled to androidx.compose.ui.graphics.Color.Gray
+private fun StatusBadge(
+    status: HomeworkStatus,
+    isOverdue: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val (labelRes, targetColor) = when {
+        isOverdue -> R.string.homework_status_overdue to StatusRed
+        status == HomeworkStatus.PENDING -> R.string.homework_status_pending to StatusYellow
+        status == HomeworkStatus.COMPLETED -> R.string.homework_status_completed to StatusGreen
+        status == HomeworkStatus.CANCELLED -> R.string.homework_status_cancelled to androidx.compose.ui.graphics.Color.Gray
+        else -> R.string.homework_status_pending to StatusYellow
     }
     val text = tullabStringResource(id = labelRes)
     

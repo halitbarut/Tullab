@@ -122,18 +122,6 @@ class CalendarViewModelTest {
         }
     }
 
-    @Test
-    fun `toggleHomeworkStatus from OVERDUE changes to COMPLETED`() = runTest {
-        val homework = homeworkWithStatus(HomeworkStatus.OVERDUE)
-        coEvery { homeworkRepository.updateHomework(any()) } returns Unit
-
-        viewModel.toggleHomeworkStatus(homework)
-        advanceUntilIdle()
-
-        coVerify { 
-            homeworkRepository.updateHomework(match { it.status == HomeworkStatus.COMPLETED }) 
-        }
-    }
 
     @Test
     fun `toggleHomeworkStatus from CANCELLED does nothing`() = runTest {
@@ -344,6 +332,71 @@ class CalendarViewModelTest {
                 it.notes == "Done"
             })
         }
+        assertEquals(null, viewModel.lessonToLog.value)
+        assertEquals(false, viewModel.isLogLessonDialogVisible.value)
+    }
+
+    @Test
+    fun `deleteLesson cancels alarms, deletes from repository, and dismisses dialog`() = runTest {
+        val lesson = Lesson(
+            id = 42,
+            studentId = 1,
+            date = 1000L,
+            status = LessonStatus.SCHEDULED,
+            durationInHours = 1.0,
+            notes = null,
+            pricingMode = com.barutdev.tullab.domain.model.PricingMode.PER_HOUR,
+            rateOrFee = 50.0
+        )
+        viewModel.onLogLessonClicked(lesson)
+        assertEquals(lesson, viewModel.lessonToLog.value)
+        assertEquals(true, viewModel.isLogLessonDialogVisible.value)
+
+        viewModel.deleteLesson(42)
+        advanceUntilIdle()
+
+        coVerify { cancelNotificationAlarmsUseCase(42) }
+        coVerify { lessonRepository.deleteLesson(42) }
+        assertEquals(null, viewModel.lessonToLog.value)
+        assertEquals(false, viewModel.isLogLessonDialogVisible.value)
+    }
+
+    @Test
+    fun `onSaveLessonDetails updates start time and reschedules notification alarms when scheduled`() = runTest {
+        val scheduledLesson = Lesson(
+            id = 15,
+            studentId = 1,
+            date = 1000L,
+            status = LessonStatus.SCHEDULED,
+            durationInHours = 1.0,
+            notes = null,
+            pricingMode = com.barutdev.tullab.domain.model.PricingMode.PER_HOUR,
+            rateOrFee = 50.0
+        )
+        viewModel.onLogLessonClicked(scheduledLesson)
+        val updatedTimeMillis = 5000L
+
+        viewModel.onSaveLessonDetails(
+            lesson = scheduledLesson,
+            duration = "1.0",
+            notes = "Rescheduled",
+            pricingMode = com.barutdev.tullab.domain.model.PricingMode.PER_HOUR,
+            rateOrFee = "50.0",
+            isCompleted = false,
+            dateMillis = updatedTimeMillis
+        )
+        advanceUntilIdle()
+
+        coVerify {
+            lessonRepository.updateLesson(match {
+                it.id == 15 &&
+                it.date == updatedTimeMillis &&
+                it.status == LessonStatus.SCHEDULED &&
+                it.notes == "Rescheduled"
+            })
+        }
+        coVerify { cancelNotificationAlarmsUseCase(15) }
+        coVerify { scheduleNotificationAlarmsUseCase(15) }
         assertEquals(null, viewModel.lessonToLog.value)
         assertEquals(false, viewModel.isLogLessonDialogVisible.value)
     }

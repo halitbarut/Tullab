@@ -75,7 +75,6 @@ internal fun resolveDayIndicators(
     val homeworkColor = if (homework.isEmpty()) null else {
         val homeworkStatuses = homework.map { h ->
             when (h.status) {
-                HomeworkStatus.OVERDUE -> InternalHomeworkStatus.RED_OVERDUE
                 HomeworkStatus.PENDING -> if (date.isBefore(homeworkToday)) InternalHomeworkStatus.RED_OVERDUE else InternalHomeworkStatus.BLUE_SCHEDULED
                 HomeworkStatus.COMPLETED -> InternalHomeworkStatus.GREEN_COMPLETED
                 HomeworkStatus.CANCELLED -> InternalHomeworkStatus.GRAY_CANCELLED

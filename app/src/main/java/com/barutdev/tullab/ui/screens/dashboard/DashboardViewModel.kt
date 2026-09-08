@@ -305,7 +305,8 @@ class DashboardViewModel @Inject constructor(
         notes: String,
         pricingMode: com.barutdev.tullab.domain.model.PricingMode,
         rateOrFee: String,
-        isCompleted: Boolean
+        isCompleted: Boolean,
+        dateMillis: Long = lesson.date
     ) {
         viewModelScope.launch {
             val normalizedDuration = duration.trim().replace(',', '.')
@@ -320,6 +321,7 @@ class DashboardViewModel @Inject constructor(
             }
 
             val updatedLesson = lesson.copy(
+                date = dateMillis,
                 status = newStatus,
                 durationInHours = if (pricingMode == com.barutdev.tullab.domain.model.PricingMode.PER_HOUR) durationValue else null,
                 notes = notes.trim().ifEmpty { null },
@@ -329,9 +331,20 @@ class DashboardViewModel @Inject constructor(
             lessonRepository.updateLesson(updatedLesson)
             when (newStatus) {
                 LessonStatus.COMPLETED -> cancelNotificationAlarmsUseCase(lesson.id)
-                LessonStatus.SCHEDULED -> scheduleNotificationAlarmsUseCase(lesson.id)
-                else -> Unit
+                LessonStatus.SCHEDULED -> {
+                    cancelNotificationAlarmsUseCase(lesson.id)
+                    scheduleNotificationAlarmsUseCase(lesson.id)
+                }
+                else -> cancelNotificationAlarmsUseCase(lesson.id)
             }
+            clearLogLessonSelection()
+        }
+    }
+
+    fun deleteLesson(lessonId: Int) {
+        viewModelScope.launch {
+            cancelNotificationAlarmsUseCase(lessonId)
+            lessonRepository.deleteLesson(lessonId)
             clearLogLessonSelection()
         }
     }

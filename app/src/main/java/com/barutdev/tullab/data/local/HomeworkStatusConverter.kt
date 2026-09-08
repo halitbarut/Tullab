@@ -9,5 +9,11 @@ class HomeworkStatusConverter {
     fun fromStatus(status: HomeworkStatus): String = status.name
 
     @TypeConverter
-    fun toStatus(value: String): HomeworkStatus = HomeworkStatus.valueOf(value)
+    fun toStatus(value: String): HomeworkStatus {
+        return if (value == "OVERDUE") {
+            HomeworkStatus.PENDING
+        } else {
+            runCatching { HomeworkStatus.valueOf(value) }.getOrDefault(HomeworkStatus.PENDING)
+        }
+    }
 }

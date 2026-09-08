@@ -134,16 +134,6 @@ class CalendarStatusLogicTest {
     // Homework color priorities (RED > BLUE > GREEN > GRAY)
     // =====================================================================
 
-    @Test
-    fun `homework priority returns red for overdue homework`() {
-        val indicators = resolveDayIndicators(
-            lessons = emptyList(),
-            homework = listOf(homework(HomeworkStatus.OVERDUE)),
-            date = futureDate,
-            today = today
-        )
-        assertEquals(StatusRed, indicators.homeworkColor)
-    }
 
     @Test
     fun `homework priority returns red for past due pending homework`() {
@@ -230,7 +220,7 @@ class CalendarStatusLogicTest {
     fun `resolves both past-due lesson and overdue homework to red`() {
         val indicators = resolveDayIndicators(
             lessons = listOf(lesson(LessonStatus.SCHEDULED)), // pastDate -> RED
-            homework = listOf(homework(HomeworkStatus.OVERDUE)), // -> RED
+            homework = listOf(homework(HomeworkStatus.PENDING)), // -> RED
             date = pastDate,
             today = today
         )

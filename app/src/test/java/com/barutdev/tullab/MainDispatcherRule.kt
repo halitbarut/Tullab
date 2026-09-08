@@ -18,6 +18,7 @@ class MainDispatcherRule(
     }
 
     override fun finished(description: Description) {
+        dispatcher.scheduler.advanceUntilIdle()
         Dispatchers.resetMain()
     }
 }

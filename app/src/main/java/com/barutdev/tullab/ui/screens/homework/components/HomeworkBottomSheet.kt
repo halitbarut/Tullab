@@ -47,7 +47,10 @@ import androidx.compose.ui.unit.dp
 import com.barutdev.tullab.R
 import com.barutdev.tullab.domain.model.Homework
 import com.barutdev.tullab.domain.model.HomeworkStatus
+import androidx.compose.material3.Surface
 import com.barutdev.tullab.ui.theme.LocalLocale
+import com.barutdev.tullab.ui.theme.StatusRed
+import com.barutdev.tullab.ui.theme.StatusRedContainer
 import com.barutdev.tullab.util.tullabStringResource
 import java.time.Instant
 import java.time.ZoneId
@@ -166,13 +169,26 @@ fun HomeworkBottomSheet(
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
                         text = sheetTitle,
                         style = MaterialTheme.typography.titleLarge,
                         modifier = Modifier.weight(1f)
                     )
+                    if (isEditing && editingHomework?.isOverdue() == true) {
+                        Surface(
+                            color = StatusRedContainer,
+                            shape = MaterialTheme.shapes.small
+                        ) {
+                            Text(
+                                text = tullabStringResource(id = R.string.homework_badge_overdue),
+                                color = StatusRed,
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
                     if (isEditing && onDelete != null) {
                         IconButton(onClick = { showDeleteConfirmationDialog = true }) {
                             Icon(
@@ -360,6 +376,5 @@ fun HomeworkBottomSheet(
 private fun statusLabelRes(status: HomeworkStatus): Int = when (status) {
     HomeworkStatus.PENDING -> R.string.homework_status_pending
     HomeworkStatus.COMPLETED -> R.string.homework_status_completed
-    HomeworkStatus.OVERDUE -> R.string.homework_status_overdue
     HomeworkStatus.CANCELLED -> R.string.homework_status_cancelled
 }

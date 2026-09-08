@@ -69,6 +69,7 @@ import com.barutdev.tullab.ui.components.AnimatedListItem
 import com.barutdev.tullab.util.formatCurrency
 import java.text.NumberFormat
 import com.barutdev.tullab.util.formatDurationHours
+import com.barutdev.tullab.util.formatLessonStartTime
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -82,6 +83,7 @@ import com.barutdev.tullab.util.LocalMessageNotifier
 
 private data class CompletedLessonUiModel(
     val dateText: String,
+    val timeText: String,
     val durationText: String?,
     val notes: String?,
     val totalText: String,
@@ -101,6 +103,7 @@ fun DashboardScreen(
     )
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val lessons by viewModel.lessons.collectAsStateWithLifecycle()
     val coroutineScope = rememberCoroutineScope()
     val userPreferences = LocalUserPreferences.current
     val locale = LocalLocale.current
@@ -206,18 +209,16 @@ LaunchedEffect(viewModel) {
         onDismiss = viewModel::dismissMarkAsPaidDialog
     )
 
-    val today = java.time.LocalDate.now(java.time.ZoneId.systemDefault())
     val currentLessonToLog = uiState.lessonToLog
-    val isScheduled = currentLessonToLog != null && currentLessonToLog.status == com.barutdev.tullab.domain.model.LessonStatus.SCHEDULED
-    val isPastScheduled = isScheduled && currentLessonToLog != null && java.time.Instant.ofEpochMilli(currentLessonToLog.date).atZone(java.time.ZoneId.systemDefault()).toLocalDate().isBefore(today)
 
     LogLessonDialog(
         showDialog = uiState.isLogLessonDialogVisible,
         lesson = uiState.lessonToLog,
+        existingLessons = lessons,
         onDismiss = viewModel::dismissLogLessonDialog,
-        onSave = { duration, notes, pricingMode, rateOrFeeInput, isCompleted ->
+        onSave = { duration, notes, pricingMode, rateOrFeeInput, isCompleted, dateMillis ->
             currentLessonToLog?.let {
-                viewModel.onSaveLessonDetails(it, duration, notes, pricingMode, rateOrFeeInput, isCompleted)
+                viewModel.onSaveLessonDetails(it, duration, notes, pricingMode, rateOrFeeInput, isCompleted, dateMillis)
             }
         },
         onComplete = { duration, notes, pricingMode, rateOrFeeInput ->
@@ -225,6 +226,9 @@ LaunchedEffect(viewModel) {
         },
         onMarkNotDone = { notes ->
             viewModel.onLogLessonMarkNotDone(notes)
+        },
+        onDelete = { lesson ->
+            viewModel.deleteLesson(lesson.id)
         },
         currencyCode = userPreferences.currencyCode
     )
@@ -330,6 +334,7 @@ private fun LogPastLessonsCard(
     locale: Locale,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val lessonsWithDates = remember(pastLessons, locale) {
         val formatter = DateTimeFormatter.ofPattern("EEEE, MMMM d", locale)
         pastLessons.map { lesson ->
@@ -337,7 +342,8 @@ private fun LogPastLessonsCard(
                 .atZone(ZoneId.systemDefault())
                 .toLocalDate()
                 .format(formatter)
-            lesson to formattedDate
+            val formattedTime = formatLessonStartTime(context, lesson.date)
+            Triple(lesson, formattedDate, formattedTime)
         }
     }
     Card(
@@ -367,7 +373,7 @@ private fun LogPastLessonsCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    lessonsWithDates.forEach { (lesson, formattedDate) ->
+                    lessonsWithDates.forEach { (lesson, formattedDate, formattedTime) ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -380,10 +386,17 @@ private fun LogPastLessonsCard(
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.primary
                             )
-                            Text(
-                                text = formattedDate,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
+                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Text(
+                                    text = formattedDate,
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Text(
+                                    text = formattedTime,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
                 }
@@ -633,8 +646,10 @@ private fun CompletedLessonsCard(
                 val durationText = lesson.durationInHours?.let { duration ->
                     formatDurationHours(context, duration, locale)
                 }
+                val timeText = formatLessonStartTime(context, lesson.date)
                 CompletedLessonUiModel(
                     dateText = dateText,
+                    timeText = timeText,
                     durationText = durationText,
                     notes = lesson.notes,
                     totalText = formatCurrency(lesson.calculatedValue, currencyCode, locale),
@@ -682,6 +697,11 @@ private fun CompletedLessonsCard(
                                     text = item.dateText,
                                     style = MaterialTheme.typography.bodyLarge
                                 )
+                                Text(
+                                    text = item.timeText,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                                 if (!item.isFlatFee && item.durationText != null) {
                                     Text(
                                         text = tullabStringResource(
@@ -726,15 +746,18 @@ private fun UpcomingLessonsCard(
     locale: Locale,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val formattedLessons = remember(upcomingLessons, locale) {
         val formatter = DateTimeFormatter.ofPattern("EEEE, MMMM d", locale)
         upcomingLessons
             .sortedBy { lesson -> lesson.date }
             .map { lesson ->
-                Instant.ofEpochMilli(lesson.date)
+                val dateText = Instant.ofEpochMilli(lesson.date)
                     .atZone(ZoneId.systemDefault())
                     .toLocalDate()
                     .format(formatter)
+                val timeText = formatLessonStartTime(context, lesson.date)
+                dateText to timeText
             }
     }
     Card(
@@ -757,7 +780,7 @@ private fun UpcomingLessonsCard(
                 )
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    formattedLessons.forEach { formattedDate ->
+                    formattedLessons.forEach { (formattedDate, formattedTime) ->
                         Row(
                             modifier = Modifier,
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -768,10 +791,17 @@ private fun UpcomingLessonsCard(
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            Text(
-                                text = formattedDate,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
+                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Text(
+                                    text = formattedDate,
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Text(
+                                    text = formattedTime,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
                 }

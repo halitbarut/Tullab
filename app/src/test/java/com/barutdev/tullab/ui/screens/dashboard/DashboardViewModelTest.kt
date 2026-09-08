@@ -16,13 +16,17 @@ import com.barutdev.tullab.domain.repository.PaymentRepository
 import com.barutdev.tullab.domain.repository.StudentRepository
 import com.barutdev.tullab.domain.repository.UserPreferencesRepository
 import com.barutdev.tullab.domain.usecase.notification.CancelNotificationAlarmsUseCase
+import com.barutdev.tullab.domain.usecase.notification.ScheduleNotificationAlarmsUseCase
 import com.barutdev.tullab.navigation.STUDENT_ID_ARG
+import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -160,9 +164,104 @@ class DashboardViewModelTest {
         advanceUntilIdle()
     }
 
+    @Test
+    fun `deleteLesson cancels alarms, deletes from repository, and dismisses dialog`() = runTest {
+        val student = Student(id = 1, fullName = "Test Student", hourlyRate = 80.0)
+        val lesson = Lesson(
+            id = 20, studentId = 1, date = 1000L,
+            status = LessonStatus.SCHEDULED,
+            durationInHours = 1.0, notes = null,
+            pricingMode = PricingMode.PER_HOUR,
+            rateOrFee = 80.0
+        )
+        val cancelAlarmUseCase: CancelNotificationAlarmsUseCase = mockk(relaxed = true)
+        val mockLessonRepo: LessonRepository = mockk(relaxed = true)
+
+        val viewModel = createViewModel(
+            student = student,
+            lessons = listOf(lesson),
+            lessonRepository = mockLessonRepo,
+            cancelNotificationAlarmsUseCase = cancelAlarmUseCase
+        )
+
+        viewModel.onLogLessonClicked(lesson)
+        val stateLogging = viewModel.uiState.first { it.isLogLessonDialogVisible }
+        assertEquals(lesson, stateLogging.lessonToLog)
+        assertEquals(true, stateLogging.isLogLessonDialogVisible)
+
+        viewModel.deleteLesson(20)
+        val stateDismissed = viewModel.uiState.first { !it.isLogLessonDialogVisible }
+
+        coVerify { cancelAlarmUseCase(20) }
+        coVerify { mockLessonRepo.deleteLesson(20) }
+        assertEquals(null, stateDismissed.lessonToLog)
+        assertEquals(false, stateDismissed.isLogLessonDialogVisible)
+
+        advanceUntilIdle()
+        viewModel.viewModelScope.cancel()
+    }
+
+    @Test
+    fun `onSaveLessonDetails updates start time and reschedules notification alarms when scheduled`() = runTest {
+        val student = Student(id = 1, fullName = "Test Student", hourlyRate = 80.0)
+        val lesson = Lesson(
+            id = 25, studentId = 1, date = 1000L,
+            status = LessonStatus.SCHEDULED,
+            durationInHours = 1.0, notes = null,
+            pricingMode = PricingMode.PER_HOUR,
+            rateOrFee = 80.0
+        )
+        val cancelAlarmUseCase: CancelNotificationAlarmsUseCase = mockk(relaxed = true)
+        val scheduleAlarmUseCase: ScheduleNotificationAlarmsUseCase = mockk(relaxed = true)
+        val mockLessonRepo: LessonRepository = mockk(relaxed = true)
+
+        val viewModel = createViewModel(
+            student = student,
+            lessons = listOf(lesson),
+            lessonRepository = mockLessonRepo,
+            cancelNotificationAlarmsUseCase = cancelAlarmUseCase,
+            scheduleNotificationAlarmsUseCase = scheduleAlarmUseCase
+        )
+
+        viewModel.onLogLessonClicked(lesson)
+        val stateLogging = viewModel.uiState.first { it.isLogLessonDialogVisible }
+        assertEquals(true, stateLogging.isLogLessonDialogVisible)
+        val updatedTimeMillis = 8000L
+
+        viewModel.onSaveLessonDetails(
+            lesson = lesson,
+            duration = "1.0",
+            notes = "Rescheduled",
+            pricingMode = PricingMode.PER_HOUR,
+            rateOrFee = "80.0",
+            isCompleted = false,
+            dateMillis = updatedTimeMillis
+        )
+        val stateDismissed = viewModel.uiState.first { !it.isLogLessonDialogVisible }
+
+        coVerify {
+            mockLessonRepo.updateLesson(match {
+                it.id == 25 &&
+                it.date == updatedTimeMillis &&
+                it.status == LessonStatus.SCHEDULED &&
+                it.notes == "Rescheduled"
+            })
+        }
+        coVerify { cancelAlarmUseCase(25) }
+        coVerify { scheduleAlarmUseCase(25) }
+        assertEquals(null, stateDismissed.lessonToLog)
+        assertEquals(false, stateDismissed.isLogLessonDialogVisible)
+
+        advanceUntilIdle()
+        viewModel.viewModelScope.cancel()
+    }
+
     private fun createViewModel(
         student: Student,
-        lessons: List<Lesson>
+        lessons: List<Lesson>,
+        lessonRepository: LessonRepository? = null,
+        cancelNotificationAlarmsUseCase: CancelNotificationAlarmsUseCase = mockk(relaxed = true),
+        scheduleNotificationAlarmsUseCase: ScheduleNotificationAlarmsUseCase = mockk(relaxed = true)
     ): DashboardViewModel {
         val savedStateHandle = SavedStateHandle(mapOf(STUDENT_ID_ARG to student.id))
         
@@ -175,7 +274,7 @@ class DashboardViewModelTest {
             override suspend fun deleteStudent(studentId: Int) {}
         }
         
-        val lessonRepository = object : LessonRepository {
+        val actualLessonRepo = lessonRepository ?: object : LessonRepository {
             override fun getAllLessons(): Flow<List<Lesson>> = MutableStateFlow(lessons)
             override fun getLessonsForStudent(studentId: Int): Flow<List<Lesson>> = MutableStateFlow(lessons)
             override suspend fun insertLesson(lesson: Lesson): Int = 0
@@ -231,10 +330,10 @@ class DashboardViewModelTest {
         return DashboardViewModel(
             savedStateHandle = savedStateHandle,
             studentRepository = studentRepository,
-            lessonRepository = lessonRepository,
+            lessonRepository = actualLessonRepo,
             homeworkRepository = homeworkRepository,
-            cancelNotificationAlarmsUseCase = mockk(relaxed = true),
-            scheduleNotificationAlarmsUseCase = mockk(relaxed = true),
+            cancelNotificationAlarmsUseCase = cancelNotificationAlarmsUseCase,
+            scheduleNotificationAlarmsUseCase = scheduleNotificationAlarmsUseCase,
             paymentRepository = paymentRepository,
             userPreferencesRepository = userPreferencesRepository
         )
