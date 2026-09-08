@@ -298,7 +298,9 @@
     <string name="reports_chart_title">Son 6 ayın kazançları</string>
     <string name="reports_chart_accessibility_bar">%1$s kazancı: %2$s</string>
     <string name="reports_message_empty_period">Bu dönem için faaliyet bulunmuyor.</string>
+    <string name="reports_message_load_failed">Raporlar yüklenemedi. Tekrar deneyin.</string>
     <string name="reports_action_retry">Tekrar dene</string>
+    <string name="reports_back_content_description">Geri</string>
 
     <string name="dashboard_completed_lessons_total">Toplam: %1$s</string>
     <string name="notification_lesson_reminder_title_new">Yaklaşan Ders: %1$s</string>

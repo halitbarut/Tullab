@@ -272,7 +272,9 @@
     <string name="reports_chart_title">Earnings last 6 months</string>
     <string name="reports_chart_accessibility_bar">%1$s earnings: %2$s</string>
     <string name="reports_message_empty_period">No activity recorded for this period.</string>
+    <string name="reports_message_load_failed">Couldn\'t load reports. Try again.</string>
     <string name="reports_action_retry">Try again</string>
+    <string name="reports_back_content_description">Navigate back</string>
 
     <!-- Edit Student Dialog -->
     <string name="edit_student_dialog_title">Edit Student</string>

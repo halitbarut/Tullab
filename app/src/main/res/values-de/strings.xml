@@ -300,7 +300,9 @@
     <string name="reports_chart_title">Einnahmen der letzten 6 Monate</string>
     <string name="reports_chart_accessibility_bar">%1$s Einnahmen: %2$s</string>
     <string name="reports_message_empty_period">Für diesen Zeitraum wurden keine Aktivitäten aufgezeichnet.</string>
+    <string name="reports_message_load_failed">Berichte konnten nicht geladen werden. Erneut versuchen.</string>
     <string name="reports_action_retry">Erneut versuchen</string>
+    <string name="reports_back_content_description">Zurück</string>
 
     <string name="dashboard_completed_lessons_total">Gesamt: %1$s</string>
     <string name="notification_lesson_reminder_title_new">Kommende Lektion: %1$s</string>
