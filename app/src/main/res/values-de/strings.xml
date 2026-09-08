@@ -442,4 +442,15 @@
     <string name="student_action_edit">Bearbeiten</string>
     <string name="student_action_delete">Löschen</string>
 
+    <!-- Feedback & Undo Snackbar strings (feature 013) -->
+    <string name="snackbar_payment_recorded">Zahlung von %1$s erfasst</string>
+    <string name="snackbar_homework_completed">Hausaufgabe abgeschlossen</string>
+    <string name="snackbar_lesson_deleted">Unterrichtsstunde gelöscht</string>
+    <string name="snackbar_homework_deleted">Hausaufgabe gelöscht</string>
+    <string name="snackbar_action_undo">Rückgängig</string>
+    <string name="snackbar_backup_export_success">Sicherung erfolgreich exportiert</string>
+    <string name="snackbar_backup_export_failure">Sicherungsexport fehlgeschlagen</string>
+    <string name="snackbar_backup_import_success">Sicherung erfolgreich importiert</string>
+    <string name="snackbar_backup_import_failure">Sicherungsimport fehlgeschlagen</string>
+
 </resources>

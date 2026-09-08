@@ -63,7 +63,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
-import kotlinx.coroutines.launch
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.barutdev.tullab.R
 import com.barutdev.tullab.ui.navigation.BottomNavPreloadViewModel
@@ -100,7 +99,9 @@ private const val NAVIGATION_LOG_TAG = "TullabNavigation"
 fun TullabNavGraph(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
-    scaffoldController: TullabScaffoldController = rememberTullabScaffoldController()
+    scaffoldController: TullabScaffoldController = rememberTullabScaffoldController(
+        coroutineScope = rememberCoroutineScope()
+    )
 ) {
     val startDestinationViewModel: StartDestinationViewModel = hiltViewModel()
     val startRoute: String? by startDestinationViewModel.startRoute.collectAsState(initial = null)
@@ -453,9 +454,6 @@ fun TullabNavGraph(
                     val successMsgSkipped = bulkSkipped?.let { if (it > 0) " " + tullabPluralResource(R.plurals.bulk_schedule_success_skipped, it, it) else "" } ?: ""
                     val successMsg = successMsgCreated + successMsgSkipped
 
-                    val snackbarHostState = scaffoldController.snackbarHostState
-                    val coroutineScope = rememberCoroutineScope()
-
                     LaunchedEffect(bulkCreated, bulkSkipped, bulkIds) {
                         val currentBulkCreated = bulkCreated
                         val currentBulkIds = bulkIds
@@ -466,16 +464,22 @@ fun TullabNavGraph(
                             savedStateHandle.remove<Int>("bulk_created")
                             savedStateHandle.remove<Int>("bulk_skipped")
                             savedStateHandle.remove<IntArray>("bulk_ids")
-                            
-                            coroutineScope.launch {
-                                val result = snackbarHostState.showSnackbar(
+
+                            // Persistent controller scope: the root SnackbarHost outlives the
+                            // Calendar destination, so the undo action stays active across
+                            // tab switches instead of being cancelled with this composition.
+                            if (currentBulkCreated > 0) {
+                                scaffoldController.launchUndoSnackbar(
                                     message = successMsg,
-                                    actionLabel = if (currentBulkCreated > 0) undoActionLabel else null,
+                                    actionLabel = undoActionLabel,
+                                    onUndo = { calendarViewModel.undoBulkLessons() },
                                     duration = androidx.compose.material3.SnackbarDuration.Long
                                 )
-                                if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) {
-                                    calendarViewModel.undoBulkLessons()
-                                }
+                            } else {
+                                scaffoldController.launchMessage(
+                                    message = successMsg,
+                                    duration = androidx.compose.material3.SnackbarDuration.Long
+                                )
                             }
                         }
                     }

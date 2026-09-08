@@ -39,7 +39,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.barutdev.tullab.util.tullabStringResource
@@ -75,11 +74,14 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
-import kotlinx.coroutines.launch
 import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
 import android.content.res.Configuration
 import com.barutdev.tullab.util.LocalMessageNotifier
+import com.barutdev.tullab.ui.navigation.LocalTullabScaffoldController
+import com.barutdev.tullab.ui.components.rememberTullabHapticFeedback
+import com.barutdev.tullab.ui.components.TullabHapticFeedbackType
+import com.barutdev.tullab.util.getLocalizedString
 
 private data class CompletedLessonUiModel(
     val dateText: String,
@@ -104,7 +106,6 @@ fun DashboardScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val lessons by viewModel.lessons.collectAsStateWithLifecycle()
-    val coroutineScope = rememberCoroutineScope()
     val userPreferences = LocalUserPreferences.current
     val locale = LocalLocale.current
     val context = LocalContext.current
@@ -115,7 +116,9 @@ fun DashboardScreen(
         context.createConfigurationContext(newConfiguration)
     }
     val messageNotifier = LocalMessageNotifier.current
-
+    val scaffoldController = LocalTullabScaffoldController.current
+    val haptics = rememberTullabHapticFeedback()
+    val undoLabel = tullabStringResource(id = R.string.snackbar_action_undo)
     LaunchedEffect(expectedStudentId) {
         Log.d("DashboardScreen", "Composing for expectedStudentId=$expectedStudentId")
     }
@@ -205,7 +208,21 @@ LaunchedEffect(viewModel) {
 
     MarkAsPaidConfirmDialog(
         showDialog = uiState.isMarkAsPaidDialogVisible,
-        onConfirm = { viewModel.confirmMarkAsPaidAndDismiss() },
+        onConfirm = {
+            haptics.perform(TullabHapticFeedbackType.CONFIRMATION)
+            val amountToDisplay = uiState.totalAmountDue
+            viewModel.confirmMarkAsPaidAndDismiss { paymentTimestamp, _ ->
+                val formattedAmount = formatCurrency(amountToDisplay, userPreferences.currencyCode, locale)
+                val message = getLocalizedString(context, locale, R.string.snackbar_payment_recorded, formattedAmount)
+                // Launch in the persistent controller scope so the Snackbar survives
+                // navigation/tab switches (screen scope would be cancelled on dispose).
+                scaffoldController.launchUndoSnackbar(
+                    message = message,
+                    actionLabel = undoLabel,
+                    onUndo = { viewModel.revertPaymentCycleUndo(paymentTimestamp) }
+                )
+            }
+        },
         onDismiss = viewModel::dismissMarkAsPaidDialog
     )
 

@@ -28,9 +28,11 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Assignment
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Groups
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -69,6 +71,9 @@ import com.barutdev.tullab.ui.theme.StatusGreen
 import com.barutdev.tullab.ui.theme.StatusRed
 import com.barutdev.tullab.ui.theme.StatusYellow
 import com.barutdev.tullab.ui.components.AnimatedListItem
+import com.barutdev.tullab.ui.components.TullabHapticFeedbackType
+import com.barutdev.tullab.ui.components.rememberTullabHapticFeedback
+import com.barutdev.tullab.ui.navigation.LocalTullabScaffoldController
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -95,6 +100,8 @@ fun HomeworkScreen(
     val isDialogVisible by viewModel.isDialogVisible.collectAsStateWithLifecycle()
     val editingHomework by viewModel.editingHomework.collectAsStateWithLifecycle()
     val locale = LocalLocale.current
+    val scaffoldController = LocalTullabScaffoldController.current
+    val haptics = rememberTullabHapticFeedback()
 
     LaunchedEffect(expectedStudentId) {
         Log.d("HomeworkScreen", "Composing for expectedStudentId=$expectedStudentId")
@@ -102,6 +109,10 @@ fun HomeworkScreen(
     LaunchedEffect(viewModel.studentId) {
         Log.d("HomeworkScreen", "Rendering homework for studentId=${viewModel.studentId}")
     }
+
+    val homeworkDeletedMessage = tullabStringResource(id = R.string.snackbar_homework_deleted)
+    val homeworkCompletedMessage = tullabStringResource(id = R.string.snackbar_homework_completed)
+    val undoLabel = tullabStringResource(id = R.string.snackbar_action_undo)
 
     HomeworkBottomSheet(
         showSheet = isDialogVisible,
@@ -116,7 +127,17 @@ fun HomeworkScreen(
                 performanceNotes = performanceNotes
             )
         },
-        onDelete = viewModel::onDeleteHomework
+        onDelete = { homework ->
+            haptics.perform(TullabHapticFeedbackType.WARNING)
+            viewModel.deleteHomeworkWithUndo(homework) { snapshot ->
+                // Persistent controller scope: survives navigation/tab switches.
+                scaffoldController.launchUndoSnackbar(
+                    message = homeworkDeletedMessage,
+                    actionLabel = undoLabel,
+                    onUndo = { viewModel.restoreHomework(snapshot) }
+                )
+            }
+        }
     )
 
     val studentNameStatus = deriveStudentNameUiStatus(
@@ -179,7 +200,22 @@ fun HomeworkScreen(
         modifier = modifier.fillMaxSize(),
         studentName = displayStudentName,
         homeworkList = homeworkList,
-        onHomeworkClick = viewModel::showEditHomeworkDialog
+        onHomeworkClick = viewModel::showEditHomeworkDialog,
+        onToggleHomeworkStatus = { homework ->
+            if (homework.status != com.barutdev.tullab.domain.model.HomeworkStatus.CANCELLED) {
+                haptics.perform(TullabHapticFeedbackType.CLICK)
+                val previousStatus = homework.status
+                viewModel.toggleHomeworkStatus(homework)
+                if (previousStatus == com.barutdev.tullab.domain.model.HomeworkStatus.PENDING) {
+                    // Persistent controller scope: survives navigation/tab switches.
+                    scaffoldController.launchUndoSnackbar(
+                        message = homeworkCompletedMessage,
+                        actionLabel = undoLabel,
+                        onUndo = { viewModel.revertHomeworkStatusUndo(homework, previousStatus) }
+                    )
+                }
+            }
+        }
     )
 }
 
@@ -189,7 +225,8 @@ private fun HomeworkScreenContent(
     modifier: Modifier = Modifier,
     studentName: String?,
     homeworkList: List<Homework>,
-    onHomeworkClick: (Homework) -> Unit
+    onHomeworkClick: (Homework) -> Unit,
+    onToggleHomeworkStatus: (Homework) -> Unit
 ) {
     val locale = LocalLocale.current
     var selectedFilter by rememberSaveable { mutableStateOf(HomeworkFilter.ALL) }
@@ -253,6 +290,7 @@ private fun HomeworkScreenContent(
                         homework = homework,
                         locale = locale,
                         onClick = onHomeworkClick,
+                        onToggleStatus = onToggleHomeworkStatus,
                         utcToday = utcToday
                     )
                 }
@@ -301,6 +339,7 @@ private fun HomeworkListItem(
     homework: Homework,
     locale: Locale,
     onClick: (Homework) -> Unit,
+    onToggleStatus: (Homework) -> Unit,
     modifier: Modifier = Modifier,
     utcToday: LocalDate = LocalDate.now(ZoneOffset.UTC)
 ) {
@@ -341,12 +380,37 @@ private fun HomeworkListItem(
             }
             Spacer(modifier = Modifier.width(12.dp))
             StatusBadge(status = homework.status, isOverdue = isOverdue)
-            Icon(
-                imageVector = Icons.Outlined.ChevronRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 12.dp)
-            )
+            if (homework.status != HomeworkStatus.CANCELLED) {
+                IconButton(
+                    onClick = { onToggleStatus(homework) },
+                    modifier = Modifier.padding(start = 4.dp)
+                ) {
+                    val tint = if (homework.status == HomeworkStatus.COMPLETED) {
+                        StatusGreen
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                    Icon(
+                        imageVector = Icons.Filled.Check,
+                        contentDescription = tullabStringResource(
+                            id = if (homework.status == HomeworkStatus.COMPLETED) {
+                                R.string.calendar_homework_action_mark_pending
+                            } else {
+                                R.string.calendar_homework_action_mark_complete
+                            }
+                        ),
+                        tint = tint,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            } else {
+                Icon(
+                    imageVector = Icons.Outlined.ChevronRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 12.dp)
+                )
+            }
         }
     }
 }
@@ -420,6 +484,7 @@ private fun HomeworkScreenPreview() {
             studentName = "Elif Yılmaz",
             homeworkList = homeworkList,
             onHomeworkClick = {},
+            onToggleHomeworkStatus = {},
             modifier = Modifier
         )
     }

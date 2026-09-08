@@ -121,4 +121,15 @@ interface LessonDao {
 
     @Query("SELECT date FROM lessons WHERE studentId = :studentId")
     suspend fun getLessonDatesForStudent(studentId: Int): List<Long>
+
+    @Query(
+        "UPDATE lessons SET status = :completedStatus, paymentTimestamp = NULL " +
+            "WHERE studentId = :studentId AND paymentTimestamp = :paymentTimestamp AND status = :paidStatus"
+    )
+    suspend fun revertPaidLessonsByTimestamp(
+        studentId: Int,
+        paymentTimestamp: Long,
+        paidStatus: LessonStatus = LessonStatus.PAID,
+        completedStatus: LessonStatus = LessonStatus.COMPLETED
+    )
 }

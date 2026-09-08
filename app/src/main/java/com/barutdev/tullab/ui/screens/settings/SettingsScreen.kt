@@ -49,7 +49,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -89,7 +88,6 @@ import java.util.Locale
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
 import androidx.core.content.ContextCompat
-import kotlinx.coroutines.launch
 import kotlin.text.Charsets
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -101,7 +99,6 @@ fun SettingsScreen(
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val scaffoldController = LocalTullabScaffoldController.current
-    val snackbarHostState = scaffoldController.snackbarHostState
     val isLanguageDialogVisible by viewModel.isLanguageDialogVisible.collectAsStateWithLifecycle()
     val isCurrencyDialogVisible by viewModel.isCurrencyDialogVisible.collectAsStateWithLifecycle()
     val isHourlyRateDialogVisible by viewModel.isHourlyRateDialogVisible.collectAsStateWithLifecycle()
@@ -132,7 +129,6 @@ fun SettingsScreen(
     }
     var showResetConfirmation by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
     val notificationPermissionRequest = remember { mutableStateOf<NotificationToggle?>(null) }
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -217,7 +213,8 @@ fun SettingsScreen(
 
     val backupLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
-        coroutineScope.launch {
+        // Persistent controller scope: backup IO + Snackbar survive navigation/tab switches.
+        scaffoldController.launchPersistent {
             val exportResult = viewModel.exportCsv()
             exportResult.onSuccess { csv ->
                 val writeResult = runCatching {
@@ -227,21 +224,22 @@ fun SettingsScreen(
                     } ?: throw IOException("Unable to open output stream")
                 }
                 if (writeResult.isSuccess) {
-                    snackbarHostState.showSnackbar(backupSuccessMessage)
+                    scaffoldController.showMessage(backupSuccessMessage)
                 } else {
                     Log.e("SettingsScreen", "Failed to write backup", writeResult.exceptionOrNull())
-                    snackbarHostState.showSnackbar(backupFailureMessage)
+                    scaffoldController.showMessage(backupFailureMessage)
                 }
             }.onFailure { error ->
                 Log.e("SettingsScreen", "Failed to export backup", error)
-                snackbarHostState.showSnackbar(backupFailureMessage)
+                scaffoldController.showMessage(backupFailureMessage)
             }
         }
     }
 
     val restoreLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
-        coroutineScope.launch {
+        // Persistent controller scope: import IO + Snackbar survive navigation/tab switches.
+        scaffoldController.launchPersistent {
             val csvResult = runCatching {
                 context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { reader ->
                     reader.readText()
@@ -250,14 +248,14 @@ fun SettingsScreen(
             csvResult.onSuccess { csv ->
                 val importResult = viewModel.importCsv(csv)
                 if (importResult.isSuccess) {
-                    snackbarHostState.showSnackbar(restoreSuccessMessage)
+                    scaffoldController.showMessage(restoreSuccessMessage)
                 } else {
                     Log.e("SettingsScreen", "Failed to import backup", importResult.exceptionOrNull())
-                    snackbarHostState.showSnackbar(restoreFailureMessage)
+                    scaffoldController.showMessage(restoreFailureMessage)
                 }
             }.onFailure { error ->
                 Log.e("SettingsScreen", "Failed to read backup", error)
-                snackbarHostState.showSnackbar(restoreFailureMessage)
+                scaffoldController.showMessage(restoreFailureMessage)
             }
         }
     }
@@ -330,13 +328,14 @@ fun SettingsScreen(
         ResetConfirmationDialog(
             onConfirm = {
                 showResetConfirmation = false
-                coroutineScope.launch {
+                // Persistent controller scope: reset + Snackbar survive navigation/tab switches.
+                scaffoldController.launchPersistent {
                     val result = viewModel.resetAllData()
                     if (result.isSuccess) {
-                        snackbarHostState.showSnackbar(resetSuccessMessage)
+                        scaffoldController.showMessage(resetSuccessMessage)
                     } else {
                         Log.e("SettingsScreen", "Failed to reset data", result.exceptionOrNull())
-                        snackbarHostState.showSnackbar(resetFailureMessage)
+                        scaffoldController.showMessage(resetFailureMessage)
                     }
                 }
             },

@@ -2,16 +2,21 @@ package com.barutdev.tullab.ui.navigation
 
 import android.util.Log
 import android.view.Choreographer
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.barutdev.tullab.BuildConfig
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 private const val TAG = "TullabScaffoldChrome"
 
@@ -40,7 +45,8 @@ data class FabConfig(
 
 @Stable
 class TullabScaffoldController internal constructor(
-    val snackbarHostState: SnackbarHostState
+    val snackbarHostState: SnackbarHostState,
+    private val coroutineScope: CoroutineScope
 ) {
     private val choreographer = Choreographer.getInstance()
 
@@ -224,6 +230,90 @@ class TullabScaffoldController internal constructor(
         releaseChrome(ownerId)
     }
 
+    /**
+     * Displays a transient Snackbar with an actionable "Undo" label.
+     * If a prior Snackbar is active it is replaced (only the latest action is undoable).
+     * When the user taps the action label, [onUndo] is invoked.
+     */
+    suspend fun showUndoSnackbar(
+        message: String,
+        actionLabel: String,
+        onUndo: suspend () -> Unit,
+        duration: SnackbarDuration = SnackbarDuration.Short
+    ) {
+        snackbarHostState.currentSnackbarData?.dismiss()
+        val result = snackbarHostState.showSnackbar(
+            message = message,
+            actionLabel = actionLabel,
+            duration = duration,
+            withDismissAction = false
+        )
+        if (result == SnackbarResult.ActionPerformed) {
+            onUndo()
+        }
+    }
+
+    /**
+     * Non-suspending variant of [showUndoSnackbar] that launches in the persistent
+     * controller scope. Use this from screen composables so the Snackbar is not
+     * cancelled when the screen leaves composition during navigation.
+     *
+     * The root SnackbarHost outlives individual screens, so launching here keeps
+     * notifications active and actionable across all tab switches.
+     */
+    fun launchUndoSnackbar(
+        message: String,
+        actionLabel: String,
+        onUndo: suspend () -> Unit,
+        duration: SnackbarDuration = SnackbarDuration.Short
+    ) {
+        coroutineScope.launch {
+            showUndoSnackbar(
+                message = message,
+                actionLabel = actionLabel,
+                onUndo = onUndo,
+                duration = duration
+            )
+        }
+    }
+
+    /**
+     * Displays a standard informational message Snackbar (e.g. backup export/import status).
+     */
+    suspend fun showMessage(
+        message: String,
+        duration: SnackbarDuration = SnackbarDuration.Short
+    ) {
+        snackbarHostState.currentSnackbarData?.dismiss()
+        snackbarHostState.showSnackbar(
+            message = message,
+            duration = duration
+        )
+    }
+
+    /**
+     * Non-suspending variant of [showMessage] that launches in the persistent
+     * controller scope. Use this from screen composables so the Snackbar is not
+     * cancelled when the screen leaves composition during navigation.
+     */
+    fun launchMessage(
+        message: String,
+        duration: SnackbarDuration = SnackbarDuration.Short
+    ) {
+        coroutineScope.launch {
+            showMessage(message = message, duration = duration)
+        }
+    }
+
+    /**
+     * Launches arbitrary suspend work in the persistent controller scope.
+     * Use this when both background work and its resulting Snackbar must survive
+     * navigation/tab switches (e.g. backup export/import, reset).
+     */
+    fun launchPersistent(block: suspend CoroutineScope.() -> Unit) {
+        coroutineScope.launch(block = block)
+    }
+
     private fun isActiveOwner(ownerId: Any): Boolean = activeChromeOwnerId === ownerId
 
     private fun String?.orUnknown(): String = this ?: "unknown"
@@ -236,10 +326,12 @@ class TullabScaffoldController internal constructor(
 }
 
 @Composable
-fun rememberTullabScaffoldController(): TullabScaffoldController {
-    return remember { TullabScaffoldController(SnackbarHostState()) }
+fun rememberTullabScaffoldController(
+    coroutineScope: CoroutineScope = rememberCoroutineScope()
+): TullabScaffoldController {
+    return remember(coroutineScope) { TullabScaffoldController(SnackbarHostState(), coroutineScope) }
 }
 
-val LocalTullabScaffoldController = staticCompositionLocalOf {
-    TullabScaffoldController(SnackbarHostState())
+val LocalTullabScaffoldController = staticCompositionLocalOf<TullabScaffoldController> {
+    error("No TullabScaffoldController provided")
 }

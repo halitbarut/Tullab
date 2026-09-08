@@ -156,14 +156,77 @@ class LogLessonDialogValidationTest {
             )
         )
 
-        // Completed lesson with FLAT_FEE allows empty duration
-        assertTrue(
+        // Duration consistency: COMPLETED requires duration > 0 for ANY pricing
+        // mode (Hourly or Flat Fee) so hour statistics stay accurate.
+        // Flat-fee totals still never multiply (see testReactiveFeeCalculation).
+        assertFalse(
             isDialogSaveEnabled(
                 durationStr = "",
                 rateOrFeeInput = "50.0",
                 pricingMode = PricingMode.FLAT_FEE,
                 isDataChanged = true,
                 statusChoice = LogLessonStatusChoice.COMPLETED
+            )
+        )
+        assertFalse(
+            isDialogSaveEnabled(
+                durationStr = "0",
+                rateOrFeeInput = "50.0",
+                pricingMode = PricingMode.FLAT_FEE,
+                isDataChanged = true,
+                statusChoice = LogLessonStatusChoice.COMPLETED
+            )
+        )
+        assertTrue(
+            isDialogSaveEnabled(
+                durationStr = "1.0",
+                rateOrFeeInput = "50.0",
+                pricingMode = PricingMode.FLAT_FEE,
+                isDataChanged = true,
+                statusChoice = LogLessonStatusChoice.COMPLETED
+            )
+        )
+
+        // Mark-as-paid requires duration > 0 for Flat Fee as well (parity).
+        assertFalse(
+            isDialogSaveEnabled(
+                durationStr = "",
+                customFeeStr = "",
+                rateOrFeeInput = "50.0",
+                pricingMode = PricingMode.FLAT_FEE,
+                isMarkAsPaidMode = true,
+                requiresFeePrompt = false
+            )
+        )
+        assertTrue(
+            isDialogSaveEnabled(
+                durationStr = "1.0",
+                customFeeStr = "",
+                rateOrFeeInput = "50.0",
+                pricingMode = PricingMode.FLAT_FEE,
+                isMarkAsPaidMode = true,
+                requiresFeePrompt = false
+            )
+        )
+        // Flat-fee with fee prompt still needs both duration and fee.
+        assertFalse(
+            isDialogSaveEnabled(
+                durationStr = "1.0",
+                customFeeStr = "",
+                rateOrFeeInput = "0",
+                pricingMode = PricingMode.FLAT_FEE,
+                isMarkAsPaidMode = true,
+                requiresFeePrompt = true
+            )
+        )
+        assertTrue(
+            isDialogSaveEnabled(
+                durationStr = "1.0",
+                customFeeStr = "100",
+                rateOrFeeInput = "0",
+                pricingMode = PricingMode.FLAT_FEE,
+                isMarkAsPaidMode = true,
+                requiresFeePrompt = true
             )
         )
     }

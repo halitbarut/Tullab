@@ -61,6 +61,8 @@ import com.barutdev.tullab.R
 import com.barutdev.tullab.domain.model.Lesson
 import com.barutdev.tullab.domain.model.LessonStatus
 import com.barutdev.tullab.domain.model.PricingMode
+import com.barutdev.tullab.ui.components.TullabHapticFeedbackType
+import com.barutdev.tullab.ui.components.rememberTullabHapticFeedback
 import com.barutdev.tullab.ui.theme.LocalLocale
 import com.barutdev.tullab.util.formatCurrency
 import com.barutdev.tullab.util.getCurrencySymbol
@@ -102,6 +104,7 @@ fun LogLessonDialog(
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val locale = LocalLocale.current
+    val haptics = rememberTullabHapticFeedback()
 
     val conflictingDates = remember(existingLessons, lesson.id, lesson.studentId) {
         getConflictingLessonDates(
@@ -154,7 +157,23 @@ fun LogLessonDialog(
     val initialDurationStr = remember(lesson) {
         lesson.durationInHours?.let { if (it % 1.0 == 0.0) it.toInt().toString() else it.toString() } ?: ""
     }
-    var duration by remember(lesson) { mutableStateOf(initialDurationStr) }
+    // Duration consistency: completed/paid lessons (any pricing mode) and
+    // mark-as-paid transitions always require duration > 0 for hour statistics.
+    // Prefill missing durations with 1.0h default so the sheet never opens empty
+    // when a duration is mandatory. Flat-fee totals still never multiply.
+    val defaultDurationStr = remember(lesson, isMarkAsPaidMode) {
+        if (isMarkAsPaidMode ||
+            lesson.status == LessonStatus.COMPLETED ||
+            lesson.status == LessonStatus.PAID
+        ) {
+            "1"
+        } else {
+            ""
+        }
+    }
+    var duration by remember(lesson, isMarkAsPaidMode) {
+        mutableStateOf(initialDurationStr.ifEmpty { defaultDurationStr })
+    }
 
     val initialNotesStr = remember(lesson) { lesson.notes ?: "" }
     var notes by remember(lesson) { mutableStateOf(initialNotesStr) }
@@ -220,7 +239,13 @@ fun LogLessonDialog(
         isMarkAsPaidMode,
         requiresFeePrompt,
         selectedDateMillis,
-        isDateConflict
+        isDateConflict,
+        duration,
+        rateOrFeeInput,
+        pricingMode,
+        customFee,
+        isDataChanged,
+        statusChoice
     ) {
         derivedStateOf {
             isDialogSaveEnabled(
@@ -238,7 +263,8 @@ fun LogLessonDialog(
     }
 
     fun resetInputs() {
-        duration = lesson.durationInHours?.let { if (it % 1.0 == 0.0) it.toInt().toString() else it.toString() } ?: ""
+        duration = lesson.durationInHours?.let { if (it % 1.0 == 0.0) it.toInt().toString() else it.toString() }
+            ?: defaultDurationStr
         notes = lesson.notes.orEmpty()
         customFee = ""
         pricingMode = lesson.pricingMode
@@ -466,7 +492,11 @@ fun LogLessonDialog(
     val parsedDuration = parseDurationDecimal(duration)
     val isDurationEntered = duration.trim().isNotEmpty()
     val isDurationValid = parsedDuration != null && parsedDuration > 0.0
-    val isDurationRequired = isMarkAsPaidMode || (statusChoice == LogLessonStatusChoice.COMPLETED && pricingMode == PricingMode.PER_HOUR)
+    // Duration consistency: required for ALL completed/paid lessons regardless
+    // of pricing mode (Hourly or Flat Fee) so teaching hours are always captured.
+    // Flat-fee totals still never multiply by duration.
+    val isDurationRequired = isMarkAsPaidMode ||
+        statusChoice == LogLessonStatusChoice.COMPLETED
 
     val durationErrorText = when {
         isDurationEntered && !isDurationValid -> tullabStringResource(id = R.string.lesson_duration_invalid_error)
@@ -528,7 +558,12 @@ fun LogLessonDialog(
                     ) {
                         SegmentedButton(
                             selected = statusChoice == LogLessonStatusChoice.SCHEDULED,
-                            onClick = { statusChoice = LogLessonStatusChoice.SCHEDULED },
+                            onClick = {
+                                if (statusChoice != LogLessonStatusChoice.SCHEDULED) {
+                                    haptics.perform(TullabHapticFeedbackType.SEGMENT_PULSE)
+                                }
+                                statusChoice = LogLessonStatusChoice.SCHEDULED
+                            },
                             shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3),
                             enabled = lesson.status != LessonStatus.PAID
                         ) {
@@ -539,7 +574,12 @@ fun LogLessonDialog(
                         }
                         SegmentedButton(
                             selected = statusChoice == LogLessonStatusChoice.COMPLETED,
-                            onClick = { statusChoice = LogLessonStatusChoice.COMPLETED },
+                            onClick = {
+                                if (statusChoice != LogLessonStatusChoice.COMPLETED) {
+                                    haptics.perform(TullabHapticFeedbackType.SEGMENT_PULSE)
+                                }
+                                statusChoice = LogLessonStatusChoice.COMPLETED
+                            },
                             shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3),
                             enabled = lesson.status != LessonStatus.PAID
                         ) {
@@ -550,7 +590,12 @@ fun LogLessonDialog(
                         }
                         SegmentedButton(
                             selected = statusChoice == LogLessonStatusChoice.CANCELLED,
-                            onClick = { statusChoice = LogLessonStatusChoice.CANCELLED },
+                            onClick = {
+                                if (statusChoice != LogLessonStatusChoice.CANCELLED) {
+                                    haptics.perform(TullabHapticFeedbackType.SEGMENT_PULSE)
+                                }
+                                statusChoice = LogLessonStatusChoice.CANCELLED
+                            },
                             shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3),
                             enabled = lesson.status != LessonStatus.PAID,
                             colors = SegmentedButtonDefaults.colors(
@@ -682,7 +727,12 @@ fun LogLessonDialog(
                     ) {
                         SegmentedButton(
                             selected = pricingMode == PricingMode.PER_HOUR,
-                            onClick = { pricingMode = PricingMode.PER_HOUR },
+                            onClick = {
+                                if (pricingMode != PricingMode.PER_HOUR) {
+                                    haptics.perform(TullabHapticFeedbackType.SEGMENT_PULSE)
+                                }
+                                pricingMode = PricingMode.PER_HOUR
+                            },
                             shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
                             colors = SegmentedButtonDefaults.colors(
                                 activeContainerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -693,7 +743,12 @@ fun LogLessonDialog(
                         }
                         SegmentedButton(
                             selected = pricingMode == PricingMode.FLAT_FEE,
-                            onClick = { pricingMode = PricingMode.FLAT_FEE },
+                            onClick = {
+                                if (pricingMode != PricingMode.FLAT_FEE) {
+                                    haptics.perform(TullabHapticFeedbackType.SEGMENT_PULSE)
+                                }
+                                pricingMode = PricingMode.FLAT_FEE
+                            },
                             shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
                             colors = SegmentedButtonDefaults.colors(
                                 activeContainerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -1005,11 +1060,14 @@ fun isDialogSaveEnabled(
     val isFeeValid = !requiresFeePrompt || parseDurationDecimal(customFeeStr)?.let { it > 0.0 } == true
     val isRateOrFeeValid = parseDurationDecimal(rateOrFeeInput) != null
 
+    // Harmonized validation: duration > 0 is required for ALL mark-as-paid
+    // transitions and ALL completed lessons, regardless of pricing mode, so hour
+    // statistics stay accurate. Flat-fee totals still never multiply by duration
+    // (see calculateDialogTotalFee / calculatedValue).
     return when {
         isMarkAsPaidMode -> isDurationValid && isFeeValid
         statusChoice == LogLessonStatusChoice.SCHEDULED -> (!isDurationEntered || isDurationValid) && isRateOrFeeValid
-        pricingMode == PricingMode.PER_HOUR -> isDurationValid && isRateOrFeeValid
-        else -> (!isDurationEntered || isDurationValid) && isRateOrFeeValid
+        else -> isDurationValid && isRateOrFeeValid
     }
 }
 

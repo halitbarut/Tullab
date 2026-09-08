@@ -74,7 +74,7 @@ fun BulkScheduleScreen(
     viewModel: BulkScheduleViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val snackbarHostState = com.barutdev.tullab.ui.navigation.LocalTullabScaffoldController.current.snackbarHostState
+    val scaffoldController = com.barutdev.tullab.ui.navigation.LocalTullabScaffoldController.current
 
     val zoneId = remember { ZoneId.systemDefault() }
     val lessonsByDate = remember(state.existingLessons, zoneId) {
@@ -131,12 +131,19 @@ fun BulkScheduleScreen(
                     )
                 }
                 is SnackbarState.Error -> {
-                    snackbarHostState.showSnackbar(message = errorMessageText)
-                    viewModel.onEvent(BulkScheduleEvent.SnackbarDismissed)
+                    // Persistent controller scope: root SnackbarHost keeps the notification
+                    // active across navigation instead of cancelling with this composition.
+                    scaffoldController.launchPersistent {
+                        scaffoldController.showMessage(message = errorMessageText)
+                        viewModel.onEvent(BulkScheduleEvent.SnackbarDismissed)
+                    }
                 }
                 is SnackbarState.UndoSuccess -> {
-                    snackbarHostState.showSnackbar(message = undoMessageText)
-                    viewModel.onEvent(BulkScheduleEvent.SnackbarDismissed)
+                    // Persistent controller scope: survives tab switches.
+                    scaffoldController.launchPersistent {
+                        scaffoldController.showMessage(message = undoMessageText)
+                        viewModel.onEvent(BulkScheduleEvent.SnackbarDismissed)
+                    }
                 }
             }
         }

@@ -197,4 +197,49 @@ class HomeworkViewModel @Inject constructor(
             dismissHomeworkDialog()
         }
     }
+
+    /**
+     * Deletes homework immediately and invokes [onDeleted] with the snapshot for undo.
+     */
+    fun deleteHomeworkWithUndo(homework: Homework, onDeleted: (Homework) -> Unit) {
+        viewModelScope.launch {
+            homeworkRepository.deleteHomework(homework)
+            dismissHomeworkDialog()
+            onDeleted(homework)
+        }
+    }
+
+    /**
+     * Re-inserts a homework snapshot into the database as an undo for deletion.
+     */
+    fun restoreHomework(homework: Homework) {
+        viewModelScope.launch {
+            homeworkRepository.insertHomework(homework.copy(id = 0))
+        }
+    }
+
+    /**
+     * Toggles homework status between PENDING and COMPLETED.
+     * CANCELLED homework items are ignored.
+     */
+    fun toggleHomeworkStatus(homework: Homework) {
+        if (homework.status == HomeworkStatus.CANCELLED) return
+        viewModelScope.launch {
+            val newStatus = when (homework.status) {
+                HomeworkStatus.PENDING -> HomeworkStatus.COMPLETED
+                HomeworkStatus.COMPLETED -> HomeworkStatus.PENDING
+                HomeworkStatus.CANCELLED -> HomeworkStatus.CANCELLED
+            }
+            homeworkRepository.updateHomework(homework.copy(status = newStatus))
+        }
+    }
+
+    /**
+     * Reverts homework status as part of an undo action triggered by the Snackbar.
+     */
+    fun revertHomeworkStatusUndo(homework: Homework, previousStatus: HomeworkStatus) {
+        viewModelScope.launch {
+            homeworkRepository.updateHomework(homework.copy(status = previousStatus))
+        }
+    }
 }

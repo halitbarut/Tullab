@@ -11,4 +11,6 @@ interface PaymentRepository {
     suspend fun markLessonAsPaid(lessonId: Int, durationInHours: Double? = null, customFee: Double? = null)
 
     suspend fun revertLessonPayment(lessonId: Int)
+
+    suspend fun revertPaymentCycle(studentId: Int, paymentTimestamp: Long)
 }

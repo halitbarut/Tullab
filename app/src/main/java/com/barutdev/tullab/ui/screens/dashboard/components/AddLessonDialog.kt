@@ -43,11 +43,11 @@ fun AddLessonDialog(
     var rateOrFeeInput by rememberSaveable { mutableStateOf("") }
 
     val isDurationValid = duration.trim().replace(',', '.').toDoubleOrNull()?.let { it > 0.0 } == true
-    val isSaveEnabled = if (pricingMode == PricingMode.PER_HOUR) {
-        isDurationValid
-    } else {
-        rateOrFeeInput.trim().replace(',', '.').toDoubleOrNull() != null
-    }
+    // Duration consistency: COMPLETED lessons require duration > 0 for any
+    // pricing mode so hour statistics stay accurate. Flat-fee totals still
+    // never multiply (see calculatedValue).
+    val isRateValid = rateOrFeeInput.trim().replace(',', '.').toDoubleOrNull() != null
+    val isSaveEnabled = isDurationValid && isRateValid
 
     AlertDialog(
         onDismissRequest = {
@@ -90,32 +90,30 @@ fun AddLessonDialog(
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                if (pricingMode == PricingMode.PER_HOUR) {
-                    androidx.compose.material3.OutlinedTextField(
-                        value = duration,
-                        onValueChange = { newValue ->
-                            val normalized = newValue.replace(',', '.')
-                            var decimalAdded = false
-                            val sanitized = StringBuilder()
-                            normalized.forEach { char ->
-                                when {
-                                    char.isDigit() -> sanitized.append(char)
-                                    char == '.' && !decimalAdded -> {
-                                        sanitized.append(char)
-                                        decimalAdded = true
-                                    }
+                androidx.compose.material3.OutlinedTextField(
+                    value = duration,
+                    onValueChange = { newValue ->
+                        val normalized = newValue.replace(',', '.')
+                        var decimalAdded = false
+                        val sanitized = StringBuilder()
+                        normalized.forEach { char ->
+                            when {
+                                char.isDigit() -> sanitized.append(char)
+                                char == '.' && !decimalAdded -> {
+                                    sanitized.append(char)
+                                    decimalAdded = true
                                 }
                             }
-                            duration = sanitized.toString()
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-                        label = { Text(text = tullabStringResource(id = R.string.dashboard_add_lesson_duration_label)) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
+                        }
+                        duration = sanitized.toString()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                    label = { Text(text = tullabStringResource(id = R.string.dashboard_add_lesson_duration_label)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true
+                )
+                Spacer(modifier = Modifier.height(16.dp))
 
                 val rateLabel = if (pricingMode == PricingMode.PER_HOUR) {
                     tullabStringResource(id = R.string.student_profile_hourly_rate_label)

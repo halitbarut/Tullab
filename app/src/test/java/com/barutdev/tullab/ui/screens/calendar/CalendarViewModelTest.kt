@@ -232,7 +232,7 @@ class CalendarViewModelTest {
         coVerify {
             lessonRepository.updateLesson(match {
                 it.id == lesson.id &&
-                it.durationInHours == null && // FLAT_FEE pricing — durationInHours must be null
+                it.durationInHours == 1.5 && // SCHEDULED preserves entered duration for any pricing mode
                 it.notes == "Test Note" &&
                 it.pricingMode == com.barutdev.tullab.domain.model.PricingMode.FLAT_FEE &&
                 it.rateOrFee == 60.0 &&

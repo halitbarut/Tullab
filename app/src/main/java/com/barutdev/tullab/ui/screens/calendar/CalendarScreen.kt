@@ -49,7 +49,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -57,6 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.barutdev.tullab.util.getLocalizedString
 import com.barutdev.tullab.util.tullabStringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -98,6 +98,8 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.material3.Surface
 import com.barutdev.tullab.ui.components.AnimatedListItem
 import com.barutdev.tullab.ui.components.CalendarSpeedDialFab
+import com.barutdev.tullab.ui.components.TullabHapticFeedbackType
+import com.barutdev.tullab.ui.components.rememberTullabHapticFeedback
 import com.barutdev.tullab.ui.screens.calendar.components.CalendarLegendBottomSheet
 import java.text.NumberFormat
 import java.time.DayOfWeek
@@ -121,7 +123,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import com.barutdev.tullab.util.calculateDelayToNextMidnight
 import androidx.compose.material.icons.outlined.Assignment
 import androidx.compose.material.icons.outlined.DateRange
@@ -154,9 +155,10 @@ fun CalendarScreen(
     val requiresFeePrompt by viewModel.requiresFeePrompt.collectAsStateWithLifecycle()
     val lessonToRevert by viewModel.lessonToRevert.collectAsStateWithLifecycle()
     val currencyCode by viewModel.currencyCode.collectAsStateWithLifecycle()
-    val coroutineScope = rememberCoroutineScope()
     val zoneId = remember { ZoneId.systemDefault() }
     val snackbarHostState = scaffoldController.snackbarHostState
+    val haptics = rememberTullabHapticFeedback()
+    val currentLocale = LocalLocale.current
 
     LaunchedEffect(expectedStudentId) {
         Log.d("CalendarScreen", "Composing for expectedStudentId=$expectedStudentId")
@@ -190,9 +192,13 @@ fun CalendarScreen(
     val addLessonDescription = tullabStringResource(
         id = R.string.calendar_add_lesson_fab_content_description
     )
+    val context = LocalContext.current
     val scheduledMessage = tullabStringResource(id = R.string.calendar_lesson_scheduled_message)
     val containerColor = MaterialTheme.colorScheme.primary
     val contentColor = MaterialTheme.colorScheme.onPrimary
+    val homeworkCompletedMessage = tullabStringResource(id = R.string.snackbar_homework_completed)
+    val lessonDeletedMessage = tullabStringResource(id = R.string.snackbar_lesson_deleted)
+    val undoLabel = tullabStringResource(id = R.string.snackbar_action_undo)
 
     val today = LocalDate.now(ZoneId.systemDefault())
     val currentLessonToLog = lessonToLog
@@ -214,7 +220,14 @@ fun CalendarScreen(
             viewModel.onLogLessonMarkNotDone(notes, dateMillis)
         },
         onDelete = { lesson ->
-            viewModel.deleteLesson(lesson.id)
+            haptics.perform(TullabHapticFeedbackType.WARNING)
+            viewModel.deleteLessonWithUndo(lesson) { snapshot ->
+                scaffoldController.launchUndoSnackbar(
+                    message = lessonDeletedMessage,
+                    actionLabel = undoLabel,
+                    onUndo = { viewModel.restoreLesson(snapshot) }
+                )
+            }
         },
         currencyCode = currencyCode
     )
@@ -231,7 +244,27 @@ fun CalendarScreen(
         onMarkAsPaid = { durationStr, feeStr ->
             val duration = durationStr.trim().replace(',', '.').toDoubleOrNull()
             val fee = feeStr.trim().replace(',', '.').toDoubleOrNull()
+            val pendingLesson = pendingLessonForPayment
+            haptics.perform(TullabHapticFeedbackType.CONFIRMATION)
             viewModel.onConfirmMarkLessonAsPaid(duration, fee)
+            if (pendingLesson != null) {
+                val amount = fee ?: if (duration != null) {
+                    if (pendingLesson.pricingMode == com.barutdev.tullab.domain.model.PricingMode.PER_HOUR) {
+                        duration * pendingLesson.rateOrFee
+                    } else {
+                        pendingLesson.rateOrFee
+                    }
+                } else {
+                    pendingLesson.calculatedValue
+                }
+                val formattedAmount = com.barutdev.tullab.util.formatCurrency(amount, currencyCode, currentLocale)
+                val message = getLocalizedString(context, currentLocale, R.string.snackbar_payment_recorded, formattedAmount)
+                scaffoldController.launchUndoSnackbar(
+                    message = message,
+                    actionLabel = undoLabel,
+                    onUndo = { viewModel.revertLessonPaymentUndo(pendingLesson.id) }
+                )
+            }
         },
         currencyCode = currencyCode
     )
@@ -286,9 +319,47 @@ fun CalendarScreen(
             onNextMonth = viewModel::onNextMonth,
             onSelectDate = viewModel::onSelectDate,
             onLogLessonClick = viewModel::onLogLessonClicked,
-            onLessonMarkAsPaidClick = viewModel::onMarkLessonAsPaidClicked,
+            onLessonMarkAsPaidClick = { lesson ->
+                // Harmonized trigger (parity with ViewModel): immediate one-tap
+                // payment only when COMPLETED with valid duration > 0 and known
+                // rate/fee. SCHEDULED or zero/missing duration always opens the
+                // sheet to capture hours. Flat-fee totals never multiply.
+                val hasValidDuration = (lesson.durationInHours ?: 0.0) > 0.0
+                val hasSufficientDetails = hasValidDuration && lesson.rateOrFee > 0.0
+                if (lesson.status == com.barutdev.tullab.domain.model.LessonStatus.COMPLETED &&
+                    hasSufficientDetails) {
+                    haptics.perform(TullabHapticFeedbackType.CONFIRMATION)
+                    val amount = lesson.calculatedValue
+                    val formattedAmount = com.barutdev.tullab.util.formatCurrency(amount, currencyCode, currentLocale)
+                    val message = getLocalizedString(context, currentLocale, R.string.snackbar_payment_recorded, formattedAmount)
+                    viewModel.onMarkLessonAsPaidClicked(lesson)
+                    scaffoldController.launchUndoSnackbar(
+                        message = message,
+                        actionLabel = undoLabel,
+                        onUndo = { viewModel.revertLessonPaymentUndo(lesson.id) }
+                    )
+                } else {
+                    // Dialog path — haptic + snackbar shown in dialog confirm callback above
+                    viewModel.onMarkLessonAsPaidClicked(lesson)
+                }
+            },
             onRevertPaymentClick = viewModel::onRevertLessonPaymentClicked,
-            onToggleHomeworkStatus = viewModel::toggleHomeworkStatus,
+            onToggleHomeworkStatus = { homework ->
+                if (homework.status != com.barutdev.tullab.domain.model.HomeworkStatus.CANCELLED) {
+                    haptics.perform(TullabHapticFeedbackType.CLICK)
+                    val previousStatus = homework.status
+                    viewModel.toggleHomeworkStatus(homework)
+                    if (previousStatus == com.barutdev.tullab.domain.model.HomeworkStatus.PENDING) {
+                        scaffoldController.launchUndoSnackbar(
+                            message = homeworkCompletedMessage,
+                            actionLabel = undoLabel,
+                            onUndo = { viewModel.revertHomeworkStatusUndo(homework, previousStatus) }
+                        )
+                    }
+                } else {
+                    viewModel.toggleHomeworkStatus(homework)
+                }
+            },
             onHomeworkDetailsClick = { homework ->
                 viewModel.studentId?.let { studentId ->
                     onNavigateToHomework(studentId, homework.id)
@@ -335,9 +406,10 @@ fun CalendarScreen(
                             .atZone(zoneId)
                             .toInstant()
                             .toEpochMilli()
-                        coroutineScope.launch {
+                        // Persistent controller scope: save + Snackbar survive tab switches.
+                        scaffoldController.launchPersistent {
                             viewModel.saveLesson(epochMillis)
-                            snackbarHostState.showSnackbar(message = scheduledMessage)
+                            scaffoldController.showMessage(message = scheduledMessage)
                         }
                         showScheduleTimePicker = false
                     }) {
