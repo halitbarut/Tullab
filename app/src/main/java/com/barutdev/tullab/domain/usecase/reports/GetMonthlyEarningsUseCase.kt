@@ -32,6 +32,7 @@ class GetMonthlyEarningsUseCase @Inject constructor(
         // Group PAID lessons by lesson date (not paymentTimestamp) so the
         // chart aligns with the summary's timeframe logic and FLAT_FEE lessons
         // (which have null duration) are included via calculatedValue.
+        // Aggregate raw values first; round only the final monthly total.
         lessons.filter { it.status == LessonStatus.PAID }
             .forEach { lesson ->
                 val lessonMonth = lesson.date.toYearMonth()
@@ -39,7 +40,6 @@ class GetMonthlyEarningsUseCase @Inject constructor(
                 val amountValue = lesson.calculatedValue
                 if (amountValue <= 0.0 || amountValue.isNaN()) return@forEach
                 val amount = BigDecimal.valueOf(amountValue)
-                    .setScale(2, RoundingMode.HALF_UP)
                 monthlyTotals[lessonMonth] = monthlyTotals.getValue(lessonMonth).add(amount)
             }
 

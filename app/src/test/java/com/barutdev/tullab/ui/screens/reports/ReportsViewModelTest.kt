@@ -17,18 +17,13 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
@@ -41,8 +36,6 @@ class ReportsViewModelTest {
     private val zoneId = ZoneId.of("UTC")
     private val clock = Clock.fixed(Instant.parse("2025-03-20T10:00:00Z"), zoneId)
 
-    // TODO: Refactor test - fails with Kotlin 2.3.0 due to StateFlow.update timing issues
-    @Ignore("Kotlin 2.3.0 coroutine compatibility issue - StateFlow.update timing")
     @Test
     fun `initial state loads default range summary and earnings`() = runTest {
         val lessonRepository = FakeLessonRepository()
@@ -120,8 +113,6 @@ class ReportsViewModelTest {
         assertEquals(expectedIndex, savedStateHandle.get<Int>(SELECTED_RANGE_KEY))
     }
 
-    // TODO: Refactor test - fails with Kotlin 2.3.0 due to StateFlow.update timing issues
-    @Ignore("Kotlin 2.3.0 coroutine compatibility issue - StateFlow.update timing")
     @Test
     fun `range selection refreshes data and persists in saved state`() = runTest {
         val lessonRepository = FakeLessonRepository()
@@ -226,12 +217,10 @@ class ReportsViewModelTest {
         assertEquals(Duration.ofMinutes(120), state.summary.totalHours)
     }
 
-    // TODO: Refactor test - fails with Kotlin 2.3.0 due to StateFlow.update timing issues
-    @Ignore("Kotlin 2.3.0 coroutine compatibility issue - StateFlow.update timing")
     @Test
     fun `rapid range changes emit only latest selection`() = runTest {
-        val lessonRepository = ControlledLessonRepository()
-        val studentRepository = ControlledStudentRepository()
+        val lessonRepository = FakeLessonRepository()
+        val studentRepository = FakeStudentRepository()
 
         studentRepository.setStudents(
             listOf(
@@ -311,70 +300,6 @@ class ReportsViewModelTest {
         rateOrFee = rateOrFee,
         paymentTimestamp = paymentDate?.atStartOfDay(zoneId)?.toInstant()?.toEpochMilli()
     )
-
-    private class ControlledLessonRepository : com.barutdev.tullab.domain.repository.LessonRepository {
-        private val lessons = MutableStateFlow<List<Lesson>>(emptyList())
-        var nextDelayMillis: Long = 0L
-
-        fun setLessons(items: List<Lesson>) {
-            lessons.value = items
-        }
-
-        override fun getAllLessons(): Flow<List<Lesson>> = flow {
-            val delayMillis = nextDelayMillis
-            if (delayMillis > 0) {
-                delay(delayMillis)
-            }
-            emit(lessons.value)
-        }
-
-        override fun getLessonsForStudent(studentId: Int): Flow<List<Lesson>> = throw UnsupportedOperationException()
-
-        override suspend fun insertLesson(lesson: Lesson): Int = throw UnsupportedOperationException()
-
-        
-    override suspend fun insertLessons(lessons: List<Lesson>): List<Int> = emptyList()
-    override suspend fun deleteLessons(lessonIds: List<Int>) {}
-    override suspend fun getLessonDatesForStudent(studentId: Int): List<Long> = emptyList()
-    override suspend fun updateLesson(lesson: Lesson) = throw UnsupportedOperationException()
-
-        override suspend fun markCompletedLessonsAsPaid(studentId: Int) = throw UnsupportedOperationException()
-
-        override suspend fun deleteLesson(lessonId: Int) = throw UnsupportedOperationException()
-        override suspend fun getScheduledLessonCount(studentId: Int): Int = 0
-    override suspend fun getScheduledLessonsForStudent(studentId: Int): List<Lesson> = emptyList()
-        override suspend fun updateScheduledLessonsRate(studentId: Int, newRate: Double) {}
-
-        override fun getLessonsForDate(date: java.time.LocalDate): Flow<List<Lesson>> = throw UnsupportedOperationException()
-
-        override fun getCompletedLessonsForDate(date: java.time.LocalDate): Flow<List<Lesson>> = throw UnsupportedOperationException()
-
-        override suspend fun getLessonWithStudent(lessonId: Int): com.barutdev.tullab.domain.model.LessonWithStudent? = throw UnsupportedOperationException()
-
-        override fun getActiveLessons(): Flow<List<Lesson>> = throw UnsupportedOperationException()
-    }
-
-    private class ControlledStudentRepository : com.barutdev.tullab.domain.repository.StudentRepository {
-        private val students = MutableStateFlow<List<Student>>(emptyList())
-
-        fun setStudents(items: List<Student>) {
-            students.value = items
-        }
-
-        override fun getAllStudents(): Flow<List<Student>> = flow {
-            emit(students.value)
-        }
-
-        override fun getStudentById(id: Int): Flow<Student?> = throw UnsupportedOperationException()
-
-        override suspend fun addStudent(student: Student) = throw UnsupportedOperationException()
-
-        override suspend fun updateStudentHourlyRate(studentId: Int, newRate: Double) = throw UnsupportedOperationException()
-
-        override suspend fun updateStudentProfile(update: com.barutdev.tullab.domain.model.StudentProfileUpdate) = throw UnsupportedOperationException()
-
-        override suspend fun deleteStudent(studentId: Int) = throw UnsupportedOperationException()
-    }
 
     private companion object {
         private const val SELECTED_RANGE_KEY = "reports_selected_range_index"

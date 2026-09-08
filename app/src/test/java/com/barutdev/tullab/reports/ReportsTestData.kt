@@ -13,8 +13,11 @@ import java.math.BigDecimal
 import java.time.Duration
 import java.time.YearMonth
 import java.util.UUID
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 
 /**
  * Shared fixtures for Reports domain and UI tests.
@@ -70,14 +73,22 @@ object ReportsTestData {
         )
 }
 
-class FakeLessonRepository : LessonRepository {
+class FakeLessonRepository(
+    var nextDelayMillis: Long = 0L
+) : LessonRepository {
     private val lessonsFlow = MutableStateFlow<List<Lesson>>(emptyList())
 
     fun setLessons(lessons: List<Lesson>) {
         lessonsFlow.value = lessons
     }
 
-    override fun getAllLessons(): Flow<List<Lesson>> = lessonsFlow
+    override fun getAllLessons(): Flow<List<Lesson>> = flow {
+        val delayMillis = nextDelayMillis
+        if (delayMillis > 0) {
+            delay(delayMillis)
+        }
+        emitAll(lessonsFlow)
+    }
 
     override fun getLessonsForStudent(studentId: Int): Flow<List<Lesson>> =
         throw UnsupportedOperationException()
@@ -85,9 +96,8 @@ class FakeLessonRepository : LessonRepository {
     override suspend fun insertLesson(lesson: Lesson): Int =
         throw UnsupportedOperationException()
 
-    
     override suspend fun insertLessons(lessons: List<Lesson>): List<Int> = emptyList()
-    override suspend fun deleteLessons(lessonIds: List<Int>) {}
+    override suspend fun deleteLessons(lessonIds: List<Int>) = Unit
     override suspend fun getLessonDatesForStudent(studentId: Int): List<Long> = emptyList()
     override suspend fun updateLesson(lesson: Lesson) =
         throw UnsupportedOperationException()
@@ -96,7 +106,7 @@ class FakeLessonRepository : LessonRepository {
         throw UnsupportedOperationException()
     override suspend fun getScheduledLessonCount(studentId: Int): Int = 0
     override suspend fun getScheduledLessonsForStudent(studentId: Int): List<Lesson> = emptyList()
-    override suspend fun updateScheduledLessonsRate(studentId: Int, newRate: Double) {}
+    override suspend fun updateScheduledLessonsRate(studentId: Int, newRate: Double) = Unit
 
     override suspend fun markCompletedLessonsAsPaid(studentId: Int) =
         throw UnsupportedOperationException()

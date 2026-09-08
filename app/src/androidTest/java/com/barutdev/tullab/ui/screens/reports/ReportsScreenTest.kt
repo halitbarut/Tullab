@@ -3,6 +3,7 @@ package com.barutdev.tullab.ui.screens.reports
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertDoesNotExist
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
@@ -62,6 +63,7 @@ class ReportsScreenTest {
                         errorMessage = null
                     ),
                     locale = locale,
+                    currencyFormatter = currencyFormatter,
                     onRangeSelected = {},
                     onRetry = {}
                 )
@@ -133,6 +135,7 @@ class ReportsScreenTest {
                 ReportsScreenContent(
                     uiState = uiState,
                     locale = locale,
+                    currencyFormatter = currencyFormatter,
                     onRangeSelected = { range ->
                         if (range == ReportRange.LastThirtyDays) {
                             uiState = updatedState

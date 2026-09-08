@@ -28,13 +28,12 @@ data class ReportsUiState(
     val hasTopStudents: Boolean get() = topStudents.isNotEmpty()
     val hasChartData: Boolean get() = monthlyEarnings.isNotEmpty()
     companion object {
-        fun initial(selectedRange: ReportRange? = ReportRange.presets.firstOrNull() ?: ReportRange.ThisMonth): ReportsUiState {
+        fun initial(selectedRange: ReportRange? = ReportRange.default): ReportsUiState {
             val ranges = ReportRange.presets
-            val fallback = selectedRange ?: ranges.firstOrNull() ?: ReportRange.ThisMonth
-            val resolved = ranges.firstOrNull { it == fallback } ?: fallback
+            val fallback = selectedRange ?: ReportRange.default
             return ReportsUiState(
                 availableRanges = ranges,
-                selectedRange = resolved
+                selectedRange = fallback
             )
         }
     }
@@ -49,5 +48,6 @@ data class ReportsUiMessage(
 ) {
     companion object {
         fun emptyState(): ReportsUiMessage = ReportsUiMessage(R.string.reports_message_empty_period)
+        fun loadFailed(): ReportsUiMessage = ReportsUiMessage(R.string.reports_message_load_failed)
     }
 }

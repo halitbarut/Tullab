@@ -53,13 +53,20 @@ sealed class ReportRange(
     companion object {
         /**
          * Provides the default preset shown when the reports screen first loads.
+         *
+         * Computed getter (not an eager val): an eager `= ThisMonth` initializer
+         * reads the nested object during class initialization, which permanently
+         * caches null when a nested preset (e.g. ThisMonth) happens to initialize
+         * first (outer -> Companion init re-entrantly observes it mid-construction).
          */
-        val default: ReportRange = ThisMonth
+        val default: ReportRange get() = ThisMonth
 
         /**
          * Returns all presets in the order they should appear in the UI.
+         *
+         * Computed getter for the same class-initialization reason as [default].
          */
-        val presets: List<ReportRange> = listOf(
+        val presets: List<ReportRange> get() = listOf(
             LastSevenDays,
             ThisMonth,
             LastThirtyDays,

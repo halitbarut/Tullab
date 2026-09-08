@@ -1,5 +1,6 @@
 package com.barutdev.tullab.ui.screens.reports
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,6 +12,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.concurrent.CancellationException
 import javax.inject.Inject
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -64,9 +66,13 @@ class ReportsViewModel @Inject constructor(
             }
 
             try {
-                val summary = getReportSummaryUseCase(rangeToLoad)
-                val monthly = getMonthlyEarningsUseCase()
-                val topStudents = getTopStudentsUseCase(rangeToLoad)
+                val summaryDeferred = async { getReportSummaryUseCase(rangeToLoad) }
+                val monthlyDeferred = async { getMonthlyEarningsUseCase() }
+                val topStudentsDeferred = async { getTopStudentsUseCase(rangeToLoad) }
+
+                val summary = summaryDeferred.await()
+                val monthly = monthlyDeferred.await()
+                val topStudents = topStudentsDeferred.await()
 
                 _uiState.update { current ->
                     current.copy(
@@ -81,11 +87,12 @@ class ReportsViewModel @Inject constructor(
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (error: Throwable) {
+                Log.e(TAG, "Failed to load reports for range=$rangeToLoad", error)
                 _uiState.update { current ->
                     current.copy(
                         selectedRange = rangeToLoad,
                         isLoading = false,
-                        errorMessage = ReportsUiMessage.emptyState()
+                        errorMessage = ReportsUiMessage.loadFailed()
                     )
                 }
             }
@@ -106,5 +113,6 @@ class ReportsViewModel @Inject constructor(
 
     companion object {
         internal const val SELECTED_RANGE_KEY = "reports_selected_range_index"
+        private const val TAG = "ReportsViewModel"
     }
 }

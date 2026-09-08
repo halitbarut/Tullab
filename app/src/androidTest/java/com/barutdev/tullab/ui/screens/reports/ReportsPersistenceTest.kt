@@ -3,6 +3,8 @@ package com.barutdev.tullab.ui.screens.reports
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -12,6 +14,7 @@ import androidx.lifecycle.SavedStateHandle
 import com.barutdev.tullab.R
 import com.barutdev.tullab.domain.model.Lesson
 import com.barutdev.tullab.domain.model.LessonStatus
+import com.barutdev.tullab.domain.model.PricingMode
 import com.barutdev.tullab.domain.model.Student
 import com.barutdev.tullab.domain.model.reports.ReportRange
 import com.barutdev.tullab.domain.repository.LessonRepository
@@ -21,6 +24,7 @@ import com.barutdev.tullab.domain.usecase.reports.GetReportSummaryUseCase
 import com.barutdev.tullab.domain.usecase.reports.GetTopStudentsUseCase
 import com.barutdev.tullab.ui.theme.TullabTheme
 import java.math.BigDecimal
+import java.text.NumberFormat
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
@@ -45,6 +49,7 @@ class ReportsPersistenceTest {
     private val zoneId = ZoneId.of("UTC")
     private val clock: Clock = Clock.fixed(Instant.parse("2025-03-20T10:00:00Z"), zoneId)
     private val locale = Locale.US
+    private val currencyFormatter: NumberFormat = NumberFormat.getCurrencyInstance(locale)
 
     @Test
     fun rangeSelectionPersistsAfterRecreatingViewModel() {
@@ -84,21 +89,27 @@ class ReportsPersistenceTest {
         val topStudentsUseCase = GetTopStudentsUseCase(lessonRepository, studentRepository, clock, zoneId)
         val savedStateHandle = SavedStateHandle()
 
-        var viewModel = ReportsViewModel(
-            getReportSummaryUseCase = summaryUseCase,
-            getMonthlyEarningsUseCase = monthlyUseCase,
-            getTopStudentsUseCase = topStudentsUseCase,
-            savedStateHandle = savedStateHandle
+        var viewModelHolder by mutableStateOf(
+            ReportsViewModel(
+                getReportSummaryUseCase = summaryUseCase,
+                getMonthlyEarningsUseCase = monthlyUseCase,
+                getTopStudentsUseCase = topStudentsUseCase,
+                savedStateHandle = savedStateHandle
+            )
         )
 
+        // Single setContent: observe the holder so ViewModel recreation does
+        // not require installing content twice on the same rule.
         composeRule.setContent {
             TullabTheme {
-                val state by viewModel.uiState.collectAsState()
+                val currentViewModel = viewModelHolder
+                val state by currentViewModel.uiState.collectAsState()
                 ReportsScreenContent(
                     uiState = state,
                     locale = locale,
-                    onRangeSelected = viewModel::onRangeSelected,
-                    onRetry = viewModel::refresh
+                    currencyFormatter = currencyFormatter,
+                    onRangeSelected = currentViewModel::onRangeSelected,
+                    onRetry = currentViewModel::refresh
                 )
             }
         }
@@ -111,28 +122,16 @@ class ReportsPersistenceTest {
         composeRule.waitForIdle()
 
         // Simulate ViewModel recreation with the same SavedStateHandle
-        viewModel = ReportsViewModel(
+        viewModelHolder = ReportsViewModel(
             getReportSummaryUseCase = summaryUseCase,
             getMonthlyEarningsUseCase = monthlyUseCase,
             getTopStudentsUseCase = topStudentsUseCase,
             savedStateHandle = savedStateHandle
         )
 
-        composeRule.setContent {
-            TullabTheme {
-                val state by viewModel.uiState.collectAsState()
-                ReportsScreenContent(
-                    uiState = state,
-                    locale = locale,
-                    onRangeSelected = viewModel::onRangeSelected,
-                    onRetry = viewModel::refresh
-                )
-            }
-        }
-
         composeRule.waitForIdle()
 
-        assertEquals(ReportRange.LastThirtyDays, viewModel.uiState.value.selectedRange)
+        assertEquals(ReportRange.LastThirtyDays, viewModelHolder.uiState.value.selectedRange)
         composeRule.onNodeWithTag("reports-range-${R.string.reports_range_last_30_days}")
             .assertIsSelected()
     }
@@ -143,7 +142,8 @@ class ReportsPersistenceTest {
         status: LessonStatus,
         durationHours: Double,
         lessonDate: LocalDate,
-        paymentDate: LocalDate?
+        paymentDate: LocalDate?,
+        rateOrFee: Double = 50.0
     ): Lesson = Lesson(
         id = id,
         studentId = studentId,
@@ -151,6 +151,8 @@ class ReportsPersistenceTest {
         durationInHours = durationHours,
         date = lessonDate.atStartOfDay(zoneId).toInstant().toEpochMilli(),
         notes = null,
+        pricingMode = PricingMode.PER_HOUR,
+        rateOrFee = rateOrFee,
         paymentTimestamp = paymentDate?.atStartOfDay(zoneId)?.toInstant()?.toEpochMilli()
     )
 
@@ -169,7 +171,29 @@ class ReportsPersistenceTest {
 
         override suspend fun updateLesson(lesson: Lesson) = throw UnsupportedOperationException()
 
+        override suspend fun deleteLesson(lessonId: Int) = throw UnsupportedOperationException()
+
         override suspend fun markCompletedLessonsAsPaid(studentId: Int) = throw UnsupportedOperationException()
+
+        override suspend fun getScheduledLessonCount(studentId: Int): Int = 0
+
+        override suspend fun getScheduledLessonsForStudent(studentId: Int): List<Lesson> = emptyList()
+
+        override suspend fun updateScheduledLessonsRate(studentId: Int, newRate: Double) = Unit
+
+        override fun getLessonsForDate(date: LocalDate): Flow<List<Lesson>> = flowOf(emptyList())
+
+        override fun getCompletedLessonsForDate(date: LocalDate): Flow<List<Lesson>> = flowOf(emptyList())
+
+        override suspend fun getLessonWithStudent(lessonId: Int) = null
+
+        override fun getActiveLessons(): Flow<List<Lesson>> = flowOf(emptyList())
+
+        override suspend fun insertLessons(lessons: List<Lesson>): List<Int> = emptyList()
+
+        override suspend fun deleteLessons(lessonIds: List<Int>) = Unit
+
+        override suspend fun getLessonDatesForStudent(studentId: Int): List<Long> = emptyList()
     }
 
     private class InMemoryStudentRepository : StudentRepository {
