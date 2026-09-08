@@ -51,7 +51,8 @@
     <string name="homework_title">Ödevler</string>
     <string name="homework_top_bar_title">%1$s – %2$s</string>
     <string name="homework_assignments_section_title">Tüm Ödevler</string>
-    <string name="homework_empty_state_message">Henüz ödev atanmadı.</string>
+    <string name="homework_empty_state_title">Henüz ödev yok</string>
+    <string name="homework_empty_state_message">Ödevler oluşturulduğunda burada görünecektir.</string>
     <string name="homework_due_date_label">Son teslim: %1$s</string>
     <string name="homework_status_pending">Beklemede</string>
     <string name="homework_status_completed">Tamamlandı</string>
@@ -64,13 +65,16 @@
     <string name="homework_dialog_title_label">Başlık</string>
     <string name="homework_dialog_description_label">Açıklama</string>
     <string name="homework_dialog_due_date_label">Teslim Tarihi</string>
-    <string name="homework_dialog_due_date_hint">Örnek: 2024-04-15</string>
+    <string name="homework_dialog_due_date_hint">Son teslim tarihi seçin</string>
     <string name="homework_dialog_due_date_error">Geçerli bir teslim tarihi girin.</string>
     <string name="homework_dialog_status_label">Durum</string>
     <string name="homework_dialog_performance_notes_label">Performans Notları</string>
     <string name="homework_dialog_cancel">Vazgeç</string>
     <string name="homework_dialog_save">Kaydet</string>
     <string name="homework_dialog_update">Güncelle</string>
+    <string name="homework_dialog_delete_content_description">Ödevi sil</string>
+    <string name="homework_delete_confirmation_title">Ödev Silinsin Mi?</string>
+    <string name="homework_delete_confirmation_message">Bu ödevi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.</string>
     <string name="settings_title">Ayarlar</string>
     <string name="navigate_to_settings">Ayarlar\'a git</string>
     <string name="settings_back_content_description">Geri dön</string>
@@ -187,6 +191,8 @@
     <string name="calendar_select_day_message">Lütfen önce bir gün seçin</string>
     <string name="calendar_lesson_scheduled_message">Ders planlandı</string>
     <string name="calendar_day_details_title">%1$s tarihindeki dersler</string>
+    <string name="calendar_day_homework_details_title">%1$s tarihindeki ödevler</string>
+    <string name="calendar_day_schedule_details_title">%1$s programı</string>
     <string name="calendar_no_lessons_message">Bu gün için planlanmış etkinlik yok.</string>
     <string name="calendar_lesson_details_title">%1$s tarihli ders</string>
     <string name="calendar_lesson_details_status">Durum: %1$s</string>
@@ -207,8 +213,8 @@
     <string name="calendar_status_scheduled">Planlandı</string>
     <string name="calendar_status_scheduled_needs_logging">Planlandı (Kaydı Gerekli)</string>
     <string name="calendar_status_cancelled">İptal edildi</string>
-    <string name="calendar_homework_action_mark_complete">Tamamlandı İşaretle</string>
-    <string name="calendar_homework_action_mark_pending">Beklemede İşaretle</string>
+    <string name="calendar_homework_action_mark_complete">Tamamla</string>
+    <string name="calendar_homework_action_mark_pending">Geri Al</string>
     <string name="calendar_homework_action_details">Detaylar</string>
     <string name="bulk_schedule_cap_reached_warning">Bir seferde maksimum 30 ders planlayabilirsiniz.</string>
     <!-- Genel Dialog Eylemleri -->

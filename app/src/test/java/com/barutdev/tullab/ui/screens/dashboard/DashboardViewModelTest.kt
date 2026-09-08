@@ -199,6 +199,7 @@ class DashboardViewModelTest {
             override fun getHomeworkById(homeworkId: Int): Flow<Homework?> = MutableStateFlow(null)
             override suspend fun insertHomework(homework: Homework) {}
             override suspend fun updateHomework(homework: Homework) {}
+            override suspend fun deleteHomework(homework: Homework) {}
         }
         
         val paymentRepository = object : PaymentRepository {

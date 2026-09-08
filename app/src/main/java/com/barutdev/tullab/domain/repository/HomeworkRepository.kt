@@ -8,4 +8,5 @@ interface HomeworkRepository {
     fun getHomeworkById(homeworkId: Int): Flow<Homework?>
     suspend fun insertHomework(homework: Homework)
     suspend fun updateHomework(homework: Homework)
+    suspend fun deleteHomework(homework: Homework)
 }

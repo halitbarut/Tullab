@@ -585,7 +585,9 @@ private fun SettingNavigationRow(
         Text(
             text = title,
             style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = 16.dp)
         )
         Text(
             text = value,

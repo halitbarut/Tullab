@@ -1,6 +1,7 @@
 package com.barutdev.tullab.data.local
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -24,6 +25,9 @@ interface HomeworkDao {
 
     @Query("SELECT * FROM homework WHERE id = :homeworkId")
     fun getHomeworkById(homeworkId: Int): Flow<HomeworkEntity?>
+
+    @Delete
+    suspend fun delete(homework: HomeworkEntity)
 
     @Query("DELETE FROM homework")
     suspend fun deleteAll()
