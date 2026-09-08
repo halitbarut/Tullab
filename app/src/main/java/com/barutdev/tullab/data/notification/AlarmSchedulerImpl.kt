@@ -4,6 +4,7 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import com.barutdev.tullab.domain.model.AlarmScheduleRequest
 import com.barutdev.tullab.domain.model.NotificationType
 import com.barutdev.tullab.domain.repository.AlarmScheduler
@@ -40,12 +41,29 @@ class AlarmSchedulerImpl @Inject constructor(
             notificationData = request.notificationData
         )
 
-        // Use setExactAndAllowWhileIdle for Doze compatibility
-        alarmManager.setExactAndAllowWhileIdle(
-            AlarmManager.RTC_WAKEUP,
-            triggerTimeMillis,
-            pendingIntent
-        )
+        // Use setExactAndAllowWhileIdle for Doze compatibility when exact alarms are permitted;
+        // fallback to setAndAllowWhileIdle on Android 12+ (API 31+) if exact alarm permission is not granted.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (alarmManager.canScheduleExactAlarms()) {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerTimeMillis,
+                    pendingIntent
+                )
+            } else {
+                alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerTimeMillis,
+                    pendingIntent
+                )
+            }
+        } else {
+            alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                triggerTimeMillis,
+                pendingIntent
+            )
+        }
     }
 
     override suspend fun cancelAlarm(lessonId: String, type: NotificationType) {

@@ -1,21 +1,89 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# ====================================================================
+# ProGuard / R8 Rules for Tullab
+# ====================================================================
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# --------------------------------------------------------------------
+# 1. Stack Traces & Debugging (Firebase Crashlytics)
+# --------------------------------------------------------------------
+# Preserve line numbers and source file names for de-obfuscation
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# --------------------------------------------------------------------
+# 2. Room Database
+# --------------------------------------------------------------------
+# Keep Room base classes and interfaces
+-keep class androidx.room.RoomDatabase
+-keep class * extends androidx.room.RoomDatabase
+-dontwarn androidx.room.paging.**
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Keep entities, fields, and constructors
+-keep @androidx.room.Entity class * {
+    <fields>;
+    <init>(...);
+}
+-keep class com.barutdev.tullab.data.local.entity.** { *; }
+
+# Keep DAO interfaces and methods
+-keep @androidx.room.Dao interface * {
+    <methods>;
+}
+-keep class com.barutdev.tullab.data.local.**Dao* { *; }
+
+# Keep Type Converters
+-keep class * extends androidx.room.TypeConverter { *; }
+-keepclassmembers class * {
+    @androidx.room.TypeConverter *;
+}
+-keep class com.barutdev.tullab.data.local.**Converter* { *; }
+-keep class com.barutdev.tullab.data.local.TullabDatabase* { *; }
+
+# --------------------------------------------------------------------
+# 3. Hilt & Dagger Dependency Injection
+# --------------------------------------------------------------------
+# Keep Application, EntryPoints, and ViewModels
+-keep class * extends dagger.hilt.android.HiltAndroidApp { *; }
+-keep @dagger.hilt.android.AndroidEntryPoint class * { *; }
+-keep @dagger.hilt.android.lifecycle.HiltViewModel class * { *; }
+-keep class * extends androidx.lifecycle.ViewModel {
+    <init>(...);
+}
+-keep @dagger.Module class * { *; }
+
+# Keep injected fields, constructors, and methods
+-keepclassmembers class * {
+    @javax.inject.Inject <init>(...);
+    @javax.inject.Inject <fields>;
+    @javax.inject.Inject <methods>;
+}
+
+# Keep Hilt generated artifacts and factories
+-keep class **_MembersInjector { *; }
+-keep class **_Factory { *; }
+-keep class **_HiltModules* { *; }
+-keep class dagger.hilt.** { *; }
+-dontwarn dagger.hilt.**
+
+# --------------------------------------------------------------------
+# 4. Kotlin Coroutines
+# --------------------------------------------------------------------
+-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
+-keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
+-keepclassmembernames class kotlinx.coroutines.** {
+    volatile <fields>;
+}
+-dontwarn kotlinx.coroutines.flow.**
+
+# --------------------------------------------------------------------
+# 5. Firebase Crashlytics & Analytics
+# --------------------------------------------------------------------
+-keep class com.google.firebase.** { *; }
+-dontwarn com.google.firebase.**
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.android.gms.**
+
+# --------------------------------------------------------------------
+# 6. Domain Models (Data State & Backup Serialization)
+# --------------------------------------------------------------------
+-keep class com.barutdev.tullab.domain.model.** { *; }
