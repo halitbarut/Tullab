@@ -79,6 +79,7 @@ WARP.md
 # Reference/spec files (development only)
 openspec/
 screen_reference/
+.opencode/
 
 # Build artifacts (all modules and depths)
 **/build/
