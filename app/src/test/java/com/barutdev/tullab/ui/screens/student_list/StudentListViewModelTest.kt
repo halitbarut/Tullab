@@ -271,5 +271,7 @@ private class FakeUserPreferencesRepository(
 
     override suspend fun updateLogReminderTime(hour: Int, minute: Int) = error("Not needed in tests")
 
+    override suspend fun updateHapticFeedbackEnabled(isEnabled: Boolean) = error("Not needed in tests")
+
     override suspend fun resetPreferences() = error("Not needed in tests")
 }

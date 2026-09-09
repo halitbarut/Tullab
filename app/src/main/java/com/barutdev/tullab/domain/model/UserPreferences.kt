@@ -10,5 +10,6 @@ data class UserPreferences(
     val lessonReminderHour: Int,
     val lessonReminderMinute: Int,
     val logReminderHour: Int,
-    val logReminderMinute: Int
+    val logReminderMinute: Int,
+    val hapticFeedbackEnabled: Boolean = true
 )

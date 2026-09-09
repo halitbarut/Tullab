@@ -94,6 +94,8 @@
     <string name="settings_section_tutoring">Nachhilfe</string>
     <string name="settings_dark_mode_label">Dunkelmodus</string>
     <string name="settings_dark_mode_content_description">Dunkelmodus umschalten</string>
+    <string name="settings_haptic_feedback_label">Haptisches Feedback</string>
+    <string name="settings_haptic_feedback_content_description">Haptisches Feedback umschalten</string>
     <string name="settings_language_label">Sprache</string>
     <string name="settings_language_content_description">App-Sprache ändern</string>
     <string name="settings_language_dialog_title">Sprache wählen</string>

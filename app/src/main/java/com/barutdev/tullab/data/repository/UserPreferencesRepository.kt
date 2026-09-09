@@ -34,6 +34,7 @@ class UserPreferencesRepository @Inject constructor(
         val LESSON_REMINDER_MINUTE_KEY = intPreferencesKey("lesson_reminder_minute")
         val LOG_REMINDER_HOUR_KEY = intPreferencesKey("log_reminder_hour")
         val LOG_REMINDER_MINUTE_KEY = intPreferencesKey("log_reminder_minute")
+        val HAPTIC_FEEDBACK_ENABLED_KEY = booleanPreferencesKey("haptic_feedback_enabled")
         val FIRST_RUN_COMPLETED_KEY = booleanPreferencesKey("first_run_completed")
         val ONBOARDING_COMPLETED_KEY = booleanPreferencesKey("onboarding_completed")
         const val DEFAULT_LESSON_REMINDER_HOUR = 9
@@ -57,7 +58,8 @@ class UserPreferencesRepository @Inject constructor(
                 lessonReminderHour = preferences[LESSON_REMINDER_HOUR_KEY] ?: DEFAULT_LESSON_REMINDER_HOUR,
                 lessonReminderMinute = preferences[LESSON_REMINDER_MINUTE_KEY] ?: DEFAULT_REMINDER_MINUTE,
                 logReminderHour = preferences[LOG_REMINDER_HOUR_KEY] ?: DEFAULT_LOG_REMINDER_HOUR,
-                logReminderMinute = preferences[LOG_REMINDER_MINUTE_KEY] ?: DEFAULT_REMINDER_MINUTE
+                logReminderMinute = preferences[LOG_REMINDER_MINUTE_KEY] ?: DEFAULT_REMINDER_MINUTE,
+                hapticFeedbackEnabled = preferences[HAPTIC_FEEDBACK_ENABLED_KEY] ?: true
             )
         }
 
@@ -142,6 +144,12 @@ class UserPreferencesRepository @Inject constructor(
         dataStore.edit { preferences ->
             preferences[LOG_REMINDER_HOUR_KEY] = hour
             preferences[LOG_REMINDER_MINUTE_KEY] = minute
+        }
+    }
+
+    override suspend fun updateHapticFeedbackEnabled(isEnabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[HAPTIC_FEEDBACK_ENABLED_KEY] = isEnabled
         }
     }
 

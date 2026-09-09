@@ -7,6 +7,7 @@ import com.barutdev.tullab.domain.repository.StudentRepository
 import com.barutdev.tullab.domain.repository.UserPreferencesRepository
 import com.barutdev.tullab.domain.usecase.notification.RescheduleAllNotificationAlarmsUseCase
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -118,5 +119,16 @@ class SettingsViewModelTest {
         assertTrue(filtered.any { it.code == "TRY" }) // Turkish Lira
         
         collectJob.cancel()
+    }
+
+    @Test
+    fun `updateHapticFeedbackEnabled delegates to repository with given value`() = runTest {
+        viewModel.updateHapticFeedbackEnabled(false)
+        runCurrent()
+        coVerify { userPreferencesRepository.updateHapticFeedbackEnabled(false) }
+
+        viewModel.updateHapticFeedbackEnabled(true)
+        runCurrent()
+        coVerify { userPreferencesRepository.updateHapticFeedbackEnabled(true) }
     }
 }

@@ -29,6 +29,7 @@ import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Sell
+import androidx.compose.material.icons.outlined.Vibration
 import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.Policy
 import androidx.compose.material.icons.automirrored.outlined.Article
@@ -361,6 +362,14 @@ fun SettingsScreen(
                     title = tullabStringResource(id = R.string.settings_dark_mode_label),
                     checked = userPreferences.isDarkMode,
                     onCheckedChange = viewModel::updateDarkMode
+                )
+                SettingsDivider()
+                SettingSwitchRow(
+                    icon = Icons.Outlined.Vibration,
+                    iconContentDescription = tullabStringResource(id = R.string.settings_haptic_feedback_content_description),
+                    title = tullabStringResource(id = R.string.settings_haptic_feedback_label),
+                    checked = userPreferences.hapticFeedbackEnabled,
+                    onCheckedChange = viewModel::updateHapticFeedbackEnabled
                 )
                 SettingsDivider()
                 SettingNavigationRow(
@@ -964,6 +973,14 @@ private fun SettingsPreviewContent(preferences: UserPreferences) {
                         iconContentDescription = tullabStringResource(id = R.string.settings_dark_mode_content_description),
                         title = tullabStringResource(id = R.string.settings_dark_mode_label),
                         checked = preferences.isDarkMode,
+                        onCheckedChange = {}
+                    )
+                    SettingsDivider()
+                    SettingSwitchRow(
+                        icon = Icons.Outlined.Vibration,
+                        iconContentDescription = tullabStringResource(id = R.string.settings_haptic_feedback_content_description),
+                        title = tullabStringResource(id = R.string.settings_haptic_feedback_label),
+                        checked = preferences.hapticFeedbackEnabled,
                         onCheckedChange = {}
                     )
                     SettingsDivider()

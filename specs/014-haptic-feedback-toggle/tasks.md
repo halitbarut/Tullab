@@ -8,12 +8,12 @@
 
 **Purpose**: Core model and persistence prerequisites required across all user stories.
 
-- [ ] T001 [P] Add `hapticFeedbackEnabled: Boolean = true` property to `UserPreferences` domain model in `app/src/main/java/com/barutdev/tullab/domain/model/UserPreferences.kt`
-- [ ] T002 [P] Add `updateHapticFeedbackEnabled(isEnabled: Boolean)` method declaration to `UserPreferencesRepository` interface in `app/src/main/java/com/barutdev/tullab/domain/repository/UserPreferencesRepository.kt`
-- [ ] T003 Implement `HAPTIC_FEEDBACK_ENABLED_KEY`, DataStore reading with `true` default, `updateHapticFeedbackEnabled(isEnabled: Boolean)`, and reset handling in `app/src/main/java/com/barutdev/tullab/data/repository/UserPreferencesRepository.kt`
-- [ ] T004 [P] Update `LocalUserPreferences` static composition default with `hapticFeedbackEnabled = true` in `app/src/main/java/com/barutdev/tullab/ui/preferences/UserPreferencesProvider.kt`
-- [ ] T005 [P] Update `defaultPreferences` in `AppViewModel` with `hapticFeedbackEnabled = true` in `app/src/main/java/com/barutdev/tullab/ui/AppViewModel.kt`
-- [ ] T006 [P] Update `defaultPreferences` in `SettingsViewModel` with `hapticFeedbackEnabled = true` in `app/src/main/java/com/barutdev/tullab/ui/screens/settings/SettingsViewModel.kt`
+- [X] T001 [P] Add `hapticFeedbackEnabled: Boolean = true` property to `UserPreferences` domain model in `app/src/main/java/com/barutdev/tullab/domain/model/UserPreferences.kt`
+- [X] T002 [P] Add `updateHapticFeedbackEnabled(isEnabled: Boolean)` method declaration to `UserPreferencesRepository` interface in `app/src/main/java/com/barutdev/tullab/domain/repository/UserPreferencesRepository.kt`
+- [X] T003 Implement `HAPTIC_FEEDBACK_ENABLED_KEY`, DataStore reading with `true` default, `updateHapticFeedbackEnabled(isEnabled: Boolean)`, and reset handling in `app/src/main/java/com/barutdev/tullab/data/repository/UserPreferencesRepository.kt`
+- [X] T004 [P] Update `LocalUserPreferences` static composition default with `hapticFeedbackEnabled = true` in `app/src/main/java/com/barutdev/tullab/ui/preferences/UserPreferencesProvider.kt`
+- [X] T005 [P] Update `defaultPreferences` in `AppViewModel` with `hapticFeedbackEnabled = true` in `app/src/main/java/com/barutdev/tullab/ui/AppViewModel.kt`
+- [X] T006 [P] Update `defaultPreferences` in `SettingsViewModel` with `hapticFeedbackEnabled = true` in `app/src/main/java/com/barutdev/tullab/ui/screens/settings/SettingsViewModel.kt`
 
 **Checkpoint**: Foundation ready — `hapticFeedbackEnabled` is established in the domain and DataStore layers with a non-breaking `true` default.
 
@@ -27,9 +27,9 @@
 
 ### Implementation for User Story 4
 
-- [ ] T007 [P] [US4] Add English strings `settings_haptic_feedback_label` ("Haptic Feedback") and `settings_haptic_feedback_content_description` ("Toggle haptic feedback") to `app/src/main/res/values/strings.xml`
-- [ ] T008 [P] [US4] Add Turkish strings `settings_haptic_feedback_label` ("Dokunsal Geri Bildirim") and `settings_haptic_feedback_content_description` ("Dokunsal geri bildirimi değiştir") to `app/src/main/res/values-tr/strings.xml`
-- [ ] T009 [P] [US4] Add German strings `settings_haptic_feedback_label` ("Haptisches Feedback") and `settings_haptic_feedback_content_description` ("Haptisches Feedback umschalten") to `app/src/main/res/values-de/strings.xml`
+- [X] T007 [P] [US4] Add English strings `settings_haptic_feedback_label` ("Haptic Feedback") and `settings_haptic_feedback_content_description` ("Toggle haptic feedback") to `app/src/main/res/values/strings.xml`
+- [X] T008 [P] [US4] Add Turkish strings `settings_haptic_feedback_label` ("Dokunsal Geri Bildirim") and `settings_haptic_feedback_content_description` ("Dokunsal geri bildirimi değiştir") to `app/src/main/res/values-tr/strings.xml`
+- [X] T009 [P] [US4] Add German strings `settings_haptic_feedback_label` ("Haptisches Feedback") and `settings_haptic_feedback_content_description` ("Haptisches Feedback umschalten") to `app/src/main/res/values-de/strings.xml`
 
 **Checkpoint**: All three languages have full parity for the haptic toggle strings.
 
@@ -43,12 +43,12 @@
 
 ### Tests for User Story 1 & 2
 
-- [ ] T010 [P] [US1] Add unit test in `app/src/test/java/com/barutdev/tullab/ui/screens/settings/SettingsViewModelTest.kt` verifying `updateHapticFeedbackEnabled(Boolean)` delegates correctly to `UserPreferencesRepository`
+- [X] T010 [P] [US1] Add unit test in `app/src/test/java/com/barutdev/tullab/ui/screens/settings/SettingsViewModelTest.kt` verifying `updateHapticFeedbackEnabled(Boolean)` delegates correctly to `UserPreferencesRepository`
 
 ### Implementation for User Story 1 & 2
 
-- [ ] T011 [US1] Implement `updateHapticFeedbackEnabled(isEnabled: Boolean)` in `app/src/main/java/com/barutdev/tullab/ui/screens/settings/SettingsViewModel.kt`
-- [ ] T012 [US2] Add `SettingSwitchRow` for Haptic Feedback (with `Icons.Outlined.Vibration`, silent toggle interaction, and localized strings) after Dark Mode and before Language in `app/src/main/java/com/barutdev/tullab/ui/screens/settings/SettingsScreen.kt`
+- [X] T011 [US1] Implement `updateHapticFeedbackEnabled(isEnabled: Boolean)` in `app/src/main/java/com/barutdev/tullab/ui/screens/settings/SettingsViewModel.kt`
+- [X] T012 [US2] Add `SettingSwitchRow` for Haptic Feedback (with `Icons.Outlined.Vibration`, silent toggle interaction, and localized strings) after Dark Mode and before Language in `app/src/main/java/com/barutdev/tullab/ui/screens/settings/SettingsScreen.kt`
 
 **Checkpoint**: Users can toggle Haptic Feedback in Settings and have their preference persisted.
 
@@ -62,12 +62,12 @@
 
 ### Tests for User Story 3
 
-- [ ] T013 [P] [US3] Add unit test in `app/src/test/java/com/barutdev/tullab/ui/components/TullabHapticsTest.kt` verifying `TullabHapticFeedback(enabled = false)` suppresses view haptic feedback and vibrator calls for all feedback types
+- [X] T013 [P] [US3] Add unit test in `app/src/test/java/com/barutdev/tullab/ui/components/TullabHapticsTest.kt` verifying `TullabHapticFeedback(enabled = false)` suppresses view haptic feedback and vibrator calls for all feedback types
 
 ### Implementation for User Story 3
 
-- [ ] T014 [US3] Update `TullabHapticFeedback` class in `app/src/main/java/com/barutdev/tullab/ui/components/TullabHaptics.kt` to accept an `enabled: Boolean = true` parameter and guard `perform(type)` with `if (!enabled) return`
-- [ ] T015 [US3] Update `rememberTullabHapticFeedback()` in `app/src/main/java/com/barutdev/tullab/ui/components/TullabHaptics.kt` to inject `LocalUserPreferences.current.hapticFeedbackEnabled` as the default `enabled` parameter
+- [X] T014 [US3] Update `TullabHapticFeedback` class in `app/src/main/java/com/barutdev/tullab/ui/components/TullabHaptics.kt` to accept an `enabled: Boolean = true` parameter and guard `perform(type)` with `if (!enabled) return`
+- [X] T015 [US3] Update `rememberTullabHapticFeedback()` in `app/src/main/java/com/barutdev/tullab/ui/components/TullabHaptics.kt` to inject `LocalUserPreferences.current.hapticFeedbackEnabled` as the default `enabled` parameter
 
 **Checkpoint**: Silencing is completely enforced at the centralized helper choke point; all screens immediately respect the setting without call-site rewrites.
 
@@ -77,9 +77,9 @@
 
 **Purpose**: Verify end-to-end integration, run automated test suites, and ensure zero regressions across existing screens.
 
-- [ ] T016 Run automated unit tests (`./gradlew testDebugUnitTest`) to verify all existing and new ViewModel, repository, and haptics tests compile and pass
-- [ ] T017 [P] Verify debug build compilation and resource checks via `./gradlew assembleDebug`
-- [ ] T018 Execute manual validation scenarios from `specs/014-haptic-feedback-toggle/quickstart.md` (fresh install default, toggling, silencing across screens, trilingual parity, and accessibility checks including 48x48 dp touch target and 200% font scaling)
+- [X] T016 Run automated unit tests (`./gradlew testDebugUnitTest`) to verify all existing and new ViewModel, repository, and haptics tests compile and pass
+- [X] T017 [P] Verify debug build compilation and resource checks via `./gradlew assembleDebug`
+- [X] T018 Execute manual validation scenarios from `specs/014-haptic-feedback-toggle/quickstart.md` (fresh install default, toggling, silencing across screens, trilingual parity, and accessibility checks including 48x48 dp touch target and 200% font scaling)
 
 ---
 
