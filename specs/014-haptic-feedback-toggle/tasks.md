@@ -1,6 +1,6 @@
 # Tasks: Haptic Feedback Toggle
 
-**Branch**: `014-haptic-feedback-toggle` | **Spec**: [spec.md](file:///home/halit/AndroidStudioProjects/Tullab/specs/014-haptic-feedback-toggle/spec.md) | **Plan**: [plan.md](file:///home/halit/AndroidStudioProjects/Tullab/specs/014-haptic-feedback-toggle/plan.md)
+**Branch**: `014-haptic-feedback-toggle` | **Spec**: [spec.md](./spec.md) | **Plan**: [plan.md](./plan.md)
 
 ---
 

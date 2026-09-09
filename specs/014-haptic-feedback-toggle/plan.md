@@ -1,6 +1,6 @@
 # Implementation Plan: Haptic Feedback Toggle
 
-**Branch**: `014-haptic-feedback-toggle` | **Date**: 2026-09-09 | **Spec**: [spec.md](file:///home/halit/AndroidStudioProjects/Tullab/specs/014-haptic-feedback-toggle/spec.md)
+**Branch**: `014-haptic-feedback-toggle` | **Date**: 2026-09-09 | **Spec**: [spec.md](./spec.md)
 
 **Input**: Feature specification from `specs/014-haptic-feedback-toggle/spec.md`
 

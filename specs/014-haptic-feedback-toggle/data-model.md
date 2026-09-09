@@ -58,7 +58,7 @@ val HAPTIC_FEEDBACK_ENABLED_KEY = booleanPreferencesKey("haptic_feedback_enabled
 - **Reset**:
   ```kotlin
   // In resetPreferences():
-  preferences[HAPTIC_FEEDBACK_ENABLED_KEY] = true
+  preferences.clear() // removes HAPTIC_FEEDBACK_ENABLED_KEY; read fallback then evaluates the setting as true
   ```
 
 ---
