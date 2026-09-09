@@ -126,4 +126,93 @@ dependencies {
     implementation(libs.firebase.crashlytics)
 }
 
+// Automated release packaging and artifact export.
+// Usage: ./gradlew :app:exportRelease
+tasks.register("exportRelease") {
+    dependsOn("assembleRelease", "bundleRelease")
+    description = "Assembles release APK + AAB and exports them to a versioned App Releases directory."
+    group = "release"
+
+    doLast {
+        val versionName = android.defaultConfig.versionName
+            ?: throw GradleException("versionName is not set in android.defaultConfig")
+        val versionCode = android.defaultConfig.versionCode
+            ?: throw GradleException("versionCode is not set in android.defaultConfig")
+
+        val userHome = System.getProperty("user.home")
+            ?: System.getenv("HOME")
+            ?: throw GradleException("Unable to resolve user home directory for release export")
+
+        val destDir = File(userHome, "AndroidStudioProjects/App Releases/Tullab/v$versionName ($versionCode)")
+        if (!destDir.exists() && !destDir.mkdirs()) {
+            throw GradleException("Failed to create release export directory: ${destDir.absolutePath}")
+        }
+
+        val buildDir = layout.buildDirectory.get().asFile
+        val exportedPaths = mutableListOf<String>()
+
+        fun exportFile(source: File, targetName: String, required: Boolean) {
+            if (!source.exists()) {
+                val message = "Release artifact not found, skipping: ${source.absolutePath}"
+                if (required) {
+                    throw GradleException(message)
+                } else {
+                    logger.warn("exportRelease: $message")
+                }
+                return
+            }
+            val target = File(destDir, targetName)
+            if (target.exists()) {
+                target.delete()
+            }
+            source.copyTo(target, overwrite = true)
+            exportedPaths.add(target.absolutePath)
+            logger.lifecycle("exportRelease: exported ${source.name} -> ${target.absolutePath}")
+        }
+
+        // Release APK and AAB, renamed with the current version.
+        exportFile(
+            File(buildDir, "outputs/apk/release/app-release.apk"),
+            "Tullab-v$versionName.apk",
+            required = true
+        )
+        exportFile(
+            File(buildDir, "outputs/bundle/release/app-release.aab"),
+            "Tullab-v$versionName.aab",
+            required = true
+        )
+
+        // ProGuard/R8 mapping file (only present with minification enabled).
+        exportFile(
+            File(buildDir, "outputs/mapping/release/mapping.txt"),
+            "mapping.txt",
+            required = false
+        )
+
+        // Native debug symbols bundle, when NDK symbols are generated.
+        exportFile(
+            File(buildDir, "outputs/native-debug-symbols/release/native-debug-symbols.zip"),
+            "Tullab-v$versionName-native-debug-symbols.zip",
+            required = false
+        )
+
+        // Raw merged native libs directory, when present.
+        val nativeLibsDir = File(buildDir, "intermediates/merged_native_libs/release/mergeReleaseNativeLibs/out/lib")
+        if (nativeLibsDir.exists() && nativeLibsDir.isDirectory) {
+            val targetNativeDir = File(destDir, "native-symbols")
+            targetNativeDir.deleteRecursively()
+            nativeLibsDir.copyRecursively(targetNativeDir, overwrite = true)
+            exportedPaths.add(targetNativeDir.absolutePath)
+            logger.lifecycle("exportRelease: exported native symbols -> ${targetNativeDir.absolutePath}")
+        } else {
+            logger.warn("exportRelease: native symbols directory not found, skipping: ${nativeLibsDir.absolutePath}")
+        }
+
+        logger.lifecycle("exportRelease: versionName=$versionName versionCode=$versionCode")
+        logger.lifecycle("exportRelease: destination directory: ${destDir.absolutePath}")
+        logger.lifecycle("exportRelease: completed successfully. Exported artifacts:")
+        exportedPaths.forEach { path -> logger.lifecycle("exportRelease:  - $path") }
+    }
+}
+
 
