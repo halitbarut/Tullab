@@ -82,6 +82,10 @@
 -dontwarn com.google.firebase.**
 -keep class com.google.android.gms.** { *; }
 -dontwarn com.google.android.gms.**
+# Explicit measurement keep rules so R8 does not strip analytics receivers
+# or transport services in release builds (required for real-time reporting).
+-keep class com.google.android.gms.measurement.** { *; }
+-keep class com.google.firebase.analytics.** { *; }
 
 # --------------------------------------------------------------------
 # 6. Domain Models (Data State & Backup Serialization)

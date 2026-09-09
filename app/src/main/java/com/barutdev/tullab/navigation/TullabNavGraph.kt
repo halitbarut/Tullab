@@ -44,6 +44,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.derivedStateOf
@@ -52,6 +53,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import com.barutdev.tullab.analytics.AnalyticsTracker
+import com.google.firebase.analytics.FirebaseAnalytics
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
@@ -113,6 +117,39 @@ fun TullabNavGraph(
     val bottomNavTransitionState = remember { BottomNavTransitionState() }
     val performanceLogger = remember { NavigationPerformanceLogger() }
     val bottomBarState = remember { BottomBarState() }
+
+    // Firebase Analytics: manual screen tracking for reliable real-time reporting
+    // in release builds (R8 + stripped AD_ID can delay automatic reporting).
+    val analyticsContext = LocalContext.current
+    val firebaseAnalytics = remember(analyticsContext) {
+        runCatching { FirebaseAnalytics.getInstance(analyticsContext) }.getOrNull()
+    }
+
+    DisposableEffect(navController, firebaseAnalytics) {
+        val analytics = firebaseAnalytics
+        if (analytics == null) {
+            onDispose { }
+        } else {
+            val listener =
+                NavController.OnDestinationChangedListener { _, destination, _ ->
+                    AnalyticsTracker.logScreenView(analytics, destination.route)
+                }
+            // Capture the cold-start destination immediately; the listener only
+            // fires on subsequent navigations.
+            AnalyticsTracker.logScreenView(analytics, navController.currentDestination?.route)
+            navController.addOnDestinationChangedListener(listener)
+            onDispose {
+                navController.removeOnDestinationChangedListener(listener)
+            }
+        }
+    }
+
+    LaunchedEffect(firebaseAnalytics) {
+        // Explicit app_open guarantees launch visibility in DebugView/Realtime
+        // even when automatic app_open is suppressed. Collection is enabled
+        // unconditionally (never gated by build type) and works without AD_ID.
+        firebaseAnalytics?.let(AnalyticsTracker::logAppOpen)
+    }
 
     LaunchedEffect(currentStudentId) {
         if (currentStudentId != null) {

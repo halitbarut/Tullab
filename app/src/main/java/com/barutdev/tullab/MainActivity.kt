@@ -13,6 +13,8 @@ import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.barutdev.tullab.navigation.TullabNavGraph
+import com.barutdev.tullab.analytics.AnalyticsTracker
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.barutdev.tullab.ui.AppViewModel
 import com.barutdev.tullab.ui.preferences.LocalUserPreferences
 import com.barutdev.tullab.ui.theme.TullabTheme
@@ -29,6 +31,14 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Explicit app_open on cold start for reliable real-time reporting in
+        // release builds. Collection is enabled unconditionally (not gated by
+        // build type) and works without the AD_ID permission (see manifest
+        // google_analytics_adid_collection_enabled=false).
+        runCatching {
+            AnalyticsTracker.logAppOpen(FirebaseAnalytics.getInstance(this))
+        }
 
         requestNotificationPermissionIfNeeded()
 
