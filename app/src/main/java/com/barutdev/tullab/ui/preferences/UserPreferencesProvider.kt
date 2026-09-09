@@ -14,6 +14,7 @@ val LocalUserPreferences = staticCompositionLocalOf {
         lessonReminderHour = 9,
         lessonReminderMinute = 0,
         logReminderHour = 20,
-        logReminderMinute = 0
+        logReminderMinute = 0,
+        hapticFeedbackEnabled = true
     )
 }

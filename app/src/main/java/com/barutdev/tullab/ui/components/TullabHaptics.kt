@@ -14,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
+import com.barutdev.tullab.ui.preferences.LocalUserPreferences
 
 /**
  * Enum of semantic haptic feedback types used in Tullab.
@@ -61,7 +62,8 @@ class TullabHapticFeedback(
     private val view: View,
     @Suppress("unused")
     private val composeHaptics: androidx.compose.ui.hapticfeedback.HapticFeedback,
-    private val context: Context = view.context
+    private val context: Context = view.context,
+    val enabled: Boolean = true
 ) {
     companion object {
         // ERM-calibrated fallback parameters. Do not reduce below these values:
@@ -117,6 +119,7 @@ class TullabHapticFeedback(
      * [Vibrator] directly with ERM-calibrated [VibrationEffect]s (requires VIBRATE permission).
      */
     fun perform(type: TullabHapticFeedbackType) {
+        if (!enabled) return
         val handled = when (type) {
             TullabHapticFeedbackType.CONFIRMATION -> {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -325,14 +328,17 @@ class TullabHapticFeedback(
 }
 
 /**
- * Creates and remembers a [TullabHapticFeedback] instance bound to the current Compose context.
+ * Creates and remembers a [TullabHapticFeedback] instance bound to the current Compose context
+ * and current user preference state.
  */
 @Composable
-fun rememberTullabHapticFeedback(): TullabHapticFeedback {
+fun rememberTullabHapticFeedback(
+    enabled: Boolean = LocalUserPreferences.current.hapticFeedbackEnabled
+): TullabHapticFeedback {
     val view = LocalView.current
     val composeHaptics = LocalHapticFeedback.current
     val context = LocalContext.current
-    return remember(view, composeHaptics, context) {
-        TullabHapticFeedback(view, composeHaptics, context)
+    return remember(view, composeHaptics, context, enabled) {
+        TullabHapticFeedback(view, composeHaptics, context, enabled)
     }
 }

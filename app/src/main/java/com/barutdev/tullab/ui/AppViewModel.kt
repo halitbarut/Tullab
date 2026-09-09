@@ -31,7 +31,8 @@ class AppViewModel @Inject constructor(
         lessonReminderHour = 9,
         lessonReminderMinute = 0,
         logReminderHour = 20,
-        logReminderMinute = 0
+        logReminderMinute = 0,
+        hapticFeedbackEnabled = true
     )
 
     val userPreferences: StateFlow<UserPreferences> = userPreferencesRepository.userPreferences

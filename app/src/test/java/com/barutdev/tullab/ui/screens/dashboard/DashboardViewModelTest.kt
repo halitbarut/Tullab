@@ -408,6 +408,7 @@ class DashboardViewModelTest {
             override suspend fun updateLogReminderEnabled(isEnabled: Boolean) {}
             override suspend fun updateLessonReminderTime(hour: Int, minute: Int) {}
             override suspend fun updateLogReminderTime(hour: Int, minute: Int) {}
+            override suspend fun updateHapticFeedbackEnabled(isEnabled: Boolean) {}
             override suspend fun resetPreferences() {}
         }
         

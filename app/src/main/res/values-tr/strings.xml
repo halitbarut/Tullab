@@ -94,6 +94,8 @@
     <string name="settings_section_tutoring">Özel Ders</string>
     <string name="settings_dark_mode_label">Karanlık Mod</string>
     <string name="settings_dark_mode_content_description">Karanlık modu değiştir</string>
+    <string name="settings_haptic_feedback_label">Dokunsal Geri Bildirim</string>
+    <string name="settings_haptic_feedback_content_description">Dokunsal geri bildirimi değiştir</string>
     <string name="settings_language_label">Dil</string>
     <string name="settings_language_content_description">Uygulama dilini değiştir</string>
     <string name="settings_language_dialog_title">Dil Seçin</string>

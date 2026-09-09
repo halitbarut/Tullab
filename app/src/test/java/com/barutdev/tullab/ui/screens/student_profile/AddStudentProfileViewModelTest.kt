@@ -144,5 +144,6 @@ private class StubUserPreferencesRepository(
     override suspend fun updateLogReminderEnabled(isEnabled: Boolean) = error("Not needed")
     override suspend fun updateLessonReminderTime(hour: Int, minute: Int) = error("Not needed")
     override suspend fun updateLogReminderTime(hour: Int, minute: Int) = error("Not needed")
+    override suspend fun updateHapticFeedbackEnabled(isEnabled: Boolean) = error("Not needed")
     override suspend fun resetPreferences() = error("Not needed")
 }

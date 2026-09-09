@@ -99,6 +99,8 @@
     <string name="settings_section_tutoring">Tutoring</string>
     <string name="settings_dark_mode_label">Dark Mode</string>
     <string name="settings_dark_mode_content_description">Toggle dark mode</string>
+    <string name="settings_haptic_feedback_label">Haptic Feedback</string>
+    <string name="settings_haptic_feedback_content_description">Toggle haptic feedback</string>
     <string name="settings_language_label">Language</string>
     <string name="settings_language_content_description">Change app language</string>
     <string name="settings_language_dialog_title">Choose Language</string>

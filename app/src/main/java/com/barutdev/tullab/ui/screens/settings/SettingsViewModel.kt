@@ -53,7 +53,8 @@ class SettingsViewModel @Inject constructor(
         lessonReminderHour = DEFAULT_LESSON_REMINDER_HOUR,
         lessonReminderMinute = DEFAULT_REMINDER_MINUTE,
         logReminderHour = DEFAULT_LOG_REMINDER_HOUR,
-        logReminderMinute = DEFAULT_REMINDER_MINUTE
+        logReminderMinute = DEFAULT_REMINDER_MINUTE,
+        hapticFeedbackEnabled = true
     )
 
     val userPreferences: StateFlow<UserPreferences> = userPreferencesRepository.userPreferences
@@ -124,6 +125,12 @@ class SettingsViewModel @Inject constructor(
     fun updateDarkMode(isDarkMode: Boolean) {
         viewModelScope.launch {
             userPreferencesRepository.updateTheme(isDarkMode)
+        }
+    }
+
+    fun updateHapticFeedbackEnabled(isEnabled: Boolean) {
+        viewModelScope.launch {
+            userPreferencesRepository.updateHapticFeedbackEnabled(isEnabled)
         }
     }
 

@@ -33,5 +33,7 @@ interface UserPreferencesRepository {
 
     suspend fun updateLogReminderTime(hour: Int, minute: Int)
 
+    suspend fun updateHapticFeedbackEnabled(isEnabled: Boolean)
+
     suspend fun resetPreferences()
 }
