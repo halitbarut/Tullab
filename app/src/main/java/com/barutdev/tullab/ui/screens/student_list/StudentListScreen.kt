@@ -101,7 +101,7 @@ fun StudentListScreen(
     val userPreferences = LocalUserPreferences.current
     val context = LocalContext.current
     val exitPrompt = tullabStringResource(id = R.string.press_back_again_to_exit)
-    var lastBackPressTime by remember { mutableLongStateOf(0L) }
+    var lastBackPressTime by remember { mutableLongStateOf(-1L) }
 
     // Double-back-press-to-exit guard, strictly scoped to the root destination.
     // This BackHandler is only composed as part of StudentListScreen, so child
@@ -109,7 +109,7 @@ fun StudentListScreen(
     // hierarchical back navigation unaffected.
     BackHandler {
         val now = SystemClock.elapsedRealtime()
-        if (now - lastBackPressTime < DOUBLE_BACK_PRESS_TIMEOUT_MS) {
+        if (lastBackPressTime != -1L && now - lastBackPressTime < DOUBLE_BACK_PRESS_TIMEOUT_MS) {
             (context as? Activity)?.finish()
         } else {
             lastBackPressTime = now
