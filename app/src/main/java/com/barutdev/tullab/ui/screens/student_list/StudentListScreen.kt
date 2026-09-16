@@ -1,5 +1,9 @@
 package com.barutdev.tullab.ui.screens.student_list
 
+import android.app.Activity
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
+
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -45,6 +49,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -54,6 +59,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -78,6 +84,8 @@ import com.barutdev.tullab.util.formatCurrency
 import com.barutdev.tullab.util.tullabStringResource
 import java.util.Locale
 
+private const val DOUBLE_BACK_PRESS_TIMEOUT_MS = 2000L
+
 @Composable
 fun StudentListScreen(
     onAddStudent: () -> Unit,
@@ -90,6 +98,23 @@ fun StudentListScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val userPreferences = LocalUserPreferences.current
+    val context = LocalContext.current
+    val exitPrompt = tullabStringResource(id = R.string.press_back_again_to_exit)
+    var lastBackPressTime by remember { mutableLongStateOf(0L) }
+
+    // Double-back-press-to-exit guard, strictly scoped to the root destination.
+    // This BackHandler is only composed as part of StudentListScreen, so child
+    // destinations (Calendar, Homework, Settings, Reports, …) keep their normal
+    // hierarchical back navigation unaffected.
+    BackHandler {
+        val now = System.currentTimeMillis()
+        if (now - lastBackPressTime < DOUBLE_BACK_PRESS_TIMEOUT_MS) {
+            (context as? Activity)?.finish()
+        } else {
+            lastBackPressTime = now
+            Toast.makeText(context, exitPrompt, Toast.LENGTH_SHORT).show()
+        }
+    }
 
     val topBarTitle = tullabStringResource(id = R.string.student_list_title)
     val addStudentDescription = tullabStringResource(id = R.string.student_list_add_student_fab_content_description)
