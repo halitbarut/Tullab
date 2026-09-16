@@ -1,6 +1,7 @@
 package com.barutdev.tullab.ui.screens.student_list
 
 import android.app.Activity
+import android.os.SystemClock
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 
@@ -107,7 +108,7 @@ fun StudentListScreen(
     // destinations (Calendar, Homework, Settings, Reports, …) keep their normal
     // hierarchical back navigation unaffected.
     BackHandler {
-        val now = System.currentTimeMillis()
+        val now = SystemClock.elapsedRealtime()
         if (now - lastBackPressTime < DOUBLE_BACK_PRESS_TIMEOUT_MS) {
             (context as? Activity)?.finish()
         } else {
